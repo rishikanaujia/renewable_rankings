@@ -31,9 +31,6 @@ cd renewable-rankings
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 
-# Upgrade pip tooling
-python -m pip install --upgrade pip setuptools wheel
-
 # Install dependencies
 pip install -r requirements.txt
 

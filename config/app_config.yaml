@@ -1,0 +1,24 @@
+app:
+  name: "Global Renewable Market Rankings"
+  version: "1.0.0"
+  description: "AI-Powered Renewable Energy Investment Analysis System"
+
+ui:
+  title: "Renewable Energy Market Rankings"
+  theme: "soft"
+  chat_history_limit: 50
+  max_message_length: 2000
+
+system:
+  mock_mode: true  # Set to false when real agents are ready
+  cache_enabled: false  # Enable in Phase 2
+  logging_level: "INFO"
+
+features:
+  chat_interface: true
+  rankings_display: true
+  country_details: true
+  report_generation: true
+  expert_corrections: true
+  domain_rules: false  # Enable in Phase 2
+  voice_input: false  # Enable in Phase 2+

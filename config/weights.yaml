@@ -1,0 +1,52 @@
+# Subcategory Weights for Final Score Calculation
+# All weights must sum to 1.0
+
+weights:
+  # Level I: Critical (55-70%)
+  regulation:
+    weight: 0.225
+    min_weight: 0.20
+    max_weight: 0.25
+    level: 1
+    description: "Policy ambition, support mechanisms, track record"
+  
+  profitability:
+    weight: 0.225
+    min_weight: 0.20
+    max_weight: 0.25
+    level: 1
+    description: "Revenue stability, offtaker status, returns, financing costs"
+  
+  accommodation:
+    weight: 0.175
+    min_weight: 0.15
+    max_weight: 0.20
+    level: 1
+    description: "Grid readiness, ownership hurdles"
+  
+  # Level II: Important (20-30%)
+  market_size_fundamentals:
+    weight: 0.125
+    min_weight: 0.10
+    max_weight: 0.15
+    level: 2
+    description: "Power market size, resource availability, energy dependence"
+  
+  competition_ease:
+    weight: 0.125
+    min_weight: 0.10
+    max_weight: 0.15
+    level: 2
+    description: "Market concentration, ease of entry"
+  
+  # Level III: Modifiers (5-10%)
+  system_modifiers:
+    weight: 0.075
+    min_weight: 0.05
+    max_weight: 0.10
+    level: 3
+    description: "Cannibalization, curtailment, queue dynamics, supply chain"
+
+# Validation
+total_weight: 1.0
+tolerance: 0.001

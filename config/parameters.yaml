@@ -1,0 +1,198 @@
+# Parameter Definitions for Global Renewable Market Rankings
+# Each parameter has scoring rubrics 1-10
+
+parameters:
+  # LEVEL I: REGULATION
+  ambition:
+    name: "Ambition"
+    subcategory: "regulation"
+    level: 1
+    description: "Government renewable energy targets for solar PV + onshore wind + offshore wind in GW by 2030"
+    scoring:
+      - value: 1
+        range: "< 3 GW"
+        description: "Minimal renewable targets"
+      - value: 2
+        range: "3 – 4.99 GW"
+        description: "Very low targets"
+      - value: 3
+        range: "5 – 9.99 GW"
+        description: "Low targets"
+      - value: 4
+        range: "10 – 14.99 GW"
+        description: "Below moderate targets"
+      - value: 5
+        range: "15 – 19.99 GW"
+        description: "Moderate targets"
+      - value: 6
+        range: "20 – 24.99 GW"
+        description: "Above moderate targets"
+      - value: 7
+        range: "25 – 29.99 GW"
+        description: "High targets"
+      - value: 8
+        range: "30 – 34.99 GW"
+        description: "Very high targets"
+      - value: 9
+        range: "35 – 39.99 GW"
+        description: "Extremely high targets"
+      - value: 10
+        range: "> 40 GW"
+        description: "World-class targets"
+    data_sources:
+      - "Government NDCs"
+      - "Ministry of Energy publications"
+      - "IRENA country profiles"
+  
+  support_scheme:
+    name: "Support Scheme"
+    subcategory: "regulation"
+    level: 1
+    description: "Evaluation of current support mechanisms available and their efficacy"
+    scoring:
+      - value: 1
+        description: "No Support: No financial or regulatory support exists for renewable energy"
+      - value: 2
+        description: "Emerging but Ineffective: No formal support, limited routes emerging organically"
+      - value: 3
+        description: "Forces Into Disadvantage: Support exists but creates unhealthy competition"
+      - value: 4
+        description: "Boom-Bust Support: Irregular and unstable, creating boom-bust cycles"
+      - value: 5
+        description: "Under Threat: Mechanisms exist but face cancellation risk"
+      - value: 6
+        description: "Federal-State Misalignment: Support present but policies conflict"
+      - value: 7
+        description: "Solid but Uncertain: Well-established but nearing expiration"
+      - value: 8
+        description: "Broad but Uneven: Multiple routes available but effectiveness varies"
+      - value: 9
+        description: "Strong but Not Scalable: Clear and stable but not scalable enough"
+      - value: 10
+        description: "Highly Mature: Long-term calendars, strong certainty, consistent investment"
+    data_sources:
+      - "Auction calendars"
+      - "FiT schedules"
+      - "Policy documents"
+
+  track_record:
+    name: "Track Record"
+    subcategory: "regulation"
+    level: 1
+    description: "Historical policy behavior, stability, credibility"
+    # Full scoring rubric would go here...
+
+  contract_terms:
+    name: "Contract Terms"
+    subcategory: "regulation"
+    level: 1
+    description: "Bankability, risk allocation, PPA robustness"
+    # Full scoring rubric would go here...
+
+  country_stability:
+    name: "Country Stability"
+    subcategory: "regulation"
+    level: 1
+    description: "Indexed to ECR Strategic Risk Rating"
+    # Full scoring rubric would go here...
+
+  # LEVEL I: PROFITABILITY
+  revenue_stream_stability:
+    name: "Revenue Stream Stability"
+    subcategory: "profitability"
+    level: 1
+    description: "Predictability, durability, bankability of cash flows"
+    # Full scoring rubric would go here...
+
+  offtaker_status:
+    name: "Offtaker Status"
+    subcategory: "profitability"
+    level: 1
+    description: "Financial strength and credibility of power purchasers"
+    # Full scoring rubric would go here...
+
+  expected_return:
+    name: "Expected Return"
+    subcategory: "profitability"
+    level: 1
+    description: "Indexed to unlevered pre-tax IRR"
+    # Full scoring rubric would go here...
+
+  long_term_interest_rates:
+    name: "Long-Term Interest Rates"
+    subcategory: "profitability"
+    level: 1
+    description: "Cost of capital for renewable projects"
+    # Full scoring rubric would go here...
+
+  # LEVEL I: ACCOMMODATION
+  status_of_grid:
+    name: "Status of Grid"
+    subcategory: "accommodation"
+    level: 1
+    description: "Grid readiness, capacity, reliability"
+    # Full scoring rubric would go here...
+
+  ownership_hurdles:
+    name: "Ownership Hurdles"
+    subcategory: "accommodation"
+    level: 1
+    description: "Regulatory and practical barriers"
+    # Full scoring rubric would go here...
+
+  # LEVEL II: MARKET SIZE & FUNDAMENTALS
+  power_market_size:
+    name: "Power Market Size"
+    subcategory: "market_size_fundamentals"
+    level: 2
+    description: "Based on 2025 electricity consumption, TWh"
+    # Full scoring rubric would go here...
+
+  resource_availability:
+    name: "Resource Availability"
+    subcategory: "market_size_fundamentals"
+    level: 2
+    description: "Average capacity factors for solar/wind"
+    # Full scoring rubric would go here...
+
+  energy_dependence:
+    name: "Energy Dependence"
+    subcategory: "market_size_fundamentals"
+    level: 2
+    description: "Net imports / total energy supply"
+    # Full scoring rubric would go here...
+
+  renewables_penetration:
+    name: "Renewables Penetration"
+    subcategory: "market_size_fundamentals"
+    level: 2
+    description: "Current non-hydro renewable share"
+    # Full scoring rubric would go here...
+
+  # LEVEL II: COMPETITION & EASE
+  ownership_consolidation:
+    name: "Ownership Consolidation"
+    subcategory: "competition_ease"
+    level: 2
+    description: "Market share of top 5 players"
+    # Full scoring rubric would go here...
+
+  competitive_landscape:
+    name: "Competitive Landscape"
+    subcategory: "competition_ease"
+    level: 2
+    description: "Ease of market entry and competition"
+    # Full scoring rubric would go here...
+
+  # LEVEL III: SYSTEM MODIFIERS
+  system_modifiers:
+    name: "System/External Modifiers"
+    subcategory: "system_modifiers"
+    level: 3
+    description: "Cannibalization, curtailment, queue dynamics, supply chain"
+    # Full scoring rubric would go here...
+
+# Metadata
+total_parameters: 21
+subcategories: 6
+levels: 3

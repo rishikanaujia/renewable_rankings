@@ -5,12 +5,12 @@ Each agent is responsible for analyzing one specific parameter.
 
 Phase 1 Agents (Implemented):
 - AmbitionAgent - Government renewable energy targets
+- CountryStabilityAgent - Political and economic risk assessment
 
 Phase 2 Agents (Coming Soon):
 - SupportSchemeAgent
 - TrackRecordAgent
 - ContractTermsAgent
-- CountryStabilityAgent
 - RevenueStreamStabilityAgent
 - OfftakerStatusAgent
 - ExpectedReturnAgent
@@ -27,15 +27,19 @@ Phase 2 Agents (Coming Soon):
 """
 
 from .ambition_agent import AmbitionAgent, analyze_ambition
+from .country_stability_agent import CountryStabilityAgent, analyze_country_stability
 
 __all__ = [
     "AmbitionAgent",
     "analyze_ambition",
+    "CountryStabilityAgent",
+    "analyze_country_stability",
 ]
 
 # Agent registry for dynamic loading
 AGENT_REGISTRY = {
     "ambition": AmbitionAgent,
+    "country_stability": CountryStabilityAgent,
     # Add more agents as they're implemented
     # "support_scheme": SupportSchemeAgent,
     # "track_record": TrackRecordAgent,

@@ -63,6 +63,67 @@ parameters:
       - "Government NDCs"
       - "Ministry of Energy publications"
       - "IRENA country profiles"
+
+  country_stability:
+    name: "Country Stability"
+    subcategory: "regulation"
+    level: 1
+    description: "Political and economic risk assessment based on Euromoney Country Risk (ECR) rating. Lower ECR = higher stability = higher score."
+    scoring:
+      - value: 10
+        min_ecr: 0.0
+        max_ecr: 1.0
+        range: "< 1.0"
+        description: "Extremely stable (minimal risk)"
+      - value: 9
+        min_ecr: 1.0
+        max_ecr: 2.0
+        range: "1.0 – 1.99"
+        description: "Very stable (very low risk)"
+      - value: 8
+        min_ecr: 2.0
+        max_ecr: 3.0
+        range: "2.0 – 2.99"
+        description: "Stable (low risk)"
+      - value: 7
+        min_ecr: 3.0
+        max_ecr: 4.0
+        range: "3.0 – 3.99"
+        description: "Moderately stable (moderate risk)"
+      - value: 6
+        min_ecr: 4.0
+        max_ecr: 5.0
+        range: "4.0 – 4.99"
+        description: "Fair stability (elevated risk)"
+      - value: 5
+        min_ecr: 5.0
+        max_ecr: 6.0
+        range: "5.0 – 5.99"
+        description: "Moderate instability (significant risk)"
+      - value: 4
+        min_ecr: 6.0
+        max_ecr: 7.0
+        range: "6.0 – 6.99"
+        description: "Unstable (high risk)"
+      - value: 3
+        min_ecr: 7.0
+        max_ecr: 8.0
+        range: "7.0 – 7.99"
+        description: "Very unstable (very high risk)"
+      - value: 2
+        min_ecr: 8.0
+        max_ecr: 9.0
+        range: "8.0 – 8.99"
+        description: "Extremely unstable (severe risk)"
+      - value: 1
+        min_ecr: 9.0
+        max_ecr: 100.0
+        range: "≥ 9.0"
+        description: "Failed/fragile state (extreme risk)"
+    data_sources:
+      - "Euromoney Country Risk (ECR)"
+      - "World Bank Governance Indicators"
+      - "Political Risk Services (PRS) Group"
   
   support_scheme:
     name: "Support Scheme"
@@ -107,13 +168,6 @@ parameters:
     subcategory: "regulation"
     level: 1
     description: "Bankability, risk allocation, PPA robustness"
-    # Full scoring rubric would go here...
-
-  country_stability:
-    name: "Country Stability"
-    subcategory: "regulation"
-    level: 1
-    description: "Indexed to ECR Strategic Risk Rating"
     # Full scoring rubric would go here...
 
   # LEVEL I: PROFITABILITY

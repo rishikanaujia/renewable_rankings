@@ -226,10 +226,10 @@ class AgentService:
         subcategory_params = {
             "regulation": [
                 "ambition",
+                "country_stability",
                 # "support_scheme",  # Not implemented yet
                 # "track_record",
                 # "contract_terms",
-                # "country_stability"
             ],
             "profitability": [
                 # "revenue_stream_stability",

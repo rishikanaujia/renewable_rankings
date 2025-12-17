@@ -987,6 +987,48 @@ parameters:
       - "Geopolitical risk indices"
       - "Market anomaly detection"
       - "IMF and World Bank macroeconomic indicators"
+# ANALYSIS CONFIGURATION
+analysis:
+  subcategory_weights:
+    regulation: 0.20  # 20% - Critical for policy and regulatory risk
+    market_size_fundamentals: 0.20  # 20% - Scale and market opportunity
+    profitability: 0.25  # 25% - Returns are primary investment driver
+    accommodation: 0.15  # 15% - Operational feasibility and access
+    competition_ease: 0.10  # 10% - Market entry and competitive dynamics
+    system_modifiers: 0.10  # 10% - Risk adjustment factors
+    # Total: 100%
+
+  strength_threshold: 7.5  # Scores >= 7.5 are considered strengths
+  weakness_threshold: 5.5  # Scores < 5.5 are considered weaknesses
+
+  score_interpretation:
+    - range: [9.0, 10.0]
+      label: "Exceptional"
+      description: "Best-in-class investment destination"
+    - range: [8.0, 9.0]
+      label: "Excellent"
+      description: "Highly attractive market with strong fundamentals"
+    - range: [7.0, 8.0]
+      label: "Very Good"
+      description: "Attractive market with good investment conditions"
+    - range: [6.0, 7.0]
+      label: "Good"
+      description: "Solid market with manageable risks"
+    - range: [5.0, 6.0]
+      label: "Moderate"
+      description: "Moderate attractiveness with notable challenges"
+    - range: [4.0, 5.0]
+      label: "Below Average"
+      description: "Challenging market requiring careful consideration"
+    - range: [3.0, 4.0]
+      label: "Poor"
+      description: "Significant barriers to investment"
+    - range: [2.0, 3.0]
+      label: "Very Poor"
+      description: "Major risks and obstacles"
+    - range: [0.0, 2.0]
+      label: "Extremely Poor"
+      description: "Market not viable for investment"
 
 # Metadata
 total_parameters: 21

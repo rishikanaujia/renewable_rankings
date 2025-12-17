@@ -140,8 +140,8 @@ def demo_scoring_rubric():
         )
     
     print("\n📊 How Combined Score is Calculated:")
-    print("  1. Normalize solar: (kWh/m²/day ÷ 2.5) × 10")
-    print("  2. Normalize wind: (m/s ÷ 1.0) × 10")
+    print("  1. Normalize solar: (kWh/m²/day ÷ 6.5) × 10")
+    print("  2. Normalize wind: (m/s ÷ 9.0) × 10")
     print("  3. Combined = (Solar × 0.5) + (Wind × 0.5)")
     
     print("\n📊 Example Calculations:")

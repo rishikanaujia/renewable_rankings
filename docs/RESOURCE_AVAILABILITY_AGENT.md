@@ -19,8 +19,8 @@ calculation:
   method: "weighted_average"
   solar_weight: 0.5
   wind_weight: 0.5
-  solar_normalization: 2.5
-  wind_normalization: 1.0
+  solar_normalization: 6.5  # Normalize to max expected solar
+  wind_normalization: 9.0   # Normalize to max expected wind
 ```
 
 **Benefits:**
@@ -58,12 +58,12 @@ Mock data based on:
 
 ```python
 # Solar: Typical range 2.5-6.5 kWh/m²/day
-# Normalize by dividing by 2.5, then scale to 10
-solar_normalized = (solar_kwh_m2_day / 2.5) * 10
+# Normalize by dividing by 6.5 (max expected), then scale to 10
+solar_normalized = (solar_kwh_m2_day / 6.5) * 10
 
 # Wind: Typical range 4-9 m/s
-# Normalize by dividing by 1.0, then scale to 10
-wind_normalized = (wind_m_s / 1.0) * 10
+# Normalize by dividing by 9.0 (max expected), then scale to 10
+wind_normalized = (wind_m_s / 9.0) * 10
 ```
 
 ### **Step 2: Calculate Combined Score**

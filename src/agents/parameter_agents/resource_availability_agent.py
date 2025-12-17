@@ -10,8 +10,8 @@ Resource Metrics:
 
 Scoring combines both metrics with equal weighting:
 - Combined Score = (Solar_normalized * 0.5) + (Wind_normalized * 0.5)
-- Solar normalized: (solar_kwh_per_m2_day / 2.5) * 10
-- Wind normalized: (wind_m_per_s / 1.0) * 10
+- Solar normalized: (solar_kwh_per_m2_day / 6.5) * 10
+- Wind normalized: (wind_m_per_s / 9.0) * 10
 
 Resource Quality Scale:
 - < 2.0: Very poor (both weak)
@@ -76,7 +76,7 @@ class ResourceAvailabilityAgent(BaseParameterAgent):
             "solar_quality": "Outstanding",
             "wind_quality": "Good"
         },
-        "United Kingdom": {
+        "UK": {
             "solar_kwh_m2_day": 2.5,  # Low solar
             "wind_m_s": 8.0,          # Excellent offshore wind
             "solar_quality": "Low",
@@ -228,8 +228,8 @@ class ResourceAvailabilityAgent(BaseParameterAgent):
         return {
             "solar_weight": 0.5,
             "wind_weight": 0.5,
-            "solar_normalization": 2.5,
-            "wind_normalization": 1.0
+            "solar_normalization": 6.5,
+            "wind_normalization": 9.0
         }
     
     def _get_fallback_rubric(self) -> List[Dict[str, Any]]:

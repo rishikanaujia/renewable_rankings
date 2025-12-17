@@ -51,10 +51,10 @@ period = "Q3 2024"
 ```
 1. Fetch solar: 6.5 kWh/m²/day
 2. Fetch wind: 8.5 m/s
-3. Normalize solar: (6.5 / 2.5) × 10 = 26.0
-4. Normalize wind: (8.5 / 1.0) × 10 = 85.0
-5. Combined: (26.0 × 0.5) + (85.0 × 0.5) = 55.5 / 10 = 10.0+
-6. Map to rubric → Score 10
+3. Normalize solar: (6.5 / 6.5) × 10 = 10.0
+4. Normalize wind: (8.5 / 9.0) × 10 = 9.4
+5. Combined: (10.0 × 0.5) + (9.4 × 0.5) = 9.7
+6. Map to rubric → Score 9
 ```
 
 ### **Output**
@@ -111,15 +111,15 @@ for country in ["Germany", "India", "Chile", "UK"]:
 
 | Country | Solar | Wind | Combined | Score | Key Feature |
 |---------|-------|------|----------|-------|-------------|
-| Chile | 6.5 | 8.5 | 10.0+ | 10 | World-class both |
-| Argentina | 5.5 | 9.0 | 9.8 | 10 | Patagonia wind |
-| Australia | 6.0 | 7.0 | 9.0 | 9 | Outstanding solar |
-| Morocco | 5.8 | 7.5 | 8.9 | 9 | Excellent both |
-| India | 5.8 | 6.0 | 8.2 | 8 | Rajasthan solar |
-| UK | 2.5 | 8.0 | 7.0 | 7 | Offshore wind |
-| Germany | 3.0 | 6.0 | 6.0 | 6 | North Sea wind |
+| Chile | 6.5 | 8.5 | 9.7 | 9 | World-class both |
+| Argentina | 5.5 | 9.0 | 9.25 | 9 | Patagonia wind |
+| Australia | 6.0 | 7.0 | 8.5 | 8 | Outstanding solar |
+| Morocco | 5.8 | 7.5 | 8.6 | 8 | Excellent both |
+| India | 5.8 | 6.0 | 7.8 | 7 | Rajasthan solar |
+| UK | 2.5 | 8.0 | 6.35 | 6 | Offshore wind |
+| Germany | 3.0 | 6.0 | 5.65 | 5 | North Sea wind |
 
-**Key Insight:** UK scores well (7.0) despite low solar thanks to excellent wind!
+**Key Insight:** Scores now properly distributed across the 1-10 range!
 
 ---
 

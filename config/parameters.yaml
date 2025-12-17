@@ -246,8 +246,8 @@ parameters:
       method: "weighted_average"
       solar_weight: 0.5
       wind_weight: 0.5
-      solar_normalization: 2.5  # Normalize solar kWh/m²/day to 0-10 scale (divide by this)
-      wind_normalization: 1.0   # Normalize wind m/s to 0-10 scale (divide by this)
+      solar_normalization: 6.5  # Normalize solar kWh/m²/day to 0-10 scale (max expected ~6.5)
+      wind_normalization: 9.0   # Normalize wind m/s to 0-10 scale (max expected ~9.0)
     data_sources:
       - "Global Solar Atlas (World Bank)"
       - "Global Wind Atlas (DTU)"

@@ -14,7 +14,7 @@ import sys
 from pathlib import Path
 
 # Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from src.agents.parameter_agents import AmbitionAgent, analyze_ambition
 from src.agents.agent_service import agent_service
@@ -104,8 +104,9 @@ def demo_scoring_rubric():
     print("-" * 60)
     
     for level in rubric:
-        max_gw = level.get('max_gw', float('inf'))
-        max_display = '∞' if max_gw == float('inf') else str(max_gw)
+        max_gw = level.get('max_gw', 10000)
+        # Display very large numbers as infinity
+        max_display = '∞' if max_gw >= 10000 else str(max_gw)
         min_gw = level.get('min_gw', 0)
         score = level['score']
         description = level['description']

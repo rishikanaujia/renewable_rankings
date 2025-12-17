@@ -78,9 +78,13 @@ class AmbitionAgent(BaseParameterAgent):
                 for item in scoring:
                     rubric.append({
                         "score": item['value'],
+                        "min_gw": item.get('min_gw', 0),
+                        "max_gw": item.get('max_gw', 10000),
                         "range": item['range'],
                         "description": item['description']
                     })
+                
+                logger.debug(f"Converted {len(rubric)} rubric levels from config")
                 return rubric
             else:
                 logger.warning("No scoring rubric in config, using fallback")
@@ -108,7 +112,7 @@ class AmbitionAgent(BaseParameterAgent):
             {"score": 7, "min_gw": 25, "max_gw": 30, "range": "25-30 GW", "description": "High targets"},
             {"score": 8, "min_gw": 30, "max_gw": 35, "range": "30-35 GW", "description": "Very high targets"},
             {"score": 9, "min_gw": 35, "max_gw": 40, "range": "35-40 GW", "description": "Extremely high targets"},
-            {"score": 10, "min_gw": 40, "max_gw": float('inf'), "range": "≥ 40 GW", "description": "World-class targets"}
+            {"score": 10, "min_gw": 40, "max_gw": 10000, "range": "≥ 40 GW", "description": "World-class targets"}
         ]
     
     def analyze(

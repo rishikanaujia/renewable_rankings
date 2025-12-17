@@ -18,6 +18,7 @@ Phase 1 Agents (Implemented):
 - SupportSchemeAgent - Government support mechanisms (FiT, auctions, tax credits)
 - ContractTermsAgent - PPA bankability and risk allocation
 - OwnershipConsolidationAgent - Market concentration and competition
+- CompetitiveLandscapeAgent - Market entry ease and competitive dynamics
 - StatusOfGridAgent - Grid infrastructure quality and reliability
 - OwnershipHurdlesAgent - Foreign ownership restrictions and market access
 
@@ -46,6 +47,7 @@ from .ownership_hurdles_agent import OwnershipHurdlesAgent, analyze_ownership_hu
 from .support_scheme_agent import SupportSchemeAgent, analyze_support_scheme
 from .contract_terms_agent import ContractTermsAgent, analyze_contract_terms
 from .ownership_consolidation_agent import OwnershipConsolidationAgent, analyze_ownership_consolidation
+from .competitive_landscape_agent import CompetitiveLandscapeAgent, analyze_competitive_landscape
 
 __all__ = [
     "AmbitionAgent",
@@ -80,6 +82,8 @@ __all__ = [
     "analyze_contract_terms",
     "OwnershipConsolidationAgent",
     "analyze_ownership_consolidation",
+    "CompetitiveLandscapeAgent",
+    "analyze_competitive_landscape",
 ]
 
 # Agent registry for dynamic loading
@@ -98,6 +102,7 @@ AGENT_REGISTRY = {
     "support_scheme": SupportSchemeAgent,
     "contract_terms": ContractTermsAgent,
     "ownership_consolidation": OwnershipConsolidationAgent,
+    "competitive_landscape": CompetitiveLandscapeAgent,
     "status_of_grid": StatusOfGridAgent,
     "ownership_hurdles": OwnershipHurdlesAgent,
     # Add more agents as they're implemented

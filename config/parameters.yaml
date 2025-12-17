@@ -906,9 +906,44 @@ parameters:
   competitive_landscape:
     name: "Competitive Landscape"
     subcategory: "competition_ease"
-    level: 2
-    description: "Ease of market entry and competition"
-    # Full scoring rubric would go here...
+    level: 3
+    description: "Ease of market entry and competitive dynamics. Evaluates barriers to entry, market openness, and competitive intensity in renewable energy markets."
+    scoring:
+      - value: 1
+        range: "Extreme barriers"
+        description: "Market effectively closed, no new entry, monopolistic control"
+      - value: 2
+        range: "Very high barriers"
+        description: "Severe restrictions on entry, limited competition possible"
+      - value: 3
+        range: "High barriers"
+        description: "Significant entry barriers, difficult for new players"
+      - value: 4
+        range: "Above moderate barriers"
+        description: "Notable barriers but entry possible with resources"
+      - value: 5
+        range: "Moderate barriers"
+        description: "Balanced entry requirements, moderate competition"
+      - value: 6
+        range: "Below moderate barriers"
+        description: "Relatively open market with some entry requirements"
+      - value: 7
+        range: "Low barriers"
+        description: "Open market, easy entry for qualified players"
+      - value: 8
+        range: "Very low barriers"
+        description: "Minimal restrictions, highly competitive market"
+      - value: 9
+        range: "Minimal barriers"
+        description: "Nearly open market with streamlined processes"
+      - value: 10
+        range: "No barriers"
+        description: "Completely open market, maximum competition and ease of entry"
+    data_sources:
+      - "Market entry analysis and regulatory frameworks"
+      - "Competitive intensity assessments"
+      - "Licensing and permitting requirements"
+      - "Industry entry and exit data"
 
   # LEVEL III: SYSTEM MODIFIERS
   system_modifiers:

@@ -85,30 +85,30 @@ AGENT_REGISTRY = {
 
 def get_agent(parameter_name: str):
     """Get agent class for a parameter.
-
+    
     Args:
         parameter_name: Parameter name (lowercase, underscored)
-
+        
     Returns:
         Agent class
-
+        
     Raises:
         KeyError: If agent not found
     """
     parameter_key = parameter_name.lower().replace(" ", "_")
-
+    
     if parameter_key not in AGENT_REGISTRY:
         raise KeyError(
             f"Agent for parameter '{parameter_name}' not implemented yet. "
             f"Available: {list(AGENT_REGISTRY.keys())}"
         )
-
+    
     return AGENT_REGISTRY[parameter_key]
 
 
 def list_available_agents():
     """List all available parameter agents.
-
+    
     Returns:
         List of parameter names
     """

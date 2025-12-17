@@ -947,11 +947,46 @@ parameters:
 
   # LEVEL III: SYSTEM MODIFIERS
   system_modifiers:
-    name: "System/External Modifiers"
+    name: "System Modifiers"
     subcategory: "system_modifiers"
     level: 3
-    description: "Cannibalization, curtailment, queue dynamics, supply chain"
-    # Full scoring rubric would go here...
+    description: "Composite adjustment factors including currency risk, geopolitical factors, and market anomalies. Acts as final calibration layer for overall rankings."
+    scoring:
+      - value: 1
+        range: "Severe negative factors"
+        description: "Multiple severe risks compound to make market essentially uninvestable"
+      - value: 2
+        range: "Very high negative impact"
+        description: "Major currency instability, severe geopolitical risks, or critical market failures"
+      - value: 3
+        range: "High negative impact"
+        description: "Significant currency risk, high geopolitical uncertainty, or major market issues"
+      - value: 4
+        range: "Above moderate negative impact"
+        description: "Notable currency volatility, elevated geopolitical concerns"
+      - value: 5
+        range: "Moderate factors"
+        description: "Balanced risk profile, manageable currency and geopolitical environment"
+      - value: 6
+        range: "Below moderate positive impact"
+        description: "Relatively stable currency, improving geopolitical environment"
+      - value: 7
+        range: "Low risk environment"
+        description: "Good currency stability, favorable geopolitical climate"
+      - value: 8
+        range: "Very low risk"
+        description: "Strong currency stability, very favorable conditions"
+      - value: 9
+        range: "Minimal risk"
+        description: "Excellent currency and geopolitical environment"
+      - value: 10
+        range: "Optimal conditions"
+        description: "Best-in-class stability across all system modifiers"
+    data_sources:
+      - "Currency volatility and exchange rate data"
+      - "Geopolitical risk indices"
+      - "Market anomaly detection"
+      - "IMF and World Bank macroeconomic indicators"
 
 # Metadata
 total_parameters: 21

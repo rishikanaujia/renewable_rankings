@@ -19,6 +19,7 @@ Phase 1 Agents (Implemented):
 - ContractTermsAgent - PPA bankability and risk allocation
 - OwnershipConsolidationAgent - Market concentration and competition
 - CompetitiveLandscapeAgent - Market entry ease and competitive dynamics
+- SystemModifiersAgent - Composite adjustment factors (currency, geopolitical)
 - StatusOfGridAgent - Grid infrastructure quality and reliability
 - OwnershipHurdlesAgent - Foreign ownership restrictions and market access
 
@@ -48,6 +49,7 @@ from .support_scheme_agent import SupportSchemeAgent, analyze_support_scheme
 from .contract_terms_agent import ContractTermsAgent, analyze_contract_terms
 from .ownership_consolidation_agent import OwnershipConsolidationAgent, analyze_ownership_consolidation
 from .competitive_landscape_agent import CompetitiveLandscapeAgent, analyze_competitive_landscape
+from .system_modifiers_agent import SystemModifiersAgent, analyze_system_modifiers
 
 __all__ = [
     "AmbitionAgent",
@@ -84,6 +86,8 @@ __all__ = [
     "analyze_ownership_consolidation",
     "CompetitiveLandscapeAgent",
     "analyze_competitive_landscape",
+    "SystemModifiersAgent",
+    "analyze_system_modifiers",
 ]
 
 # Agent registry for dynamic loading
@@ -103,6 +107,7 @@ AGENT_REGISTRY = {
     "contract_terms": ContractTermsAgent,
     "ownership_consolidation": OwnershipConsolidationAgent,
     "competitive_landscape": CompetitiveLandscapeAgent,
+    "system_modifiers": SystemModifiersAgent,
     "status_of_grid": StatusOfGridAgent,
     "ownership_hurdles": OwnershipHurdlesAgent,
     # Add more agents as they're implemented

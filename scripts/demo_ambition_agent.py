@@ -96,18 +96,24 @@ def demo_scoring_rubric():
     print("="*70)
     
     agent = AmbitionAgent()
+    rubric = agent._get_scoring_rubric()
     
     print("\nScoring Rubric for Ambition:")
     print("-" * 60)
     print(f"{'Score':<8} {'GW Range':<20} {'Description'}")
     print("-" * 60)
     
-    for level in agent.SCORING_RUBRIC:
-        max_gw = level['max_gw'] if level['max_gw'] != float('inf') else '∞'
+    for level in rubric:
+        max_gw = level.get('max_gw', float('inf'))
+        max_display = '∞' if max_gw == float('inf') else str(max_gw)
+        min_gw = level.get('min_gw', 0)
+        score = level['score']
+        description = level['description']
+        
         print(
-            f"{level['score']:<8} "
-            f"{level['min_gw']}-{max_gw:<17} "
-            f"{level['description']}"
+            f"{score:<8} "
+            f"{min_gw}-{max_display:<17} "
+            f"{description}"
         )
     
     print("\n📊 Example Scores:")

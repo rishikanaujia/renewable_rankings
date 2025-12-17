@@ -30,20 +30,6 @@ logger = get_logger(__name__)
 class AmbitionAgent(BaseParameterAgent):
     """Agent for analyzing government renewable energy ambition."""
     
-    # Scoring rubric (GW thresholds)
-    SCORING_RUBRIC = [
-        {"score": 1, "min_gw": 0, "max_gw": 3, "description": "Minimal renewable targets"},
-        {"score": 2, "min_gw": 3, "max_gw": 5, "description": "Very low targets"},
-        {"score": 3, "min_gw": 5, "max_gw": 10, "description": "Low targets"},
-        {"score": 4, "min_gw": 10, "max_gw": 15, "description": "Below moderate targets"},
-        {"score": 5, "min_gw": 15, "max_gw": 20, "description": "Moderate targets"},
-        {"score": 6, "min_gw": 20, "max_gw": 25, "description": "Above moderate targets"},
-        {"score": 7, "min_gw": 25, "max_gw": 30, "description": "High targets"},
-        {"score": 8, "min_gw": 30, "max_gw": 35, "description": "Very high targets"},
-        {"score": 9, "min_gw": 35, "max_gw": 40, "description": "Extremely high targets"},
-        {"score": 10, "min_gw": 40, "max_gw": float('inf'), "description": "World-class targets"}
-    ]
-    
     # Mock data for Phase 1 testing (will be replaced with real data fetching)
     MOCK_DATA = {
         "Brazil": {"total_gw": 26.8, "solar": 15.0, "onshore_wind": 10.8, "offshore_wind": 1.0},
@@ -65,6 +51,65 @@ class AmbitionAgent(BaseParameterAgent):
             mode=mode,
             config=config
         )
+        
+        # Load scoring rubric from config
+        self.scoring_rubric = self._load_scoring_rubric()
+        
+        logger.debug(f"Loaded scoring rubric with {len(self.scoring_rubric)} levels")
+    
+    def _load_scoring_rubric(self) -> List[Dict[str, Any]]:
+        """Load scoring rubric from configuration.
+        
+        Returns:
+            List of scoring levels
+        """
+        try:
+            from ...core.config_loader import config_loader
+            params_config = config_loader.get_parameters()
+            
+            # Get rubric for ambition parameter
+            ambition_config = params_config['parameters'].get('ambition', {})
+            scoring = ambition_config.get('scoring', [])
+            
+            if scoring:
+                logger.info("Loaded scoring rubric from config/parameters.yaml")
+                # Convert config format to internal format
+                rubric = []
+                for item in scoring:
+                    rubric.append({
+                        "score": item['value'],
+                        "range": item['range'],
+                        "description": item['description']
+                    })
+                return rubric
+            else:
+                logger.warning("No scoring rubric in config, using fallback")
+                return self._get_fallback_rubric()
+                
+        except Exception as e:
+            logger.warning(f"Could not load rubric from config: {e}. Using fallback.")
+            return self._get_fallback_rubric()
+    
+    def _get_fallback_rubric(self) -> List[Dict[str, Any]]:
+        """Fallback scoring rubric if config is not available.
+        
+        This ensures agent works even without full config.
+        
+        Returns:
+            Default scoring rubric
+        """
+        return [
+            {"score": 1, "min_gw": 0, "max_gw": 3, "range": "< 3 GW", "description": "Minimal renewable targets"},
+            {"score": 2, "min_gw": 3, "max_gw": 5, "range": "3-5 GW", "description": "Very low targets"},
+            {"score": 3, "min_gw": 5, "max_gw": 10, "range": "5-10 GW", "description": "Low targets"},
+            {"score": 4, "min_gw": 10, "max_gw": 15, "range": "10-15 GW", "description": "Below moderate targets"},
+            {"score": 5, "min_gw": 15, "max_gw": 20, "range": "15-20 GW", "description": "Moderate targets"},
+            {"score": 6, "min_gw": 20, "max_gw": 25, "range": "20-25 GW", "description": "Above moderate targets"},
+            {"score": 7, "min_gw": 25, "max_gw": 30, "range": "25-30 GW", "description": "High targets"},
+            {"score": 8, "min_gw": 30, "max_gw": 35, "range": "30-35 GW", "description": "Very high targets"},
+            {"score": 9, "min_gw": 35, "max_gw": 40, "range": "35-40 GW", "description": "Extremely high targets"},
+            {"score": 10, "min_gw": 40, "max_gw": float('inf'), "range": "≥ 40 GW", "description": "World-class targets"}
+        ]
     
     def analyze(
         self,
@@ -188,12 +233,15 @@ class AmbitionAgent(BaseParameterAgent):
         logger.debug(f"Calculating score for {country}: {total_gw} GW")
         
         # Find matching rubric level
-        for level in self.SCORING_RUBRIC:
-            if level["min_gw"] <= total_gw < level["max_gw"]:
+        for level in self.scoring_rubric:
+            min_gw = level.get("min_gw", 0)
+            max_gw = level.get("max_gw", float('inf'))
+            
+            if min_gw <= total_gw < max_gw:
                 score = level["score"]
                 logger.debug(
                     f"Score {score} assigned: "
-                    f"{total_gw} GW falls in range {level['min_gw']}-{level['max_gw']} GW"
+                    f"{total_gw} GW falls in range {min_gw}-{max_gw} GW"
                 )
                 return float(score)
         
@@ -226,7 +274,7 @@ class AmbitionAgent(BaseParameterAgent):
         
         # Find description from rubric
         description = "renewable targets"
-        for level in self.SCORING_RUBRIC:
+        for level in self.scoring_rubric:
             if level["score"] == int(score):
                 description = level["description"]
                 break
@@ -262,7 +310,7 @@ class AmbitionAgent(BaseParameterAgent):
         Returns:
             Complete scoring rubric
         """
-        return self.SCORING_RUBRIC
+        return self.scoring_rubric
     
     def get_data_sources(self) -> List[str]:
         """Get general data sources for this parameter.

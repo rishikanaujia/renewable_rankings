@@ -92,10 +92,10 @@ AGENT_REGISTRY = {
     "long_term_interest_rates": LongTermInterestRatesAgent,
     "track_record": TrackRecordAgent,
     "support_scheme": SupportSchemeAgent,
+    "contract_terms": ContractTermsAgent,
     "status_of_grid": StatusOfGridAgent,
     "ownership_hurdles": OwnershipHurdlesAgent,
     # Add more agents as they're implemented
-    # "contract_terms": ContractTermsAgent,
     # ...
 }
 

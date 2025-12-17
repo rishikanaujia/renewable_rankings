@@ -15,11 +15,11 @@ Phase 1 Agents (Implemented):
 - OfftakerStatusAgent - PPA offtaker creditworthiness
 - LongTermInterestRatesAgent - Long-term interest rates and financing costs
 - TrackRecordAgent - Historical renewable energy deployment track record
+- StatusOfGridAgent - Grid infrastructure quality and reliability
 
 Phase 2 Agents (Coming Soon):
 - SupportSchemeAgent
 - ContractTermsAgent
-- StatusOfGridAgent
 - OwnershipHurdlesAgent
 - OwnershipConsolidationAgent
 - CompetitiveLandscapeAgent
@@ -37,6 +37,7 @@ from .revenue_stream_stability_agent import RevenueStreamStabilityAgent, analyze
 from .offtaker_status_agent import OfftakerStatusAgent, analyze_offtaker_status
 from .long_term_interest_rates_agent import LongTermInterestRatesAgent, analyze_long_term_interest_rates
 from .track_record_agent import TrackRecordAgent, analyze_track_record
+from .status_of_grid_agent import StatusOfGridAgent, analyze_status_of_grid
 
 __all__ = [
     "AmbitionAgent",
@@ -61,6 +62,8 @@ __all__ = [
     "analyze_long_term_interest_rates",
     "TrackRecordAgent",
     "analyze_track_record",
+    "StatusOfGridAgent",
+    "analyze_status_of_grid",
 ]
 
 # Agent registry for dynamic loading
@@ -76,6 +79,7 @@ AGENT_REGISTRY = {
     "offtaker_status": OfftakerStatusAgent,
     "long_term_interest_rates": LongTermInterestRatesAgent,
     "track_record": TrackRecordAgent,
+    "status_of_grid": StatusOfGridAgent,
     # Add more agents as they're implemented
     # "support_scheme": SupportSchemeAgent,
     # "contract_terms": ContractTermsAgent,

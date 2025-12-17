@@ -724,8 +724,64 @@ parameters:
     name: "Status of Grid"
     subcategory: "accommodation"
     level: 1
-    description: "Grid readiness, capacity, reliability"
-    # Full scoring rubric would go here...
+    description: "Grid infrastructure quality, transmission capacity, and reliability for renewable energy integration. Higher grid quality enables greater renewable deployment and reduces curtailment risk."
+    scoring:
+      - value: 1
+        min_score: 0.0
+        max_score: 1.0
+        range: "0 – 0.9"
+        description: "Critical grid deficiencies (frequent outages, severe congestion)"
+      - value: 2
+        min_score: 1.0
+        max_score: 2.0
+        range: "1.0 – 1.9"
+        description: "Major grid challenges (poor reliability, limited capacity)"
+      - value: 3
+        min_score: 2.0
+        max_score: 3.0
+        range: "2.0 – 2.9"
+        description: "Significant grid constraints (regular congestion, aging infrastructure)"
+      - value: 4
+        min_score: 3.0
+        max_score: 4.0
+        range: "3.0 – 3.9"
+        description: "Below adequate grid (moderate reliability issues)"
+      - value: 5
+        min_score: 4.0
+        max_score: 5.0
+        range: "4.0 – 4.9"
+        description: "Adequate grid (basic functionality, some constraints)"
+      - value: 6
+        min_score: 5.0
+        max_score: 6.0
+        range: "5.0 – 5.9"
+        description: "Above adequate grid (reliable with minor constraints)"
+      - value: 7
+        min_score: 6.0
+        max_score: 7.0
+        range: "6.0 – 6.9"
+        description: "Good grid (strong reliability, manageable constraints)"
+      - value: 8
+        min_score: 7.0
+        max_score: 8.0
+        range: "7.0 – 7.9"
+        description: "Very good grid (high reliability, modern infrastructure)"
+      - value: 9
+        min_score: 8.0
+        max_score: 9.0
+        range: "8.0 – 8.9"
+        description: "Excellent grid (very high reliability, advanced infrastructure)"
+      - value: 10
+        min_score: 9.0
+        max_score: 10.1
+        range: "9.0 – 10.0"
+        description: "Outstanding grid (world-class reliability, cutting-edge infrastructure)"
+    data_sources:
+      - "World Bank Enterprise Surveys"
+      - "IEA Electricity Security reports"
+      - "National grid operator data"
+      - "SAIDI/SAIFI reliability metrics"
+      - "Transmission capacity reports"
 
   ownership_hurdles:
     name: "Ownership Hurdles"

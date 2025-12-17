@@ -825,8 +825,6 @@ parameters:
       - "National energy laws and regulations"
       - "Investment treaties and bilateral agreements"
 
-
-
   # LEVEL II: COMPETITION & EASE
   ownership_consolidation:
     name: "Ownership Consolidation"

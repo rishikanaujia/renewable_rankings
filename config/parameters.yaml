@@ -987,8 +987,10 @@ parameters:
       - "Geopolitical risk indices"
       - "Market anomaly detection"
       - "IMF and World Bank macroeconomic indicators"
+
 # ANALYSIS CONFIGURATION
 analysis:
+  # Subcategory weights for aggregation (used by Agent #19)
   subcategory_weights:
     regulation: 0.20  # 20% - Critical for policy and regulatory risk
     market_size_fundamentals: 0.20  # 20% - Scale and market opportunity
@@ -998,9 +1000,11 @@ analysis:
     system_modifiers: 0.10  # 10% - Risk adjustment factors
     # Total: 100%
 
+  # Country-level analysis thresholds (used by Agent #19)
   strength_threshold: 7.5  # Scores >= 7.5 are considered strengths
   weakness_threshold: 5.5  # Scores < 5.5 are considered weaknesses
 
+  # Score interpretation labels (used by Agent #19)
   score_interpretation:
     - range: [9.0, 10.0]
       label: "Exceptional"
@@ -1029,6 +1033,32 @@ analysis:
     - range: [0.0, 2.0]
       label: "Extremely Poor"
       description: "Market not viable for investment"
+
+  # Comparative analysis settings (used by Agent #20)
+  comparative_analysis:
+    min_countries: 2  # Minimum countries required for comparison
+    max_countries: 100  # Maximum countries in single comparison
+    recommended_countries: 10  # Recommended number for best insights
+
+    # Performance gap thresholds for subcategory analysis
+    gap_thresholds:
+      highly_competitive: 1.0  # Gap < 1.0 points = highly competitive
+      moderately_competitive: 2.0  # Gap 1-2 points = moderately competitive
+      uncompetitive: 2.0  # Gap > 2.0 points = uncompetitive
+
+    # Ranking display preferences
+    display:
+      show_scores: true  # Show numerical scores in rankings
+      show_strengths_weaknesses: true  # Show strength/weakness counts
+      show_subcategory_details: true  # Show subcategory breakdowns
+      decimal_places: 2  # Decimal places for score display
+
+    # Summary generation settings
+    summary:
+      include_top_performers: 3  # Number of top performers to highlight
+      include_bottom_performers: 1  # Number of bottom performers to mention
+      highlight_competitive_subcategories: 2  # Most competitive to mention
+      highlight_gap_subcategories: 2  # Largest gaps to mention
 
 # Metadata
 total_parameters: 21

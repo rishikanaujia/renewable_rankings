@@ -58,8 +58,20 @@ class ComparativeAnalysisAgent:
             ComparativeAnalysis with complete comparison
         """
         try:
-            if len(countries) < 2:
-                raise AgentError("Comparative analysis requires at least 2 countries")
+            # Get config values with defaults
+            comp_config = self.config.get('comparative_analysis', {})
+            min_countries = comp_config.get('min_countries', 2)
+            max_countries = comp_config.get('max_countries', 100)
+            
+            # Validate country count
+            if len(countries) < min_countries:
+                raise AgentError(
+                    f"Comparative analysis requires at least {min_countries} countries"
+                )
+            if len(countries) > max_countries:
+                raise AgentError(
+                    f"Comparative analysis limited to {max_countries} countries"
+                )
             
             logger.info(f"Comparing {len(countries)} countries: {', '.join(countries)}")
             
@@ -182,12 +194,26 @@ class ComparativeAnalysisAgent:
         subcategory_comparisons: List[SubcategoryComparison]
     ) -> str:
         """Generate comparative analysis summary."""
+        # Get config values
+        comp_config = self.config.get('comparative_analysis', {})
+        gap_thresholds = comp_config.get('gap_thresholds', {})
+        highly_competitive = gap_thresholds.get('highly_competitive', 1.0)
+        moderately_competitive = gap_thresholds.get('moderately_competitive', 2.0)
+        
         # Top performer
         top_country = country_comparisons[0]
         
         # Score range
         scores = [c.overall_score for c in country_comparisons]
         score_range = max(scores) - min(scores)
+        
+        # Determine variation level using config thresholds
+        if score_range <= highly_competitive:
+            variation_level = "minimal"
+        elif score_range <= moderately_competitive:
+            variation_level = "moderate"
+        else:
+            variation_level = "substantial"
         
         # Most competitive subcategory (smallest range)
         most_competitive = min(
@@ -205,7 +231,7 @@ class ComparativeAnalysisAgent:
             f"Comparative analysis of {len(countries)} countries reveals "
             f"{top_country.country} as the top performer ({top_country.overall_score:.1f}/10). "
             f"Overall scores span {score_range:.1f} points, indicating "
-            f"{'substantial' if score_range > 3 else 'moderate'} variation. "
+            f"{variation_level} variation. "
             f"{most_competitive.name.lower()} shows the most competitive landscape "
             f"(average {most_competitive.average_score:.1f}), while "
             f"{least_competitive.name.lower()} exhibits the widest performance gap."

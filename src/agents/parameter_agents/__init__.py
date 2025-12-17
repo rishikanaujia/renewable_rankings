@@ -28,6 +28,7 @@ Phase 2 Agents (Coming Soon):
 
 from .ambition_agent import AmbitionAgent, analyze_ambition
 from .country_stability_agent import CountryStabilityAgent, analyze_country_stability
+from .offtaker_status_agent import OfftakerStatusAgent, analyze_offtaker_status
 from .power_market_size_agent import PowerMarketSizeAgent, analyze_power_market_size
 from .resource_availability_agent import ResourceAvailabilityAgent, analyze_resource_availability
 from .energy_dependence_agent import EnergyDependenceAgent, analyze_energy_dependence
@@ -52,6 +53,8 @@ __all__ = [
     "analyze_expected_return",
     "RevenueStreamStabilityAgent",
     "analyze_revenue_stream_stability",
+    "OfftakerStatusAgent",
+    "analyze_offtaker_status",
 ]
 
 # Agent registry for dynamic loading
@@ -64,11 +67,12 @@ AGENT_REGISTRY = {
     "renewables_penetration": RenewablesPenetrationAgent,
     "expected_return": ExpectedReturnAgent,
     "revenue_stream_stability": RevenueStreamStabilityAgent,
-    # Add more agents as they're implemented
+    "offtaker_status": OfftakerStatusAgent
+# Add more agents as they're implemented
     # "support_scheme": SupportSchemeAgent,
     # "track_record": TrackRecordAgent,
     # ...
-}
+    # Add more agents}
 
 
 def get_agent(parameter_name: str):

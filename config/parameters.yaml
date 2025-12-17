@@ -500,6 +500,59 @@ parameters:
       - "Project finance documentation"
       - "Market PPA term benchmarks"
       - "Offtaker contract databases"
+
+  offtaker_status:
+    name: "Offtaker Status"
+    subcategory: "profitability"
+    level: 2
+    description: "Credit quality and reliability of the PPA offtaker. Higher creditworthiness reduces payment default risk and improves project bankability."
+    scoring:
+      - value: 1
+        category: "distressed"
+        range: "D/CCC rating"
+        description: "Distressed offtaker (high default risk)"
+      - value: 2
+        category: "very_weak"
+        range: "CCC+/B- rating"
+        description: "Very weak credit (substantial credit risk)"
+      - value: 3
+        category: "weak"
+        range: "B/B+ rating"
+        description: "Weak credit (significant risk)"
+      - value: 4
+        category: "below_moderate"
+        range: "BB- rating"
+        description: "Below investment grade (speculative)"
+      - value: 5
+        category: "moderate"
+        range: "BB/BB+ rating"
+        description: "Moderate credit (below investment grade)"
+      - value: 6
+        category: "adequate"
+        range: "BBB- rating"
+        description: "Adequate credit (lower investment grade)"
+      - value: 7
+        category: "good"
+        range: "BBB/BBB+ rating"
+        description: "Good credit (solid investment grade)"
+      - value: 8
+        category: "very_good"
+        range: "A-/A rating"
+        description: "Very good credit (strong capacity)"
+      - value: 9
+        category: "excellent"
+        range: "A+/AA rating"
+        description: "Excellent credit (very strong capacity)"
+      - value: 10
+        category: "superior"
+        range: "AA+/AAA rating"
+        description: "Superior credit (sovereign/AAA utilities)"
+    data_sources:
+      - "S&P Global Ratings"
+      - "Moody's Ratings"
+      - "Fitch Ratings"
+      - "Offtaker financial statements"
+      - "Sovereign credit ratings"
   
   support_scheme:
     name: "Support Scheme"
@@ -546,12 +599,6 @@ parameters:
     description: "Bankability, risk allocation, PPA robustness"
     # Full scoring rubric would go here...
 
-  offtaker_status:
-    name: "Offtaker Status"
-    subcategory: "profitability"
-    level: 1
-    description: "Financial strength and credibility of power purchasers"
-    # Full scoring rubric would go here...
 
   long_term_interest_rates:
     name: "Long-Term Interest Rates"
@@ -574,6 +621,7 @@ parameters:
     level: 1
     description: "Regulatory and practical barriers"
     # Full scoring rubric would go here...
+
 
   # LEVEL II: COMPETITION & EASE
   ownership_consolidation:

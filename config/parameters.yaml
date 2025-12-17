@@ -438,6 +438,68 @@ parameters:
       - "Lazard Levelized Cost of Energy (LCOE)"
       - "Project financial models"
       - "Developer IRR benchmarks"
+
+  revenue_stream_stability:
+    name: "Revenue Stream Stability"
+    subcategory: "profitability"
+    level: 2
+    description: "Predictability and security of project revenues through PPA contracts. Longer contract terms with fixed prices provide greater revenue certainty and reduce merchant exposure risk."
+    scoring:
+      - value: 1
+        min_term_years: 0
+        max_term_years: 3
+        range: "< 3 years"
+        description: "Minimal revenue security (merchant or very short-term)"
+      - value: 2
+        min_term_years: 3
+        max_term_years: 5
+        range: "3 – 4 years"
+        description: "Very low stability (short-term contracts)"
+      - value: 3
+        min_term_years: 5
+        max_term_years: 7
+        range: "5 – 6 years"
+        description: "Low stability (below typical debt tenor)"
+      - value: 4
+        min_term_years: 7
+        max_term_years: 10
+        range: "7 – 9 years"
+        description: "Below moderate stability"
+      - value: 5
+        min_term_years: 10
+        max_term_years: 12
+        range: "10 – 11 years"
+        description: "Moderate stability (covers partial debt)"
+      - value: 6
+        min_term_years: 12
+        max_term_years: 15
+        range: "12 – 14 years"
+        description: "Above moderate stability"
+      - value: 7
+        min_term_years: 15
+        max_term_years: 18
+        range: "15 – 17 years"
+        description: "Good stability (covers typical debt tenor)"
+      - value: 8
+        min_term_years: 18
+        max_term_years: 20
+        range: "18 – 19 years"
+        description: "Very good stability"
+      - value: 9
+        min_term_years: 20
+        max_term_years: 25
+        range: "20 – 24 years"
+        description: "Outstanding stability (full project life)"
+      - value: 10
+        min_term_years: 25
+        max_term_years: 100
+        range: "≥ 25 years"
+        description: "Exceptional stability (ultra-long term contracts)"
+    data_sources:
+      - "PPA databases and registries"
+      - "Project finance documentation"
+      - "Market PPA term benchmarks"
+      - "Offtaker contract databases"
   
   support_scheme:
     name: "Support Scheme"
@@ -484,21 +546,12 @@ parameters:
     description: "Bankability, risk allocation, PPA robustness"
     # Full scoring rubric would go here...
 
-  # LEVEL I: PROFITABILITY
-  revenue_stream_stability:
-    name: "Revenue Stream Stability"
-    subcategory: "profitability"
-    level: 1
-    description: "Predictability, durability, bankability of cash flows"
-    # Full scoring rubric would go here...
-
   offtaker_status:
     name: "Offtaker Status"
     subcategory: "profitability"
     level: 1
     description: "Financial strength and credibility of power purchasers"
     # Full scoring rubric would go here...
-
 
   long_term_interest_rates:
     name: "Long-Term Interest Rates"

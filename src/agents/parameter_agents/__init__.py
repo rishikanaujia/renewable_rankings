@@ -33,6 +33,7 @@ from .resource_availability_agent import ResourceAvailabilityAgent, analyze_reso
 from .energy_dependence_agent import EnergyDependenceAgent, analyze_energy_dependence
 from .renewables_penetration_agent import RenewablesPenetrationAgent, analyze_renewables_penetration
 from .expected_return_agent import ExpectedReturnAgent, analyze_expected_return
+from .revenue_stream_stability_agent import RevenueStreamStabilityAgent, analyze_revenue_stream_stability
 
 __all__ = [
     "AmbitionAgent",
@@ -49,6 +50,8 @@ __all__ = [
     "analyze_renewables_penetration",
     "ExpectedReturnAgent",
     "analyze_expected_return",
+    "RevenueStreamStabilityAgent",
+    "analyze_revenue_stream_stability",
 ]
 
 # Agent registry for dynamic loading
@@ -60,6 +63,7 @@ AGENT_REGISTRY = {
     "energy_dependence": EnergyDependenceAgent,
     "renewables_penetration": RenewablesPenetrationAgent,
     "expected_return": ExpectedReturnAgent,
+    "revenue_stream_stability": RevenueStreamStabilityAgent,
     # Add more agents as they're implemented
     # "support_scheme": SupportSchemeAgent,
     # "track_record": TrackRecordAgent,

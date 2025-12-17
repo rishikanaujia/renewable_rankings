@@ -232,8 +232,8 @@ class AgentService:
                 # "contract_terms",
             ],
             "profitability": [
-                "expected_return",  # NEW SUBCATEGORY STARTED! 1/4 = 25%
-                # "revenue_stream_stability",
+                "expected_return",
+                "revenue_stream_stability",  # Profitability now 2/4 = 50%!
                 # "offtaker_status",
                 # "long_term_interest_rates"
             ],

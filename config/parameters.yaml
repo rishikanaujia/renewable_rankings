@@ -185,6 +185,73 @@ parameters:
       - "IEA World Energy Statistics"
       - "BP Statistical Review of World Energy"
       - "National energy statistics agencies"
+
+  resource_availability:
+    name: "Resource Availability"
+    subcategory: "market_size_fundamentals"
+    level: 2
+    description: "Quality and abundance of solar and wind renewable energy resources. Combines solar irradiation (kWh/m²/day) and wind speed (m/s) to assess natural resource endowment."
+    scoring:
+      - value: 1
+        min_combined: 0.0
+        max_combined: 2.0
+        range: "< 2.0"
+        description: "Very poor resources (both solar and wind weak)"
+      - value: 2
+        min_combined: 2.0
+        max_combined: 3.0
+        range: "2.0 – 2.99"
+        description: "Poor resources"
+      - value: 3
+        min_combined: 3.0
+        max_combined: 4.0
+        range: "3.0 – 3.99"
+        description: "Below average resources"
+      - value: 4
+        min_combined: 4.0
+        max_combined: 5.0
+        range: "4.0 – 4.99"
+        description: "Moderate resources"
+      - value: 5
+        min_combined: 5.0
+        max_combined: 6.0
+        range: "5.0 – 5.99"
+        description: "Average resources"
+      - value: 6
+        min_combined: 6.0
+        max_combined: 7.0
+        range: "6.0 – 6.99"
+        description: "Good resources"
+      - value: 7
+        min_combined: 7.0
+        max_combined: 8.0
+        range: "7.0 – 7.99"
+        description: "Very good resources"
+      - value: 8
+        min_combined: 8.0
+        max_combined: 9.0
+        range: "8.0 – 8.99"
+        description: "Excellent resources"
+      - value: 9
+        min_combined: 9.0
+        max_combined: 10.0
+        range: "9.0 – 9.99"
+        description: "Outstanding resources"
+      - value: 10
+        min_combined: 10.0
+        max_combined: 100.0
+        range: "≥ 10.0"
+        description: "World-class resources (exceptional solar and wind)"
+    calculation:
+      method: "weighted_average"
+      solar_weight: 0.5
+      wind_weight: 0.5
+      solar_normalization: 2.5  # Normalize solar kWh/m²/day to 0-10 scale (divide by this)
+      wind_normalization: 1.0   # Normalize wind m/s to 0-10 scale (divide by this)
+    data_sources:
+      - "Global Solar Atlas (World Bank)"
+      - "Global Wind Atlas (DTU)"
+      - "NREL Renewable Energy Data"
   
   support_scheme:
     name: "Support Scheme"
@@ -273,13 +340,6 @@ parameters:
     subcategory: "accommodation"
     level: 1
     description: "Regulatory and practical barriers"
-    # Full scoring rubric would go here...
-
-  resource_availability:
-    name: "Resource Availability"
-    subcategory: "market_size_fundamentals"
-    level: 2
-    description: "Average capacity factors for solar/wind"
     # Full scoring rubric would go here...
 
   energy_dependence:

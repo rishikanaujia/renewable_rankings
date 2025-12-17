@@ -244,8 +244,8 @@ class AgentService:
             "market_size_fundamentals": [
                 "power_market_size",
                 "resource_availability",
-                # "energy_dependence",  # Not implemented yet
-                # "renewables_penetration"
+                "energy_dependence",
+                # "renewables_penetration"  # Not implemented yet
             ],
             "competition_ease": [
                 # "ownership_consolidation",

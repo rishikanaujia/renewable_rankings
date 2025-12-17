@@ -252,6 +252,67 @@ parameters:
       - "Global Solar Atlas (World Bank)"
       - "Global Wind Atlas (DTU)"
       - "NREL Renewable Energy Data"
+
+  energy_dependence:
+    name: "Energy Dependence"
+    subcategory: "market_size_fundamentals"
+    level: 2
+    description: "Degree of reliance on energy imports. Lower import dependency indicates greater energy security and more favorable conditions for domestic renewable energy development."
+    scoring:
+      - value: 10
+        min_import_pct: 0.0
+        max_import_pct: 10.0
+        range: "< 10%"
+        description: "Energy independent (net exporter or minimal imports)"
+      - value: 9
+        min_import_pct: 10.0
+        max_import_pct: 20.0
+        range: "10% – 19%"
+        description: "Very low dependence"
+      - value: 8
+        min_import_pct: 20.0
+        max_import_pct: 30.0
+        range: "20% – 29%"
+        description: "Low dependence"
+      - value: 7
+        min_import_pct: 30.0
+        max_import_pct: 40.0
+        range: "30% – 39%"
+        description: "Moderate-low dependence"
+      - value: 6
+        min_import_pct: 40.0
+        max_import_pct: 50.0
+        range: "40% – 49%"
+        description: "Moderate dependence"
+      - value: 5
+        min_import_pct: 50.0
+        max_import_pct: 60.0
+        range: "50% – 59%"
+        description: "Moderate-high dependence"
+      - value: 4
+        min_import_pct: 60.0
+        max_import_pct: 70.0
+        range: "60% – 69%"
+        description: "High dependence"
+      - value: 3
+        min_import_pct: 70.0
+        max_import_pct: 80.0
+        range: "70% – 79%"
+        description: "Very high dependence"
+      - value: 2
+        min_import_pct: 80.0
+        max_import_pct: 90.0
+        range: "80% – 89%"
+        description: "Extreme dependence"
+      - value: 1
+        min_import_pct: 90.0
+        max_import_pct: 100.0
+        range: "≥ 90%"
+        description: "Nearly total dependence (energy security risk)"
+    data_sources:
+      - "IEA World Energy Balances"
+      - "BP Statistical Review of World Energy"
+      - "National energy statistics"
   
   support_scheme:
     name: "Support Scheme"
@@ -340,13 +401,6 @@ parameters:
     subcategory: "accommodation"
     level: 1
     description: "Regulatory and practical barriers"
-    # Full scoring rubric would go here...
-
-  energy_dependence:
-    name: "Energy Dependence"
-    subcategory: "market_size_fundamentals"
-    level: 2
-    description: "Net imports / total energy supply"
     # Full scoring rubric would go here...
 
   renewables_penetration:

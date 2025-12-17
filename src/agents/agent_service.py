@@ -241,10 +241,6 @@ class AgentService:
                 "status_of_grid",  # Accommodation now 1/2 = 50%! NEW SUBCATEGORY!
                 # "ownership_hurdles"
             ],
-            "accommodation": [
-                # "status_of_grid",
-                # "ownership_hurdles"
-            ],
             "market_size_fundamentals": [
                 "power_market_size",
                 "resource_availability",

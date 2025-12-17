@@ -234,8 +234,8 @@ class AgentService:
             "profitability": [
                 "expected_return",
                 "revenue_stream_stability",
-                "offtaker_status",  # Profitability now 3/4 = 75%!
-                # "long_term_interest_rates"
+                "offtaker_status",
+                "long_term_interest_rates"  # Profitability 4/4 = 100% COMPLETE! 🏆
             ],
             "accommodation": [
                 # "status_of_grid",

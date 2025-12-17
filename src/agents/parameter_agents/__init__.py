@@ -13,12 +13,12 @@ Phase 1 Agents (Implemented):
 - ExpectedReturnAgent - Projected IRR for renewable energy projects
 - RevenueStreamStabilityAgent - PPA contract term and revenue security
 - OfftakerStatusAgent - PPA offtaker creditworthiness
+- LongTermInterestRatesAgent - Long-term interest rates and financing costs
 
 Phase 2 Agents (Coming Soon):
 - SupportSchemeAgent
 - TrackRecordAgent
 - ContractTermsAgent
-- LongTermInterestRatesAgent
 - StatusOfGridAgent
 - OwnershipHurdlesAgent
 - OwnershipConsolidationAgent
@@ -35,6 +35,7 @@ from .renewables_penetration_agent import RenewablesPenetrationAgent, analyze_re
 from .expected_return_agent import ExpectedReturnAgent, analyze_expected_return
 from .revenue_stream_stability_agent import RevenueStreamStabilityAgent, analyze_revenue_stream_stability
 from .offtaker_status_agent import OfftakerStatusAgent, analyze_offtaker_status
+from .long_term_interest_rates_agent import LongTermInterestRatesAgent, analyze_long_term_interest_rates
 
 __all__ = [
     "AmbitionAgent",
@@ -55,6 +56,8 @@ __all__ = [
     "analyze_revenue_stream_stability",
     "OfftakerStatusAgent",
     "analyze_offtaker_status",
+    "LongTermInterestRatesAgent",
+    "analyze_long_term_interest_rates",
 ]
 
 # Agent registry for dynamic loading
@@ -68,6 +71,7 @@ AGENT_REGISTRY = {
     "expected_return": ExpectedReturnAgent,
     "revenue_stream_stability": RevenueStreamStabilityAgent,
     "offtaker_status": OfftakerStatusAgent,
+    "long_term_interest_rates": LongTermInterestRatesAgent,
     # Add more agents as they're implemented
     # "support_scheme": SupportSchemeAgent,
     # "track_record": TrackRecordAgent,

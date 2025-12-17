@@ -245,7 +245,7 @@ class AgentService:
                 "power_market_size",
                 "resource_availability",
                 "energy_dependence",
-                # "renewables_penetration"  # Not implemented yet
+                "renewables_penetration"  # COMPLETE! 4/4 = 100%
             ],
             "competition_ease": [
                 # "ownership_consolidation",

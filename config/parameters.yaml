@@ -313,6 +313,68 @@ parameters:
       - "IEA World Energy Balances"
       - "BP Statistical Review of World Energy"
       - "National energy statistics"
+
+  renewables_penetration:
+    name: "Renewables Penetration"
+    subcategory: "market_size_fundamentals"
+    level: 2
+    description: "Current share of renewables in electricity generation. Higher penetration indicates market maturity, proven track record, and favorable conditions for further renewable development."
+    scoring:
+      - value: 1
+        min_renewables_pct: 0.0
+        max_renewables_pct: 5.0
+        range: "< 5%"
+        description: "Minimal renewables (coal/gas/nuclear dominated)"
+      - value: 2
+        min_renewables_pct: 5.0
+        max_renewables_pct: 10.0
+        range: "5% – 9%"
+        description: "Very low renewables penetration"
+      - value: 3
+        min_renewables_pct: 10.0
+        max_renewables_pct: 15.0
+        range: "10% – 14%"
+        description: "Low renewables penetration"
+      - value: 4
+        min_renewables_pct: 15.0
+        max_renewables_pct: 20.0
+        range: "15% – 19%"
+        description: "Below moderate penetration"
+      - value: 5
+        min_renewables_pct: 20.0
+        max_renewables_pct: 30.0
+        range: "20% – 29%"
+        description: "Moderate renewables penetration"
+      - value: 6
+        min_renewables_pct: 30.0
+        max_renewables_pct: 40.0
+        range: "30% – 39%"
+        description: "Above moderate penetration"
+      - value: 7
+        min_renewables_pct: 40.0
+        max_renewables_pct: 50.0
+        range: "40% – 49%"
+        description: "High renewables penetration"
+      - value: 8
+        min_renewables_pct: 50.0
+        max_renewables_pct: 60.0
+        range: "50% – 59%"
+        description: "Very high renewables penetration"
+      - value: 9
+        min_renewables_pct: 60.0
+        max_renewables_pct: 75.0
+        range: "60% – 74%"
+        description: "Outstanding renewables penetration"
+      - value: 10
+        min_renewables_pct: 75.0
+        max_renewables_pct: 100.0
+        range: "≥ 75%"
+        description: "World-leading renewables penetration (renewable-dominated grid)"
+    data_sources:
+      - "IEA Electricity Information"
+      - "IRENA Renewable Energy Statistics"
+      - "Ember Climate - Global Electricity Review"
+      - "National grid operators"
   
   support_scheme:
     name: "Support Scheme"
@@ -359,6 +421,13 @@ parameters:
     description: "Bankability, risk allocation, PPA robustness"
     # Full scoring rubric would go here...
 
+  country_stability:
+    name: "Country Stability"
+    subcategory: "regulation"
+    level: 1
+    description: "Indexed to ECR Strategic Risk Rating"
+    # Full scoring rubric would go here...
+
   # LEVEL I: PROFITABILITY
   revenue_stream_stability:
     name: "Revenue Stream Stability"
@@ -401,6 +470,28 @@ parameters:
     subcategory: "accommodation"
     level: 1
     description: "Regulatory and practical barriers"
+    # Full scoring rubric would go here...
+
+  # LEVEL II: MARKET SIZE & FUNDAMENTALS
+  power_market_size:
+    name: "Power Market Size"
+    subcategory: "market_size_fundamentals"
+    level: 2
+    description: "Based on 2025 electricity consumption, TWh"
+    # Full scoring rubric would go here...
+
+  resource_availability:
+    name: "Resource Availability"
+    subcategory: "market_size_fundamentals"
+    level: 2
+    description: "Average capacity factors for solar/wind"
+    # Full scoring rubric would go here...
+
+  energy_dependence:
+    name: "Energy Dependence"
+    subcategory: "market_size_fundamentals"
+    level: 2
+    description: "Net imports / total energy supply"
     # Full scoring rubric would go here...
 
   renewables_penetration:

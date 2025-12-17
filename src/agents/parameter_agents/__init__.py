@@ -9,6 +9,7 @@ Phase 1 Agents (Implemented):
 - PowerMarketSizeAgent - Total electricity market size (TWh consumption)
 - ResourceAvailabilityAgent - Solar and wind renewable energy resources
 - EnergyDependenceAgent - Energy import dependency and security
+- RenewablesPenetrationAgent - Current renewables share in electricity generation
 
 Phase 2 Agents (Coming Soon):
 - SupportSchemeAgent
@@ -20,7 +21,6 @@ Phase 2 Agents (Coming Soon):
 - LongTermInterestRatesAgent
 - StatusOfGridAgent
 - OwnershipHurdlesAgent
-- RenewablesPenetrationAgent
 - OwnershipConsolidationAgent
 - CompetitiveLandscapeAgent
 - SystemModifiersAgent
@@ -31,6 +31,7 @@ from .country_stability_agent import CountryStabilityAgent, analyze_country_stab
 from .power_market_size_agent import PowerMarketSizeAgent, analyze_power_market_size
 from .resource_availability_agent import ResourceAvailabilityAgent, analyze_resource_availability
 from .energy_dependence_agent import EnergyDependenceAgent, analyze_energy_dependence
+from .renewables_penetration_agent import RenewablesPenetrationAgent, analyze_renewables_penetration
 
 __all__ = [
     "AmbitionAgent",
@@ -43,6 +44,8 @@ __all__ = [
     "analyze_resource_availability",
     "EnergyDependenceAgent",
     "analyze_energy_dependence",
+    "RenewablesPenetrationAgent",
+    "analyze_renewables_penetration",
 ]
 
 # Agent registry for dynamic loading
@@ -52,6 +55,7 @@ AGENT_REGISTRY = {
     "power_market_size": PowerMarketSizeAgent,
     "resource_availability": ResourceAvailabilityAgent,
     "energy_dependence": EnergyDependenceAgent,
+    "renewables_penetration": RenewablesPenetrationAgent,
     # Add more agents as they're implemented
     # "support_scheme": SupportSchemeAgent,
     # "track_record": TrackRecordAgent,

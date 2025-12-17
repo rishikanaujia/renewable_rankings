@@ -14,10 +14,10 @@ Phase 1 Agents (Implemented):
 - RevenueStreamStabilityAgent - PPA contract term and revenue security
 - OfftakerStatusAgent - PPA offtaker creditworthiness
 - LongTermInterestRatesAgent - Long-term interest rates and financing costs
+- TrackRecordAgent - Historical renewable energy deployment track record
 
 Phase 2 Agents (Coming Soon):
 - SupportSchemeAgent
-- TrackRecordAgent
 - ContractTermsAgent
 - StatusOfGridAgent
 - OwnershipHurdlesAgent
@@ -36,6 +36,7 @@ from .expected_return_agent import ExpectedReturnAgent, analyze_expected_return
 from .revenue_stream_stability_agent import RevenueStreamStabilityAgent, analyze_revenue_stream_stability
 from .offtaker_status_agent import OfftakerStatusAgent, analyze_offtaker_status
 from .long_term_interest_rates_agent import LongTermInterestRatesAgent, analyze_long_term_interest_rates
+from .track_record_agent import TrackRecordAgent, analyze_track_record
 
 __all__ = [
     "AmbitionAgent",
@@ -58,6 +59,8 @@ __all__ = [
     "analyze_offtaker_status",
     "LongTermInterestRatesAgent",
     "analyze_long_term_interest_rates",
+    "TrackRecordAgent",
+    "analyze_track_record",
 ]
 
 # Agent registry for dynamic loading
@@ -72,39 +75,40 @@ AGENT_REGISTRY = {
     "revenue_stream_stability": RevenueStreamStabilityAgent,
     "offtaker_status": OfftakerStatusAgent,
     "long_term_interest_rates": LongTermInterestRatesAgent,
+    "track_record": TrackRecordAgent,
     # Add more agents as they're implemented
     # "support_scheme": SupportSchemeAgent,
-    # "track_record": TrackRecordAgent,
+    # "contract_terms": ContractTermsAgent,
     # ...
 }
 
 
 def get_agent(parameter_name: str):
     """Get agent class for a parameter.
-    
+
     Args:
         parameter_name: Parameter name (lowercase, underscored)
-        
+
     Returns:
         Agent class
-        
+
     Raises:
         KeyError: If agent not found
     """
     parameter_key = parameter_name.lower().replace(" ", "_")
-    
+
     if parameter_key not in AGENT_REGISTRY:
         raise KeyError(
             f"Agent for parameter '{parameter_name}' not implemented yet. "
             f"Available: {list(AGENT_REGISTRY.keys())}"
         )
-    
+
     return AGENT_REGISTRY[parameter_key]
 
 
 def list_available_agents():
     """List all available parameter agents.
-    
+
     Returns:
         List of parameter names
     """

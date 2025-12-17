@@ -227,8 +227,8 @@ class AgentService:
             "regulation": [
                 "ambition",
                 "country_stability",
-                # "support_scheme",  # Not implemented yet
-                # "track_record",
+                "track_record",  # Regulation now 3/5 = 60%!
+                # "support_scheme",
                 # "contract_terms",
             ],
             "profitability": [

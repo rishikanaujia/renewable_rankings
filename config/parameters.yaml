@@ -125,6 +125,68 @@ parameters:
       - "World Bank Governance Indicators"
       - "Political Risk Services (PRS) Group"
 
+  track_record:
+    name: "Track Record"
+    subcategory: "regulation"
+    level: 1
+    description: "Historical renewable energy deployment track record measured by cumulative installed capacity. Higher installed capacity demonstrates proven market execution and reduced regulatory risk."
+    scoring:
+      - value: 1
+        min_capacity_mw: 0
+        max_capacity_mw: 100
+        range: "< 100 MW"
+        description: "Minimal track record (nascent market)"
+      - value: 2
+        min_capacity_mw: 100
+        max_capacity_mw: 500
+        range: "100 – 499 MW"
+        description: "Very limited track record"
+      - value: 3
+        min_capacity_mw: 500
+        max_capacity_mw: 1000
+        range: "500 – 999 MW"
+        description: "Limited track record (early stage)"
+      - value: 4
+        min_capacity_mw: 1000
+        max_capacity_mw: 2500
+        range: "1 – 2.4 GW"
+        description: "Below moderate track record"
+      - value: 5
+        min_capacity_mw: 2500
+        max_capacity_mw: 5000
+        range: "2.5 – 4.9 GW"
+        description: "Moderate track record (emerging market)"
+      - value: 6
+        min_capacity_mw: 5000
+        max_capacity_mw: 10000
+        range: "5 – 9.9 GW"
+        description: "Above moderate track record"
+      - value: 7
+        min_capacity_mw: 10000
+        max_capacity_mw: 25000
+        range: "10 – 24.9 GW"
+        description: "Good track record (established market)"
+      - value: 8
+        min_capacity_mw: 25000
+        max_capacity_mw: 50000
+        range: "25 – 49.9 GW"
+        description: "Very good track record"
+      - value: 9
+        min_capacity_mw: 50000
+        max_capacity_mw: 100000
+        range: "50 – 99.9 GW"
+        description: "Excellent track record (major market)"
+      - value: 10
+        min_capacity_mw: 100000
+        max_capacity_mw: 10000000
+        range: "≥ 100 GW"
+        description: "Outstanding track record (world leader)"
+    data_sources:
+      - "IRENA Renewable Energy Statistics"
+      - "IEA Renewables Market Report"
+      - "National renewable energy agencies"
+      - "Industry databases (BNEF, Wood Mackenzie)"
+
   power_market_size:
     name: "Power Market Size"
     subcategory: "market_size_fundamentals"
@@ -648,12 +710,6 @@ parameters:
       - "FiT schedules"
       - "Policy documents"
 
-  track_record:
-    name: "Track Record"
-    subcategory: "regulation"
-    level: 1
-    description: "Historical policy behavior, stability, credibility"
-    # Full scoring rubric would go here...
 
   contract_terms:
     name: "Contract Terms"
@@ -677,7 +733,6 @@ parameters:
     level: 1
     description: "Regulatory and practical barriers"
     # Full scoring rubric would go here...
-
 
   # LEVEL II: COMPETITION & EASE
   ownership_consolidation:

@@ -248,7 +248,7 @@ class AgentService:
                 "renewables_penetration"  # COMPLETE! 4/4 = 100%
             ],
             "competition_ease": [
-                # "ownership_consolidation",
+                "ownership_consolidation",  # Competition & Ease now 1/2 = 50%! FIFTH ACTIVE SUBCATEGORY! 🚀
                 # "competitive_landscape"
             ],
             "system_modifiers": [

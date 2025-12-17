@@ -864,9 +864,44 @@ parameters:
   ownership_consolidation:
     name: "Ownership Consolidation"
     subcategory: "competition_ease"
-    level: 2
-    description: "Market share of top 5 players"
-    # Full scoring rubric would go here...
+    level: 3
+    description: "Market concentration and consolidation among renewable energy asset owners. Lower consolidation indicates more competitive markets with diverse ownership."
+    scoring:
+      - value: 1
+        range: "Extreme monopoly"
+        description: "Single dominant owner controls >80% of market"
+      - value: 2
+        range: "Very high consolidation"
+        description: "Top 3 owners control 70-80% of market"
+      - value: 3
+        range: "High consolidation"
+        description: "Top 3 owners control 60-70% of market"
+      - value: 4
+        range: "Above moderate consolidation"
+        description: "Top 3 owners control 50-60% of market"
+      - value: 5
+        range: "Moderate consolidation"
+        description: "Top 3 owners control 40-50% of market"
+      - value: 6
+        range: "Below moderate consolidation"
+        description: "Top 3 owners control 30-40% of market"
+      - value: 7
+        range: "Low consolidation"
+        description: "Top 3 owners control 20-30% of market"
+      - value: 8
+        range: "Very low consolidation"
+        description: "Top 3 owners control 15-20% of market"
+      - value: 9
+        range: "Minimal consolidation"
+        description: "Top 3 owners control 10-15% of market"
+      - value: 10
+        range: "Highly fragmented"
+        description: "Top 3 owners control <10% of market (highly competitive)"
+    data_sources:
+      - "Renewable energy asset ownership databases"
+      - "Market concentration analysis"
+      - "Industry reports and company filings"
+      - "National energy statistics"
 
   competitive_landscape:
     name: "Competitive Landscape"

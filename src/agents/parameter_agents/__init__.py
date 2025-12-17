@@ -17,6 +17,7 @@ Phase 1 Agents (Implemented):
 - TrackRecordAgent - Historical renewable energy deployment track record
 - SupportSchemeAgent - Government support mechanisms (FiT, auctions, tax credits)
 - ContractTermsAgent - PPA bankability and risk allocation
+- OwnershipConsolidationAgent - Market concentration and competition
 - StatusOfGridAgent - Grid infrastructure quality and reliability
 - OwnershipHurdlesAgent - Foreign ownership restrictions and market access
 
@@ -44,6 +45,7 @@ from .status_of_grid_agent import StatusOfGridAgent, analyze_status_of_grid
 from .ownership_hurdles_agent import OwnershipHurdlesAgent, analyze_ownership_hurdles
 from .support_scheme_agent import SupportSchemeAgent, analyze_support_scheme
 from .contract_terms_agent import ContractTermsAgent, analyze_contract_terms
+from .ownership_consolidation_agent import OwnershipConsolidationAgent, analyze_ownership_consolidation
 
 __all__ = [
     "AmbitionAgent",
@@ -76,6 +78,8 @@ __all__ = [
     "analyze_support_scheme",
     "ContractTermsAgent",
     "analyze_contract_terms",
+    "OwnershipConsolidationAgent",
+    "analyze_ownership_consolidation",
 ]
 
 # Agent registry for dynamic loading
@@ -93,6 +97,7 @@ AGENT_REGISTRY = {
     "track_record": TrackRecordAgent,
     "support_scheme": SupportSchemeAgent,
     "contract_terms": ContractTermsAgent,
+    "ownership_consolidation": OwnershipConsolidationAgent,
     "status_of_grid": StatusOfGridAgent,
     "ownership_hurdles": OwnershipHurdlesAgent,
     # Add more agents as they're implemented

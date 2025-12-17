@@ -56,7 +56,7 @@ parameters:
         description: "Extremely high targets"
       - value: 10
         min_gw: 40
-        max_gw: .inf
+        max_gw: 10000
         range: "> 40 GW"
         description: "World-class targets"
     data_sources:

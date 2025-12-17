@@ -16,10 +16,10 @@ from pathlib import Path
 # Add src to path
 sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
 
-from agents.parameter_agents import AmbitionAgent, analyze_ambition
-from agents.agent_service import agent_service
-from agents.base_agent import AgentMode
-from core.logger import setup_logger, get_logger
+from src.agents.parameter_agents import AmbitionAgent, analyze_ambition
+from src.agents.agent_service import agent_service
+from src.agents.base_agent import AgentMode
+from src.core.logger import setup_logger, get_logger
 
 # Setup logging
 setup_logger(log_level="INFO")

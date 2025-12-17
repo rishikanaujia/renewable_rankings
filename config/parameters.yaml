@@ -715,8 +715,43 @@ parameters:
     name: "Contract Terms"
     subcategory: "regulation"
     level: 1
-    description: "Bankability, risk allocation, PPA robustness"
-    # Full scoring rubric would go here...
+    description: "Bankability, risk allocation, and PPA robustness. Evaluates standardization, enforceability, and investor-friendliness of renewable energy contracts."
+    scoring:
+      - value: 1
+        range: "Non-bankable"
+        description: "Highly unfavorable terms, unenforceable contracts, severe investor risk"
+      - value: 2
+        range: "Very poor"
+        description: "Major risk allocation issues, weak legal framework, difficult to finance"
+      - value: 3
+        range: "Poor"
+        description: "Significant concerns about enforceability and risk allocation"
+      - value: 4
+        range: "Below adequate"
+        description: "Below-market terms, notable legal uncertainties"
+      - value: 5
+        range: "Adequate"
+        description: "Basic contract framework exists but with material weaknesses"
+      - value: 6
+        range: "Above adequate"
+        description: "Reasonable terms with some improvement needed"
+      - value: 7
+        range: "Good"
+        description: "Solid contract framework with minor gaps"
+      - value: 8
+        range: "Very good"
+        description: "Strong standardization, favorable risk allocation, highly bankable"
+      - value: 9
+        range: "Excellent"
+        description: "Internationally-competitive terms, proven track record"
+      - value: 10
+        range: "Best-in-class"
+        description: "World-class contract framework, optimal risk allocation, maximum bankability"
+    data_sources:
+      - "Sample PPAs and contracts"
+      - "Legal framework assessments"
+      - "International lender due diligence"
+      - "Project finance transaction data"
 
 
   # LEVEL I: ACCOMMODATION

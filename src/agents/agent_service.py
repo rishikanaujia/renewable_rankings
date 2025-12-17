@@ -228,8 +228,8 @@ class AgentService:
                 "ambition",
                 "country_stability",
                 "track_record",
-                "support_scheme",  # Regulation now 4/5 = 80%! Well advanced!
-                # "contract_terms",
+                "support_scheme",
+                "contract_terms"  # Regulation now 5/5 = 100% COMPLETE! 🏆 FOURTH COMPLETE SUBCATEGORY!
             ],
             "profitability": [
                 "expected_return",

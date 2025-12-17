@@ -6,6 +6,7 @@ Each agent is responsible for analyzing one specific parameter.
 Phase 1 Agents (Implemented):
 - AmbitionAgent - Government renewable energy targets
 - CountryStabilityAgent - Political and economic risk assessment
+- PowerMarketSizeAgent - Total electricity market size (TWh consumption)
 
 Phase 2 Agents (Coming Soon):
 - SupportSchemeAgent
@@ -17,7 +18,6 @@ Phase 2 Agents (Coming Soon):
 - LongTermInterestRatesAgent
 - StatusOfGridAgent
 - OwnershipHurdlesAgent
-- PowerMarketSizeAgent
 - ResourceAvailabilityAgent
 - EnergyDependenceAgent
 - RenewablesPenetrationAgent
@@ -28,18 +28,22 @@ Phase 2 Agents (Coming Soon):
 
 from .ambition_agent import AmbitionAgent, analyze_ambition
 from .country_stability_agent import CountryStabilityAgent, analyze_country_stability
+from .power_market_size_agent import PowerMarketSizeAgent, analyze_power_market_size
 
 __all__ = [
     "AmbitionAgent",
     "analyze_ambition",
     "CountryStabilityAgent",
     "analyze_country_stability",
+    "PowerMarketSizeAgent",
+    "analyze_power_market_size",
 ]
 
 # Agent registry for dynamic loading
 AGENT_REGISTRY = {
     "ambition": AmbitionAgent,
     "country_stability": CountryStabilityAgent,
+    "power_market_size": PowerMarketSizeAgent,
     # Add more agents as they're implemented
     # "support_scheme": SupportSchemeAgent,
     # "track_record": TrackRecordAgent,

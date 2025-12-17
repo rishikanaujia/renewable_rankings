@@ -242,8 +242,8 @@ class AgentService:
                 # "ownership_hurdles"
             ],
             "market_size_fundamentals": [
-                # "power_market_size",
-                # "resource_availability",
+                "power_market_size",
+                # "resource_availability",  # Not implemented yet
                 # "energy_dependence",
                 # "renewables_penetration"
             ],

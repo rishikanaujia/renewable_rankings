@@ -124,6 +124,67 @@ parameters:
       - "Euromoney Country Risk (ECR)"
       - "World Bank Governance Indicators"
       - "Political Risk Services (PRS) Group"
+
+  power_market_size:
+    name: "Power Market Size"
+    subcategory: "market_size_fundamentals"
+    level: 2
+    description: "Total electricity consumption in TWh per year. Larger markets offer greater absolute opportunity for renewable energy deployment."
+    scoring:
+      - value: 1
+        min_twh: 0
+        max_twh: 50
+        range: "< 50 TWh"
+        description: "Very small market (limited opportunity)"
+      - value: 2
+        min_twh: 50
+        max_twh: 100
+        range: "50 – 99 TWh"
+        description: "Small market"
+      - value: 3
+        min_twh: 100
+        max_twh: 200
+        range: "100 – 199 TWh"
+        description: "Below moderate market"
+      - value: 4
+        min_twh: 200
+        max_twh: 300
+        range: "200 – 299 TWh"
+        description: "Moderate market"
+      - value: 5
+        min_twh: 300
+        max_twh: 500
+        range: "300 – 499 TWh"
+        description: "Above moderate market"
+      - value: 6
+        min_twh: 500
+        max_twh: 750
+        range: "500 – 749 TWh"
+        description: "Large market"
+      - value: 7
+        min_twh: 750
+        max_twh: 1000
+        range: "750 – 999 TWh"
+        description: "Very large market"
+      - value: 8
+        min_twh: 1000
+        max_twh: 2000
+        range: "1000 – 1999 TWh"
+        description: "Major market"
+      - value: 9
+        min_twh: 2000
+        max_twh: 4000
+        range: "2000 – 3999 TWh"
+        description: "Huge market"
+      - value: 10
+        min_twh: 4000
+        max_twh: 100000
+        range: "≥ 4000 TWh"
+        description: "Massive market (world-leading)"
+    data_sources:
+      - "IEA World Energy Statistics"
+      - "BP Statistical Review of World Energy"
+      - "National energy statistics agencies"
   
   support_scheme:
     name: "Support Scheme"
@@ -212,14 +273,6 @@ parameters:
     subcategory: "accommodation"
     level: 1
     description: "Regulatory and practical barriers"
-    # Full scoring rubric would go here...
-
-  # LEVEL II: MARKET SIZE & FUNDAMENTALS
-  power_market_size:
-    name: "Power Market Size"
-    subcategory: "market_size_fundamentals"
-    level: 2
-    description: "Based on 2025 electricity consumption, TWh"
     # Full scoring rubric would go here...
 
   resource_availability:

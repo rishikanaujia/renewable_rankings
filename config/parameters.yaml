@@ -375,6 +375,69 @@ parameters:
       - "IRENA Renewable Energy Statistics"
       - "Ember Climate - Global Electricity Review"
       - "National grid operators"
+
+  expected_return:
+    name: "Expected Return"
+    subcategory: "profitability"
+    level: 2
+    description: "Projected Internal Rate of Return (IRR) for renewable energy projects. Higher IRR indicates better profitability and more attractive investment opportunity."
+    scoring:
+      - value: 1
+        min_irr_pct: 0.0
+        max_irr_pct: 2.0
+        range: "< 2%"
+        description: "Very poor returns (below risk-free rate)"
+      - value: 2
+        min_irr_pct: 2.0
+        max_irr_pct: 4.0
+        range: "2% – 3%"
+        description: "Poor returns (marginal profitability)"
+      - value: 3
+        min_irr_pct: 4.0
+        max_irr_pct: 6.0
+        range: "4% – 5%"
+        description: "Below acceptable returns"
+      - value: 4
+        min_irr_pct: 6.0
+        max_irr_pct: 8.0
+        range: "6% – 7%"
+        description: "Minimally acceptable returns"
+      - value: 5
+        min_irr_pct: 8.0
+        max_irr_pct: 10.0
+        range: "8% – 9%"
+        description: "Moderate returns (acceptable for low-risk)"
+      - value: 6
+        min_irr_pct: 10.0
+        max_irr_pct: 12.0
+        range: "10% – 11%"
+        description: "Good returns (above hurdle rate)"
+      - value: 7
+        min_irr_pct: 12.0
+        max_irr_pct: 14.0
+        range: "12% – 13%"
+        description: "Very good returns"
+      - value: 8
+        min_irr_pct: 14.0
+        max_irr_pct: 16.0
+        range: "14% – 15%"
+        description: "Excellent returns"
+      - value: 9
+        min_irr_pct: 16.0
+        max_irr_pct: 20.0
+        range: "16% – 19%"
+        description: "Outstanding returns"
+      - value: 10
+        min_irr_pct: 20.0
+        max_irr_pct: 100.0
+        range: "≥ 20%"
+        description: "Exceptional returns (highly attractive)"
+    data_sources:
+      - "IRENA Renewable Power Generation Costs"
+      - "Bloomberg New Energy Finance (BNEF)"
+      - "Lazard Levelized Cost of Energy (LCOE)"
+      - "Project financial models"
+      - "Developer IRR benchmarks"
   
   support_scheme:
     name: "Support Scheme"
@@ -421,13 +484,6 @@ parameters:
     description: "Bankability, risk allocation, PPA robustness"
     # Full scoring rubric would go here...
 
-  country_stability:
-    name: "Country Stability"
-    subcategory: "regulation"
-    level: 1
-    description: "Indexed to ECR Strategic Risk Rating"
-    # Full scoring rubric would go here...
-
   # LEVEL I: PROFITABILITY
   revenue_stream_stability:
     name: "Revenue Stream Stability"
@@ -443,12 +499,6 @@ parameters:
     description: "Financial strength and credibility of power purchasers"
     # Full scoring rubric would go here...
 
-  expected_return:
-    name: "Expected Return"
-    subcategory: "profitability"
-    level: 1
-    description: "Indexed to unlevered pre-tax IRR"
-    # Full scoring rubric would go here...
 
   long_term_interest_rates:
     name: "Long-Term Interest Rates"
@@ -470,35 +520,6 @@ parameters:
     subcategory: "accommodation"
     level: 1
     description: "Regulatory and practical barriers"
-    # Full scoring rubric would go here...
-
-  # LEVEL II: MARKET SIZE & FUNDAMENTALS
-  power_market_size:
-    name: "Power Market Size"
-    subcategory: "market_size_fundamentals"
-    level: 2
-    description: "Based on 2025 electricity consumption, TWh"
-    # Full scoring rubric would go here...
-
-  resource_availability:
-    name: "Resource Availability"
-    subcategory: "market_size_fundamentals"
-    level: 2
-    description: "Average capacity factors for solar/wind"
-    # Full scoring rubric would go here...
-
-  energy_dependence:
-    name: "Energy Dependence"
-    subcategory: "market_size_fundamentals"
-    level: 2
-    description: "Net imports / total energy supply"
-    # Full scoring rubric would go here...
-
-  renewables_penetration:
-    name: "Renewables Penetration"
-    subcategory: "market_size_fundamentals"
-    level: 2
-    description: "Current non-hydro renewable share"
     # Full scoring rubric would go here...
 
   # LEVEL II: COMPETITION & EASE

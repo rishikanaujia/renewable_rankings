@@ -10,6 +10,7 @@ Phase 1 Agents (Implemented):
 - ResourceAvailabilityAgent - Solar and wind renewable energy resources
 - EnergyDependenceAgent - Energy import dependency and security
 - RenewablesPenetrationAgent - Current renewables share in electricity generation
+- ExpectedReturnAgent - Projected IRR for renewable energy projects
 
 Phase 2 Agents (Coming Soon):
 - SupportSchemeAgent
@@ -17,7 +18,6 @@ Phase 2 Agents (Coming Soon):
 - ContractTermsAgent
 - RevenueStreamStabilityAgent
 - OfftakerStatusAgent
-- ExpectedReturnAgent
 - LongTermInterestRatesAgent
 - StatusOfGridAgent
 - OwnershipHurdlesAgent
@@ -32,6 +32,7 @@ from .power_market_size_agent import PowerMarketSizeAgent, analyze_power_market_
 from .resource_availability_agent import ResourceAvailabilityAgent, analyze_resource_availability
 from .energy_dependence_agent import EnergyDependenceAgent, analyze_energy_dependence
 from .renewables_penetration_agent import RenewablesPenetrationAgent, analyze_renewables_penetration
+from .expected_return_agent import ExpectedReturnAgent, analyze_expected_return
 
 __all__ = [
     "AmbitionAgent",
@@ -46,6 +47,8 @@ __all__ = [
     "analyze_energy_dependence",
     "RenewablesPenetrationAgent",
     "analyze_renewables_penetration",
+    "ExpectedReturnAgent",
+    "analyze_expected_return",
 ]
 
 # Agent registry for dynamic loading
@@ -56,6 +59,7 @@ AGENT_REGISTRY = {
     "resource_availability": ResourceAvailabilityAgent,
     "energy_dependence": EnergyDependenceAgent,
     "renewables_penetration": RenewablesPenetrationAgent,
+    "expected_return": ExpectedReturnAgent,
     # Add more agents as they're implemented
     # "support_scheme": SupportSchemeAgent,
     # "track_record": TrackRecordAgent,

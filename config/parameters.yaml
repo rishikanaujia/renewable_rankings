@@ -787,8 +787,45 @@ parameters:
     name: "Ownership Hurdles"
     subcategory: "accommodation"
     level: 1
-    description: "Regulatory and practical barriers"
-    # Full scoring rubric would go here...
+    description: "Regulatory and practical barriers to foreign ownership and market participation. Lower barriers enable greater international investment and competition."
+    scoring:
+      - value: 1
+        range: "Severe restrictions"
+        description: "Prohibitive barriers (foreign ownership banned or <10% allowed)"
+      - value: 2
+        range: "Very high barriers"
+        description: "Major restrictions (10-25% foreign ownership, complex approvals)"
+      - value: 3
+        range: "High barriers"
+        description: "Significant restrictions (25-40% foreign ownership)"
+      - value: 4
+        range: "Above moderate barriers"
+        description: "Notable restrictions (40-50% foreign ownership)"
+      - value: 5
+        range: "Moderate barriers"
+        description: "Some restrictions (50-65% foreign ownership)"
+      - value: 6
+        range: "Below moderate barriers"
+        description: "Limited restrictions (65-75% foreign ownership)"
+      - value: 7
+        range: "Low barriers"
+        description: "Minor restrictions (75-85% foreign ownership)"
+      - value: 8
+        range: "Very low barriers"
+        description: "Minimal restrictions (85-95% foreign ownership)"
+      - value: 9
+        range: "Minimal barriers"
+        description: "Nearly unrestricted (95-99% foreign ownership)"
+      - value: 10
+        range: "No barriers"
+        description: "Full market access (100% foreign ownership allowed)"
+    data_sources:
+      - "OECD FDI Regulatory Restrictiveness Index"
+      - "World Bank Doing Business reports"
+      - "National energy laws and regulations"
+      - "Investment treaties and bilateral agreements"
+
+
 
   # LEVEL II: COMPETITION & EASE
   ownership_consolidation:

@@ -238,8 +238,8 @@ class AgentService:
                 "long_term_interest_rates"  # Profitability 4/4 = 100% COMPLETE! 🏆
             ],
             "accommodation": [
-                "status_of_grid",  # Accommodation now 1/2 = 50%! NEW SUBCATEGORY!
-                # "ownership_hurdles"
+                "status_of_grid",
+                "ownership_hurdles"  # Accommodation now 2/2 = 100% COMPLETE! 🏆 THIRD COMPLETE SUBCATEGORY!
             ],
             "market_size_fundamentals": [
                 "power_market_size",

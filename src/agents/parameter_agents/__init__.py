@@ -16,6 +16,7 @@ Phase 1 Agents (Implemented):
 - LongTermInterestRatesAgent - Long-term interest rates and financing costs
 - TrackRecordAgent - Historical renewable energy deployment track record
 - StatusOfGridAgent - Grid infrastructure quality and reliability
+- OwnershipHurdlesAgent - Foreign ownership restrictions and market access
 
 Phase 2 Agents (Coming Soon):
 - SupportSchemeAgent
@@ -38,6 +39,7 @@ from .offtaker_status_agent import OfftakerStatusAgent, analyze_offtaker_status
 from .long_term_interest_rates_agent import LongTermInterestRatesAgent, analyze_long_term_interest_rates
 from .track_record_agent import TrackRecordAgent, analyze_track_record
 from .status_of_grid_agent import StatusOfGridAgent, analyze_status_of_grid
+from .ownership_hurdles_agent import OwnershipHurdlesAgent, analyze_ownership_hurdles
 
 __all__ = [
     "AmbitionAgent",
@@ -64,6 +66,8 @@ __all__ = [
     "analyze_track_record",
     "StatusOfGridAgent",
     "analyze_status_of_grid",
+    "OwnershipHurdlesAgent",
+    "analyze_ownership_hurdles",
 ]
 
 # Agent registry for dynamic loading
@@ -80,6 +84,7 @@ AGENT_REGISTRY = {
     "long_term_interest_rates": LongTermInterestRatesAgent,
     "track_record": TrackRecordAgent,
     "status_of_grid": StatusOfGridAgent,
+    "ownership_hurdles": OwnershipHurdlesAgent,
     # Add more agents as they're implemented
     # "support_scheme": SupportSchemeAgent,
     # "contract_terms": ContractTermsAgent,

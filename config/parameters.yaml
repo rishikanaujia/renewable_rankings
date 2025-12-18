@@ -710,6 +710,12 @@ parameters:
       - "FiT schedules"
       - "Policy documents"
 
+  track_record:
+    name: "Track Record"
+    subcategory: "regulation"
+    level: 1
+    description: "Historical policy behavior, stability, credibility"
+    # Full scoring rubric would go here...
 
   contract_terms:
     name: "Contract Terms"
@@ -753,6 +759,41 @@ parameters:
       - "International lender due diligence"
       - "Project finance transaction data"
 
+  country_stability:
+    name: "Country Stability"
+    subcategory: "regulation"
+    level: 1
+    description: "Indexed to ECR Strategic Risk Rating"
+    # Full scoring rubric would go here...
+
+  # LEVEL I: PROFITABILITY
+  revenue_stream_stability:
+    name: "Revenue Stream Stability"
+    subcategory: "profitability"
+    level: 1
+    description: "Predictability, durability, bankability of cash flows"
+    # Full scoring rubric would go here...
+
+  offtaker_status:
+    name: "Offtaker Status"
+    subcategory: "profitability"
+    level: 1
+    description: "Financial strength and credibility of power purchasers"
+    # Full scoring rubric would go here...
+
+  expected_return:
+    name: "Expected Return"
+    subcategory: "profitability"
+    level: 1
+    description: "Indexed to unlevered pre-tax IRR"
+    # Full scoring rubric would go here...
+
+  long_term_interest_rates:
+    name: "Long-Term Interest Rates"
+    subcategory: "profitability"
+    level: 1
+    description: "Cost of capital for renewable projects"
+    # Full scoring rubric would go here...
 
   # LEVEL I: ACCOMMODATION
   status_of_grid:
@@ -860,130 +901,63 @@ parameters:
       - "National energy laws and regulations"
       - "Investment treaties and bilateral agreements"
 
+  # LEVEL II: MARKET SIZE & FUNDAMENTALS
+  power_market_size:
+    name: "Power Market Size"
+    subcategory: "market_size_fundamentals"
+    level: 2
+    description: "Based on 2025 electricity consumption, TWh"
+    # Full scoring rubric would go here...
+
+  resource_availability:
+    name: "Resource Availability"
+    subcategory: "market_size_fundamentals"
+    level: 2
+    description: "Average capacity factors for solar/wind"
+    # Full scoring rubric would go here...
+
+  energy_dependence:
+    name: "Energy Dependence"
+    subcategory: "market_size_fundamentals"
+    level: 2
+    description: "Net imports / total energy supply"
+    # Full scoring rubric would go here...
+
+  renewables_penetration:
+    name: "Renewables Penetration"
+    subcategory: "market_size_fundamentals"
+    level: 2
+    description: "Current non-hydro renewable share"
+    # Full scoring rubric would go here...
+
   # LEVEL II: COMPETITION & EASE
   ownership_consolidation:
     name: "Ownership Consolidation"
     subcategory: "competition_ease"
-    level: 3
-    description: "Market concentration and consolidation among renewable energy asset owners. Lower consolidation indicates more competitive markets with diverse ownership."
-    scoring:
-      - value: 1
-        range: "Extreme monopoly"
-        description: "Single dominant owner controls >80% of market"
-      - value: 2
-        range: "Very high consolidation"
-        description: "Top 3 owners control 70-80% of market"
-      - value: 3
-        range: "High consolidation"
-        description: "Top 3 owners control 60-70% of market"
-      - value: 4
-        range: "Above moderate consolidation"
-        description: "Top 3 owners control 50-60% of market"
-      - value: 5
-        range: "Moderate consolidation"
-        description: "Top 3 owners control 40-50% of market"
-      - value: 6
-        range: "Below moderate consolidation"
-        description: "Top 3 owners control 30-40% of market"
-      - value: 7
-        range: "Low consolidation"
-        description: "Top 3 owners control 20-30% of market"
-      - value: 8
-        range: "Very low consolidation"
-        description: "Top 3 owners control 15-20% of market"
-      - value: 9
-        range: "Minimal consolidation"
-        description: "Top 3 owners control 10-15% of market"
-      - value: 10
-        range: "Highly fragmented"
-        description: "Top 3 owners control <10% of market (highly competitive)"
-    data_sources:
-      - "Renewable energy asset ownership databases"
-      - "Market concentration analysis"
-      - "Industry reports and company filings"
-      - "National energy statistics"
+    level: 2
+    description: "Market share of top 5 players"
+    # Full scoring rubric would go here...
 
   competitive_landscape:
     name: "Competitive Landscape"
     subcategory: "competition_ease"
-    level: 3
-    description: "Ease of market entry and competitive dynamics. Evaluates barriers to entry, market openness, and competitive intensity in renewable energy markets."
-    scoring:
-      - value: 1
-        range: "Extreme barriers"
-        description: "Market effectively closed, no new entry, monopolistic control"
-      - value: 2
-        range: "Very high barriers"
-        description: "Severe restrictions on entry, limited competition possible"
-      - value: 3
-        range: "High barriers"
-        description: "Significant entry barriers, difficult for new players"
-      - value: 4
-        range: "Above moderate barriers"
-        description: "Notable barriers but entry possible with resources"
-      - value: 5
-        range: "Moderate barriers"
-        description: "Balanced entry requirements, moderate competition"
-      - value: 6
-        range: "Below moderate barriers"
-        description: "Relatively open market with some entry requirements"
-      - value: 7
-        range: "Low barriers"
-        description: "Open market, easy entry for qualified players"
-      - value: 8
-        range: "Very low barriers"
-        description: "Minimal restrictions, highly competitive market"
-      - value: 9
-        range: "Minimal barriers"
-        description: "Nearly open market with streamlined processes"
-      - value: 10
-        range: "No barriers"
-        description: "Completely open market, maximum competition and ease of entry"
-    data_sources:
-      - "Market entry analysis and regulatory frameworks"
-      - "Competitive intensity assessments"
-      - "Licensing and permitting requirements"
-      - "Industry entry and exit data"
+    level: 2
+    description: "Ease of market entry and competition"
+    # Full scoring rubric would go here...
 
   # LEVEL III: SYSTEM MODIFIERS
   system_modifiers:
-    name: "System Modifiers"
+    name: "System/External Modifiers"
     subcategory: "system_modifiers"
     level: 3
-    description: "Composite adjustment factors including currency risk, geopolitical factors, and market anomalies. Acts as final calibration layer for overall rankings."
-    scoring:
-      - value: 1
-        range: "Severe negative factors"
-        description: "Multiple severe risks compound to make market essentially uninvestable"
-      - value: 2
-        range: "Very high negative impact"
-        description: "Major currency instability, severe geopolitical risks, or critical market failures"
-      - value: 3
-        range: "High negative impact"
-        description: "Significant currency risk, high geopolitical uncertainty, or major market issues"
-      - value: 4
-        range: "Above moderate negative impact"
-        description: "Notable currency volatility, elevated geopolitical concerns"
-      - value: 5
-        range: "Moderate factors"
-        description: "Balanced risk profile, manageable currency and geopolitical environment"
-      - value: 6
-        range: "Below moderate positive impact"
-        description: "Relatively stable currency, improving geopolitical environment"
-      - value: 7
-        range: "Low risk environment"
-        description: "Good currency stability, favorable geopolitical climate"
-      - value: 8
-        range: "Very low risk"
-        description: "Strong currency stability, very favorable conditions"
-      - value: 9
-        range: "Minimal risk"
-        description: "Excellent currency and geopolitical environment"
-      - value: 10
-        range: "Optimal conditions"
-        description: "Best-in-class stability across all system modifiers"
-    data_sources:
-      - "Currency volatility and exchange rate data"
+    description: "Cannibalization, curtailment, queue dynamics, supply chain"
+    # Full scoring rubric would go here...
+
+# Metadata
+total_parameters: 21
+subcategories: 6
+levels: 3
+
       - "Geopolitical risk indices"
       - "Market anomaly detection"
       - "IMF and World Bank macroeconomic indicators"
@@ -999,11 +973,11 @@ analysis:
     competition_ease: 0.10  # 10% - Market entry and competitive dynamics
     system_modifiers: 0.10  # 10% - Risk adjustment factors
     # Total: 100%
-
+  
   # Country-level analysis thresholds (used by Agent #19)
   strength_threshold: 7.5  # Scores >= 7.5 are considered strengths
   weakness_threshold: 5.5  # Scores < 5.5 are considered weaknesses
-
+  
   # Score interpretation labels (used by Agent #19)
   score_interpretation:
     - range: [9.0, 10.0]
@@ -1033,34 +1007,67 @@ analysis:
     - range: [0.0, 2.0]
       label: "Extremely Poor"
       description: "Market not viable for investment"
-
+  
   # Comparative analysis settings (used by Agent #20)
   comparative_analysis:
     min_countries: 2  # Minimum countries required for comparison
     max_countries: 100  # Maximum countries in single comparison
     recommended_countries: 10  # Recommended number for best insights
-
+    
     # Performance gap thresholds for subcategory analysis
     gap_thresholds:
       highly_competitive: 1.0  # Gap < 1.0 points = highly competitive
       moderately_competitive: 2.0  # Gap 1-2 points = moderately competitive
       uncompetitive: 2.0  # Gap > 2.0 points = uncompetitive
-
+    
     # Ranking display preferences
     display:
       show_scores: true  # Show numerical scores in rankings
       show_strengths_weaknesses: true  # Show strength/weakness counts
       show_subcategory_details: true  # Show subcategory breakdowns
       decimal_places: 2  # Decimal places for score display
-
+    
     # Summary generation settings
     summary:
       include_top_performers: 3  # Number of top performers to highlight
       include_bottom_performers: 1  # Number of bottom performers to mention
       highlight_competitive_subcategories: 2  # Most competitive to mention
       highlight_gap_subcategories: 2  # Largest gaps to mention
-
-# Metadata
-total_parameters: 21
-subcategories: 6
-levels: 3
+  
+  # ================================================================================
+  # AGENT #21: GLOBAL RANKINGS CONFIGURATION
+  # ================================================================================
+  # Configuration for the Global Rankings Agent - the final synthesis agent
+  # that produces complete global rankings with tier assignments
+  # ================================================================================
+  
+  global_rankings:
+    # Minimum countries required for global rankings
+    min_countries_for_ranking: 5  # Need meaningful sample size
+    
+    # Performance tier thresholds (0-10 scale)
+    tier_thresholds:
+      tier_a_min: 8.0  # A-tier: 8.0+ (Excellent investment climate)
+      tier_b_min: 6.5  # B-tier: 6.5-7.99 (Strong investment climate)
+      tier_c_min: 5.0  # C-tier: 5.0-6.49 (Moderate investment climate)
+      # D-tier: < 5.0 (Challenging investment climate)
+    
+    # Ranking display preferences
+    ranking_display:
+      countries_per_tier: 10  # Show top 10 countries per tier in summaries
+      show_tier_statistics: true  # Include tier-level statistics
+      include_tier_transitions: true  # Track countries moving between tiers
+      show_score_distribution: true  # Show score distribution by tier
+    
+    # Summary generation settings
+    summary:
+      highlight_top_performers: 5  # Number of top countries to highlight
+      highlight_bottom_performers: 3  # Number of bottom countries to mention
+      mention_tier_movers: true  # Mention countries that changed tiers
+      include_regional_insights: false  # Regional analysis (future feature)
+    
+    # Analysis preferences
+    analysis:
+      enable_historical_comparison: false  # Compare with previous periods (future)
+      enable_peer_benchmarking: false  # Benchmark against peer groups (future)
+      enable_trend_analysis: false  # Analyze score trends (future)

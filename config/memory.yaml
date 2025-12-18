@@ -1,0 +1,150 @@
+# Memory System Configuration
+# Configuration for the renewable energy rankings memory & learning system
+
+memory:
+  # Enable/disable memory system
+  enabled: true
+  
+  # Memory store configuration
+  store_type: chromadb  # Currently only chromadb supported
+  
+  store_config:
+    # Path for persistent storage
+    persist_directory: ./data/memory/chroma_db
+    
+    # Embedding model for similarity search
+    # Options: all-MiniLM-L6-v2, all-mpnet-base-v2, etc.
+    embedding_model: all-MiniLM-L6-v2
+    
+    # Collection name prefix
+    collection_name: renewable_rankings_memory
+    
+    # Use separate collections for each memory type
+    use_separate_collections: false
+  
+  # Learning configuration
+  learning_config:
+    # Learning rate for weight adaptation
+    learning_rate: 0.1
+    
+    # Minimum feedback count before applying patterns
+    min_feedback_count: 3
+    
+    # Decay factor for weighting recent feedback
+    decay_factor: 0.95
+    
+    # Pattern recognition thresholds
+    min_pattern_occurrences: 3
+    min_pattern_confidence: 0.6
+  
+  # Retrieval settings
+  retrieval:
+    # Default retrieval strategy
+    default_strategy: hybrid  # Options: similarity, temporal, frequency, recency, hybrid, relevance
+    
+    # Default number of results to retrieve
+    default_top_k: 5
+    
+    # Similarity threshold (0-1)
+    similarity_threshold: 0.75
+    
+    # Maximum memories to include in agent context
+    max_context_memories: 10
+  
+  # Memory retention settings
+  retention:
+    # Default time-to-live for memories (days)
+    default_ttl_days: 365
+    
+    # Auto-cleanup expired memories
+    auto_cleanup_enabled: true
+    auto_cleanup_interval_hours: 24
+  
+  # Agent integration settings
+  agent_integration:
+    # Automatically record all analyses
+    auto_record: true
+    
+    # Use memory suggestions in analysis
+    use_memory_suggestions: true
+    
+    # Enhance justifications with memory context
+    enhance_with_context: true
+    
+    # Minimum confidence for applying suggestions
+    min_suggestion_confidence: 0.5
+  
+  # Feedback processing
+  feedback:
+    # Types of feedback to track
+    track_types:
+      - score_adjustment
+      - reasoning_correction
+      - weight_modification
+      - new_insight
+      - validation
+      - rejection
+    
+    # Impact scope levels
+    impact_scopes:
+      - specific  # Affects only specific case
+      - category  # Affects category of analyses
+      - global    # Affects all analyses
+  
+  # Performance settings
+  performance:
+    # Batch size for bulk operations
+    batch_size: 100
+    
+    # Enable caching
+    enable_caching: true
+    cache_ttl_seconds: 300
+    
+    # Embedding batch size
+    embedding_batch_size: 32
+
+# Example memory configurations for different deployment scenarios
+
+# Development configuration
+development:
+  memory:
+    enabled: true
+    store_config:
+      persist_directory: ./data/memory/dev
+    learning_config:
+      min_feedback_count: 2  # Lower threshold for testing
+    agent_integration:
+      auto_record: true
+
+# Production configuration
+production:
+  memory:
+    enabled: true
+    store_config:
+      persist_directory: /var/data/renewable_rankings/memory
+      use_separate_collections: true  # Better organization at scale
+    retention:
+      default_ttl_days: 730  # 2 years
+      auto_cleanup_enabled: true
+    performance:
+      enable_caching: true
+      batch_size: 500
+
+# Testing configuration (memory disabled)
+testing:
+  memory:
+    enabled: false
+
+# Expert mode (maximum learning)
+expert_mode:
+  memory:
+    enabled: true
+    learning_config:
+      learning_rate: 0.15  # More aggressive learning
+      min_feedback_count: 2  # React faster to feedback
+    retrieval:
+      default_top_k: 10
+      max_context_memories: 15
+    agent_integration:
+      use_memory_suggestions: true
+      min_suggestion_confidence: 0.3  # More liberal suggestions

@@ -18,6 +18,7 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import yaml
 from datetime import datetime
+from typing import Dict, Any
 from src import (
     MemoryManager,
     MemoryMixin,
@@ -270,6 +271,18 @@ def demo_8_agent_integration(memory_manager: MemoryManager):
         def __init__(self, mode, config, memory_manager):
             BaseParameterAgent.__init__(self, "Demo Agent", mode, config)
             MemoryMixin.init_memory(self, memory_manager, auto_record=True)
+        
+        def _fetch_data(self, country: str, period: str) -> Dict[str, Any]:
+            """Fetch data for analysis (mock implementation)."""
+            return {"test_data": True}
+        
+        def _calculate_score(self, data: Dict[str, Any]) -> float:
+            """Calculate score (mock implementation)."""
+            return 8.0
+        
+        def _generate_justification(self, score: float, data: Dict[str, Any]) -> str:
+            """Generate justification (mock implementation)."""
+            return f"Mock justification for score {score}"
         
         def analyze(self, country, period, data=None):
             """Simple analysis with memory integration."""

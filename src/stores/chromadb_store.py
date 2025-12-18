@@ -271,12 +271,8 @@ class ChromaDBMemoryStore(MemoryStore):
                     '$lte': end.isoformat()
                 }
             
-            # Expired filter
-            if not query.include_expired:
-                where['$or'] = [
-                    {'expires_at': {'$eq': None}},
-                    {'expires_at': {'$gt': datetime.now().isoformat()}}
-                ]
+            # Note: ChromaDB doesn't support complex $or with other operators
+            # We'll filter expired entries after retrieval instead
             
             # Query collection(s)
             collections = self.collections.values()
@@ -287,21 +283,21 @@ class ChromaDBMemoryStore(MemoryStore):
                     # Text-based query
                     results = collection.query(
                         query_texts=[query.query_text],
-                        n_results=query.top_k,
+                        n_results=query.top_k * 2,  # Get more to filter
                         where=where if where else None
                     )
                 elif query.query_embedding:
                     # Embedding-based query
                     results = collection.query(
                         query_embeddings=[query.query_embedding],
-                        n_results=query.top_k,
+                        n_results=query.top_k * 2,  # Get more to filter
                         where=where if where else None
                     )
                 else:
                     # Just filter-based retrieval
                     results = collection.get(
                         where=where if where else None,
-                        limit=query.top_k
+                        limit=query.top_k * 2  # Get more to filter
                     )
                 
                 # Convert to memory entries
@@ -312,6 +308,10 @@ class ChromaDBMemoryStore(MemoryStore):
                             results['documents'][0][i],
                             results['metadatas'][0][i]
                         )
+                        
+                        # Filter expired entries if requested
+                        if not query.include_expired and entry.is_expired():
+                            continue
                         
                         # Check similarity threshold if applicable
                         if results.get('distances'):
@@ -419,21 +419,28 @@ class ChromaDBMemoryStore(MemoryStore):
         self.ensure_initialized()
         
         count = 0
-        now = datetime.now().isoformat()
+        now = datetime.now()
         
         try:
             for collection in self.collections.values():
-                # Get all expired memories
-                results = collection.get(
-                    where={
-                        'expires_at': {'$lt': now},
-                        '$ne': None
-                    }
-                )
+                # Get all memories and filter expired ones
+                results = collection.get()
                 
+                expired_ids = []
                 if results['ids']:
-                    collection.delete(ids=results['ids'])
-                    count += len(results['ids'])
+                    for i, metadata in enumerate(results['metadatas']):
+                        expires_at_str = metadata.get('expires_at')
+                        if expires_at_str:
+                            try:
+                                expires_at = datetime.fromisoformat(expires_at_str)
+                                if expires_at < now:
+                                    expired_ids.append(results['ids'][i])
+                            except (ValueError, TypeError):
+                                continue
+                
+                if expired_ids:
+                    collection.delete(ids=expired_ids)
+                    count += len(expired_ids)
             
             logger.info(f"Deleted {count} expired memories")
             return count

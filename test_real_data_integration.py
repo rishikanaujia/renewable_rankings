@@ -418,14 +418,14 @@ def test_data_service():
             results.record_fail("DataService countries", "No countries available")
         
         # Test get_value (from file if available)
-        value = data_service.get_value("Germany", "ecr_rating", default=None)
+        value = data_service.get_value("Germany", "ecr", default=None)
         if value is not None:
             results.record_pass(f"DataService.get_value() returned {value}")
         else:
             results.record_fail("DataService.get_value()", "No value returned (check if sample data exists)")
         
         # Test get_data
-        response = data_service.get_data("Germany", "ecr_rating")
+        response = data_service.get_data("Germany", "ecr")
         if response.success:
             results.record_pass("DataService.get_data() successful")
         else:
@@ -467,7 +467,7 @@ def test_agent_integration():
         results.record_pass("Mock agent created with data_service")
         
         # Test agent fetching data
-        data = agent.fetch_data("Germany", "ecr_rating")
+        data = agent.fetch_data("Germany", "ecr")
         if data and 'value' in data:
             results.record_pass(f"Mock agent fetched data: {data['value']}")
         else:

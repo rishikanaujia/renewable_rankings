@@ -1,0 +1,11 @@
+# Data Integration Dependencies
+
+# Core dependencies for data fetching
+requests>=2.31.0          # HTTP library for API calls (World Bank, etc.)
+pandas>=2.0.0            # Data manipulation for file provider
+
+# Optional: For additional providers (uncomment when needed)
+# psycopg2-binary>=2.9.0  # PostgreSQL database provider
+# sqlalchemy>=2.0.0       # SQL database ORM
+# redis>=4.5.0            # Redis caching
+# openpyxl>=3.1.0         # Excel file support (already included via pandas)

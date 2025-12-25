@@ -5,7 +5,7 @@ from datetime import datetime
 
 from ...base.memory_store import MemoryStore
 from ...base.memory_entry import (
-    FeedbackMemoryEntry, MemoryQuery, BaseMemoryEntry
+    FeedbackMemoryEntry, MemoryQuery, BaseMemoryEntry, MemoryMetadata
 )
 from ...base.memory_types import (
     MemoryType, FeedbackType, LearningStrategy
@@ -71,8 +71,6 @@ class FeedbackProcessor:
         Returns:
             ID of created feedback entry
         """
-        from ..base.memory_entry import MemoryMetadata
-        
         feedback = FeedbackMemoryEntry(
             feedback_type=feedback_type,
             original_analysis_id=original_analysis_id,

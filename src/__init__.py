@@ -45,19 +45,14 @@ from .base import (
 )
 
 # Store implementations
-from .stores import (
+from src.memory.stores import (
     ChromaDBMemoryStore
 )
 
 # Learning components
-from .learning import (
-    SimilarityEngine,
-    FeedbackProcessor,
-    PatternRecognizer
-)
 
 # Integration components
-from .integration import (
+from src.memory.integration import (
     MemoryManager,
     MemoryMixin,
     MemoryAwareAnalysisMixin

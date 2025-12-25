@@ -3,15 +3,15 @@ from typing import List, Dict, Any, Optional, Set
 from collections import defaultdict, Counter
 from datetime import datetime
 
-from ..base.memory_store import MemoryStore
-from ..base.memory_entry import (
+from ...base.memory_store import MemoryStore
+from ...base.memory_entry import (
     EpisodicMemoryEntry, ProceduralMemoryEntry,
     MemoryQuery, MemoryMetadata
 )
-from ..base.memory_types import (
+from ...base.memory_types import (
     MemoryType, MemoryCategory
 )
-from ..core.logger import get_logger
+from ...core.logger import get_logger
 
 logger = get_logger(__name__)
 

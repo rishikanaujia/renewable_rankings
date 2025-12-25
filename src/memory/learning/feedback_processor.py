@@ -3,14 +3,14 @@ from typing import List, Dict, Any, Optional
 from collections import defaultdict
 from datetime import datetime
 
-from ..base.memory_store import MemoryStore
-from ..base.memory_entry import (
+from ...base.memory_store import MemoryStore
+from ...base.memory_entry import (
     FeedbackMemoryEntry, MemoryQuery, BaseMemoryEntry
 )
-from ..base.memory_types import (
+from ...base.memory_types import (
     MemoryType, FeedbackType, LearningStrategy
 )
-from ..core.logger import get_logger
+from ...core.logger import get_logger
 
 logger = get_logger(__name__)
 

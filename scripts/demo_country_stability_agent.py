@@ -3,8 +3,8 @@
 
 This script demonstrates:
 1. MOCK mode (using hardcoded test data)
-2. REAL mode (using real data from data service)
-3. Comparison between MOCK and REAL modes
+2. RULE_BASED mode (using rule-based data from data service)
+3. Comparison between MOCK and RULE_BASED modes
 4. Service layer usage
 5. Score calculation based on ECR ratings
 
@@ -28,7 +28,7 @@ logger = get_logger(__name__)
 
 
 def initialize_data_service():
-    """Initialize data service for REAL mode."""
+    """Initialize data service for RULE_BASED mode."""
     try:
         import yaml
         from src.data import DataService
@@ -45,7 +45,7 @@ def initialize_data_service():
         
     except Exception as e:
         logger.warning(f"Could not initialize data service: {e}")
-        logger.warning("REAL mode demos will fall back to MOCK data")
+        logger.warning("RULE_BASED mode demos will fall back to MOCK data")
         return None
 
 
@@ -81,18 +81,18 @@ def demo_mock_mode():
 
 
 def demo_real_mode(data_service):
-    """Demonstrate REAL mode (using real data)."""
+    """Demonstrate RULE_BASED mode (using rule-based data)."""
     print("\n" + "="*70)
-    print("DEMO 2: REAL Mode (Real Data from Data Service)")
+    print("DEMO 2: RULE_BASED Mode (Real Data from Data Service)")
     print("="*70)
     
     if data_service is None:
-        print("\n⚠️  Data service not available. Skipping REAL mode demo.")
+        print("\n⚠️  Data service not available. Skipping RULE_BASED mode demo.")
         print("    Make sure config/data_sources.yaml exists and is valid.")
         return
     
-    # Create agent in REAL mode
-    agent = CountryStabilityAgent(mode=AgentMode.REAL, data_service=data_service)
+    # Create agent in RULE_BASED mode
+    agent = CountryStabilityAgent(mode=AgentMode.RULE_BASED, data_service=data_service)
     
     # Test countries (these should have ECR data in data/files/)
     countries = ["Germany", "USA"]
@@ -112,9 +112,9 @@ def demo_real_mode(data_service):
 
 
 def demo_mock_vs_real_comparison(data_service):
-    """Compare MOCK vs REAL mode for same country."""
+    """Compare MOCK vs RULE_BASED mode for same country."""
     print("\n" + "="*70)
-    print("DEMO 3: MOCK vs REAL Mode Comparison")
+    print("DEMO 3: MOCK vs RULE_BASED Mode Comparison")
     print("="*70)
     
     if data_service is None:
@@ -123,7 +123,7 @@ def demo_mock_vs_real_comparison(data_service):
     
     # Create both agents
     mock_agent = CountryStabilityAgent(mode=AgentMode.MOCK)
-    real_agent = CountryStabilityAgent(mode=AgentMode.REAL, data_service=data_service)
+    real_agent = CountryStabilityAgent(mode=AgentMode.RULE_BASED, data_service=data_service)
     
     countries = ["Germany", "USA"]
     
@@ -161,13 +161,13 @@ def demo_convenience_function(data_service):
     print(f"  {result.parameter_name} Score for Brazil: {result.score}/10")
     print(f"  {result.justification}")
     
-    # REAL mode
+    # RULE_BASED mode
     if data_service:
-        print("\nREAL Mode:")
+        print("\nRULE_BASED Mode:")
         result = analyze_country_stability(
             "Germany", 
             "Q3 2024", 
-            mode=AgentMode.REAL, 
+            mode=AgentMode.RULE_BASED, 
             data_service=data_service
         )
         print(f"  {result.parameter_name} Score for Germany: {result.score}/10")
@@ -277,7 +277,7 @@ def demo_data_service_status(data_service):
     
     if data_service is None:
         print("\n❌ Data service not initialized")
-        print("   To enable REAL mode:")
+        print("   To enable RULE_BASED mode:")
         print("   1. Ensure config/data_sources.yaml exists")
         print("   2. Add ECR data files to data/files/")
         print("   3. Format: ecr_CountryName.csv")
@@ -320,7 +320,7 @@ def demo_integration_guide():
     print("DEMO 9: Integration Guide for Other Agents")
     print("="*70)
     
-    print("\nTo add REAL mode to other agents, follow this pattern:")
+    print("\nTo add RULE_BASED mode to other agents, follow this pattern:")
     print("-" * 70)
     print("""
 1. Add data_service parameter to __init__:
@@ -335,11 +335,11 @@ def demo_integration_guide():
        if self.mode == AgentMode.MOCK:
            return self.MOCK_DATA.get(country, {})
        
-       elif self.mode == AgentMode.REAL:
+       elif self.mode == AgentMode.RULE_BASED:
            if self.data_service is None:
                return self._fetch_data_mock_fallback(country)
            
-           # Fetch real data
+           # Fetch rule-based data
            data = {}
            data['your_indicator'] = self.data_service.get_value(
                country, 'indicator_name', default=0.0
@@ -349,25 +349,25 @@ def demo_integration_guide():
 3. Initialize with data service:
 
    data_service = initialize_data_service()
-   agent = YourAgent(mode=AgentMode.REAL, data_service=data_service)
+   agent = YourAgent(mode=AgentMode.RULE_BASED, data_service=data_service)
 
-That's it! Your agent now supports both MOCK and REAL modes.
+That's it! Your agent now supports both MOCK and RULE_BASED modes.
     """)
 
 
 def main():
     """Run all demos."""
     print("\n" + "="*70)
-    print("🚀 COUNTRY STABILITY AGENT DEMO - MOCK & REAL MODES")
+    print("🚀 COUNTRY STABILITY AGENT DEMO - MOCK & RULE_BASED MODES")
     print("="*70)
     print("\nThis demo shows the Country Stability Agent with:")
     print("  - MOCK mode (test data)")
-    print("  - REAL mode (real data from data service)")
+    print("  - RULE_BASED mode (rule-based data from data service)")
     print("  - Comparison between modes")
     print("\n")
     
     try:
-        # Initialize data service for REAL mode
+        # Initialize data service for RULE_BASED mode
         data_service = initialize_data_service()
         
         # Run demos
@@ -387,7 +387,7 @@ def main():
         print("\nNext steps:")
         print("1. Review updated agent code in country_stability_agent.py")
         print("2. Test MOCK mode: Works immediately ✅")
-        print("3. Test REAL mode: Add ECR CSV files to data/files/")
+        print("3. Test RULE_BASED mode: Add ECR CSV files to data/files/")
         print("4. Apply same pattern to other 17 agents")
         print("5. Notice backward compatibility: MOCK mode unchanged!")
         print("\n")

@@ -29,7 +29,7 @@ Score 1:  ECR ≥ 9.0    - Failed/fragile state
 
 MODES:
 - MOCK: Uses hardcoded test data (for testing)
-- REAL: Fetches real ECR data from data service (production)
+- RULE_BASED: Fetches real ECR data from data service (production)
 """
 from typing import Dict, Any, List, Optional
 from datetime import datetime
@@ -67,14 +67,14 @@ class CountryStabilityAgent(BaseParameterAgent):
         self, 
         mode: AgentMode = AgentMode.MOCK, 
         config: Dict[str, Any] = None,
-        data_service = None  # DataService instance for REAL mode
+        data_service = None  # DataService instance for RULE_BASED mode
     ):
         """Initialize Country Stability Agent.
         
         Args:
             mode: Agent operation mode (MOCK or REAL)
             config: Configuration dictionary
-            data_service: DataService instance (required for REAL mode)
+            data_service: DataService instance (required for RULE_BASED mode)
         """
         super().__init__(
             parameter_name="Country Stability",
@@ -82,13 +82,13 @@ class CountryStabilityAgent(BaseParameterAgent):
             config=config
         )
         
-        # Store data service for REAL mode
+        # Store data service for RULE_BASED mode
         self.data_service = data_service
         
-        # Validate data service if in REAL mode
-        if self.mode == AgentMode.REAL and self.data_service is None:
+        # Validate data service if in RULE_BASED mode
+        if self.mode == AgentMode.RULE_BASED and self.data_service is None:
             logger.warning(
-                "REAL mode enabled but no data_service provided. "
+                "RULE_BASED mode enabled but no data_service provided. "
                 "Agent will fall back to MOCK data."
             )
         
@@ -190,8 +190,8 @@ class CountryStabilityAgent(BaseParameterAgent):
             justification = self._generate_justification(data, score, country, period)
             
             # Step 5: Estimate confidence
-            # Real data has higher confidence than mock data
-            if self.mode == AgentMode.REAL and data.get('source') == 'real':
+            # Rule-based data has higher confidence than mock data
+            if self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
                 data_quality = "high"
                 confidence = 0.9  # High confidence for real ECR data
             else:
@@ -233,7 +233,7 @@ class CountryStabilityAgent(BaseParameterAgent):
         """Fetch country risk data.
         
         In MOCK mode: Returns mock ECR ratings
-        In REAL mode: Fetches real ECR data from data service
+        In RULE_BASED mode: Fetches real ECR data from data service
         In RULE mode: Would query database (not yet implemented)
         In AI mode: Would use LLM to extract from documents (not yet implemented)
         
@@ -257,8 +257,8 @@ class CountryStabilityAgent(BaseParameterAgent):
             logger.debug(f"Fetched mock data for {country}: ECR={data.get('ecr_rating')}")
             return data
         
-        elif self.mode == AgentMode.REAL:
-            # Fetch real data from data service
+        elif self.mode == AgentMode.RULE_BASED:
+            # Fetch rule-based data from data service
             if self.data_service is None:
                 logger.warning("No data_service available, falling back to MOCK data")
                 return self._fetch_data_mock_fallback(country)
@@ -284,7 +284,7 @@ class CountryStabilityAgent(BaseParameterAgent):
                 data = {
                     'ecr_rating': float(ecr_rating),
                     'risk_category': risk_category,
-                    'source': 'real',
+                    'source': 'rule_based',
                     'period': period
                 }
                 
@@ -297,7 +297,7 @@ class CountryStabilityAgent(BaseParameterAgent):
                 
             except Exception as e:
                 logger.error(
-                    f"Error fetching real data for {country}: {e}. "
+                    f"Error fetching rule-based data for {country}: {e}. "
                     f"Falling back to MOCK data"
                 )
                 return self._fetch_data_mock_fallback(country)
@@ -316,7 +316,7 @@ class CountryStabilityAgent(BaseParameterAgent):
             raise AgentError(f"Unknown agent mode: {self.mode}")
     
     def _fetch_data_mock_fallback(self, country: str) -> Dict[str, Any]:
-        """Fallback to mock data when real data is unavailable.
+        """Fallback to mock data when rule-based data is unavailable.
         
         Args:
             country: Country name
@@ -454,7 +454,7 @@ class CountryStabilityAgent(BaseParameterAgent):
         sources = []
         
         # Check if we used real or mock data
-        if data and data.get('source') == 'real':
+        if data and data.get('source') == 'rule_based':
             sources.append("Euromoney Country Risk (ECR) - Real Data")
             sources.append(f"{country} Political Risk Assessment")
         else:
@@ -501,7 +501,7 @@ def analyze_country_stability(
         country: Country name
         period: Time period
         mode: Agent mode (MOCK or REAL)
-        data_service: DataService instance (required for REAL mode)
+        data_service: DataService instance (required for RULE_BASED mode)
         
     Returns:
         ParameterScore

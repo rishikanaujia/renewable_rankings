@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
-"""Demo script for testing the Country Stability Agent.
+"""Demo script for testing the Country Stability Agent with REAL data integration.
 
 This script demonstrates:
-1. Direct agent usage
-2. Service layer usage
-3. Score calculation based on ECR ratings
-4. Comparison with Ambition agent
+1. MOCK mode (using hardcoded test data)
+2. REAL mode (using real data from data service)
+3. Comparison between MOCK and REAL modes
+4. Service layer usage
+5. Score calculation based on ECR ratings
 
 Run from project root:
     python scripts/demo_country_stability_agent.py
@@ -26,13 +27,35 @@ setup_logger(log_level="INFO")
 logger = get_logger(__name__)
 
 
-def demo_direct_agent_usage():
-    """Demonstrate direct agent usage."""
+def initialize_data_service():
+    """Initialize data service for REAL mode."""
+    try:
+        import yaml
+        from src.data import DataService
+        
+        # Load configuration
+        with open('config/data_sources.yaml') as f:
+            config = yaml.safe_load(f)
+        
+        # Create data service
+        data_service = DataService(config)
+        
+        logger.info("Data service initialized successfully")
+        return data_service
+        
+    except Exception as e:
+        logger.warning(f"Could not initialize data service: {e}")
+        logger.warning("REAL mode demos will fall back to MOCK data")
+        return None
+
+
+def demo_mock_mode():
+    """Demonstrate MOCK mode (traditional usage)."""
     print("\n" + "="*70)
-    print("DEMO 1: Direct Agent Usage")
+    print("DEMO 1: MOCK Mode (Test Data)")
     print("="*70)
     
-    # Create agent
+    # Create agent in MOCK mode
     agent = CountryStabilityAgent(mode=AgentMode.MOCK)
     
     # Test countries with different risk levels
@@ -44,7 +67,7 @@ def demo_direct_agent_usage():
     ]
     
     for country, expected_risk in countries:
-        print(f"\n📍 {country} ({expected_risk})")
+        print(f"\n🏴 {country} ({expected_risk})")
         print("-" * 60)
         
         # Analyze
@@ -57,24 +80,104 @@ def demo_direct_agent_usage():
         print(f"Data Sources:   {', '.join(result.data_sources[:2])}...")
 
 
-def demo_convenience_function():
-    """Demonstrate convenience function."""
+def demo_real_mode(data_service):
+    """Demonstrate REAL mode (using real data)."""
     print("\n" + "="*70)
-    print("DEMO 2: Convenience Function")
+    print("DEMO 2: REAL Mode (Real Data from Data Service)")
     print("="*70)
     
-    # Use convenience function
-    result = analyze_country_stability("Brazil", "Q3 2024")
+    if data_service is None:
+        print("\n⚠️  Data service not available. Skipping REAL mode demo.")
+        print("    Make sure config/data_sources.yaml exists and is valid.")
+        return
     
-    print(f"\n{result.parameter_name} Score for Brazil:")
-    print(f"  Score: {result.score}/10")
+    # Create agent in REAL mode
+    agent = CountryStabilityAgent(mode=AgentMode.REAL, data_service=data_service)
+    
+    # Test countries (these should have ECR data in data/files/)
+    countries = ["Germany", "USA"]
+    
+    for country in countries:
+        print(f"\n🌍 {country} (REAL DATA)")
+        print("-" * 60)
+        
+        # Analyze
+        result = agent.analyze(country, "Q3 2024")
+        
+        # Display results
+        print(f"Score:          {result.score}/10")
+        print(f"Justification:  {result.justification}")
+        print(f"Confidence:     {result.confidence*100:.0f}%")
+        print(f"Data Sources:   {', '.join(result.data_sources)}")
+
+
+def demo_mock_vs_real_comparison(data_service):
+    """Compare MOCK vs REAL mode for same country."""
+    print("\n" + "="*70)
+    print("DEMO 3: MOCK vs REAL Mode Comparison")
+    print("="*70)
+    
+    if data_service is None:
+        print("\n⚠️  Data service not available. Skipping comparison.")
+        return
+    
+    # Create both agents
+    mock_agent = CountryStabilityAgent(mode=AgentMode.MOCK)
+    real_agent = CountryStabilityAgent(mode=AgentMode.REAL, data_service=data_service)
+    
+    countries = ["Germany", "USA"]
+    
+    print("\nComparing MOCK vs REAL data:")
+    print("-" * 70)
+    print(f"{'Country':<15} {'MOCK Score':<12} {'REAL Score':<12} {'Difference'}")
+    print("-" * 70)
+    
+    for country in countries:
+        mock_result = mock_agent.analyze(country, "Q3 2024")
+        real_result = real_agent.analyze(country, "Q3 2024")
+        
+        diff = real_result.score - mock_result.score
+        diff_str = f"{diff:+.1f}" if diff != 0 else "Same"
+        
+        print(
+            f"{country:<15} "
+            f"{mock_result.score:<12.1f} "
+            f"{real_result.score:<12.1f} "
+            f"{diff_str}"
+        )
+    
+    print("\n💡 Insight: REAL and MOCK data should match if CSV files match MOCK_DATA!")
+
+
+def demo_convenience_function(data_service):
+    """Demonstrate convenience function."""
+    print("\n" + "="*70)
+    print("DEMO 4: Convenience Function (Both Modes)")
+    print("="*70)
+    
+    # MOCK mode
+    print("\nMOCK Mode:")
+    result = analyze_country_stability("Brazil", "Q3 2024", mode=AgentMode.MOCK)
+    print(f"  {result.parameter_name} Score for Brazil: {result.score}/10")
     print(f"  {result.justification}")
+    
+    # REAL mode
+    if data_service:
+        print("\nREAL Mode:")
+        result = analyze_country_stability(
+            "Germany", 
+            "Q3 2024", 
+            mode=AgentMode.REAL, 
+            data_service=data_service
+        )
+        print(f"  {result.parameter_name} Score for Germany: {result.score}/10")
+        print(f"  {result.justification}")
 
 
 def demo_service_layer():
     """Demonstrate service layer usage."""
     print("\n" + "="*70)
-    print("DEMO 3: Service Layer (UI Integration Pattern)")
+    print("DEMO 5: Service Layer (UI Integration Pattern)")
     print("="*70)
     
     # This is how the UI will use agents
@@ -99,7 +202,7 @@ def demo_service_layer():
 def demo_scoring_rubric():
     """Demonstrate scoring rubric."""
     print("\n" + "="*70)
-    print("DEMO 4: Scoring Rubric Visualization")
+    print("DEMO 6: Scoring Rubric Visualization")
     print("="*70)
     
     agent = CountryStabilityAgent()
@@ -145,7 +248,7 @@ def demo_scoring_rubric():
 def demo_all_countries():
     """Test all mock countries."""
     print("\n" + "="*70)
-    print("DEMO 5: All Mock Countries Comparison")
+    print("DEMO 7: All Mock Countries Comparison")
     print("="*70)
     
     agent = CountryStabilityAgent()
@@ -166,66 +269,127 @@ def demo_all_countries():
         print(f"{i:<6} {country:<20} {score:<8.1f} {ecr:.1f}")
 
 
-def demo_comparison_with_ambition():
-    """Compare Country Stability with Ambition scores."""
+def demo_data_service_status(data_service):
+    """Show data service status."""
     print("\n" + "="*70)
-    print("DEMO 6: Comparison with Ambition Agent")
+    print("DEMO 8: Data Service Status")
     print("="*70)
     
-    from src.agents.parameter_agents import AmbitionAgent
+    if data_service is None:
+        print("\n❌ Data service not initialized")
+        print("   To enable REAL mode:")
+        print("   1. Ensure config/data_sources.yaml exists")
+        print("   2. Add ECR data files to data/files/")
+        print("   3. Format: ecr_CountryName.csv")
+        return
     
-    stability_agent = CountryStabilityAgent()
-    ambition_agent = AmbitionAgent()
-    
-    countries = ["Brazil", "Germany", "India", "USA"]
-    
-    print("\nShowing how different factors affect overall ranking:")
-    print("-" * 60)
-    print(f"{'Country':<15} {'Ambition':<12} {'Stability':<12} {'Average'}")
-    print("-" * 60)
-    
-    for country in countries:
-        stability_result = stability_agent.analyze(country, "Q3 2024")
-        ambition_result = ambition_agent.analyze(country, "Q3 2024")
+    try:
+        status = data_service.get_status()
         
-        avg = (stability_result.score + ambition_result.score) / 2
+        print("\n✅ Data Service Active")
+        print(f"   Providers: {len(status['providers'])}")
+        print(f"   Indicators: {status['total_indicators']}")
+        print(f"   Countries: {status['total_countries']}")
         
-        print(
-            f"{country:<15} "
-            f"{ambition_result.score:<12.1f} "
-            f"{stability_result.score:<12.1f} "
-            f"{avg:.1f}"
-        )
+        # Show available ECR data
+        print("\n📊 Available ECR Data:")
+        countries = data_service.get_available_countries()
+        
+        # Try to get ECR data for each country
+        ecr_countries = []
+        for country in countries:
+            value = data_service.get_value(country, 'ecr', default=None)
+            if value is not None:
+                ecr_countries.append((country, value))
+        
+        if ecr_countries:
+            print(f"   Found ECR data for {len(ecr_countries)} countries:")
+            for country, value in ecr_countries[:10]:  # Show first 10
+                print(f"   - {country}: {value}")
+        else:
+            print("   No ECR data found")
+            print("   Add CSV files to data/files/ with format: ecr_CountryName.csv")
+        
+    except Exception as e:
+        print(f"\n⚠️  Error getting data service status: {e}")
+
+
+def demo_integration_guide():
+    """Show integration guide for other agents."""
+    print("\n" + "="*70)
+    print("DEMO 9: Integration Guide for Other Agents")
+    print("="*70)
     
-    print("\nInsight: High ambition + high stability = best investment opportunity!")
+    print("\nTo add REAL mode to other agents, follow this pattern:")
+    print("-" * 70)
+    print("""
+1. Add data_service parameter to __init__:
+
+   def __init__(self, mode=AgentMode.MOCK, config=None, data_service=None):
+       super().__init__("Agent Name", mode, config)
+       self.data_service = data_service
+
+2. Update _fetch_data method:
+
+   def _fetch_data(self, country, period, **kwargs):
+       if self.mode == AgentMode.MOCK:
+           return self.MOCK_DATA.get(country, {})
+       
+       elif self.mode == AgentMode.REAL:
+           if self.data_service is None:
+               return self._fetch_data_mock_fallback(country)
+           
+           # Fetch real data
+           data = {}
+           data['your_indicator'] = self.data_service.get_value(
+               country, 'indicator_name', default=0.0
+           )
+           return data
+
+3. Initialize with data service:
+
+   data_service = initialize_data_service()
+   agent = YourAgent(mode=AgentMode.REAL, data_service=data_service)
+
+That's it! Your agent now supports both MOCK and REAL modes.
+    """)
 
 
 def main():
     """Run all demos."""
     print("\n" + "="*70)
-    print("🚀 COUNTRY STABILITY AGENT DEMO")
+    print("🚀 COUNTRY STABILITY AGENT DEMO - MOCK & REAL MODES")
     print("="*70)
-    print("\nThis demo shows the Country Stability Agent in action.")
-    print("The agent analyzes political and economic risk using ECR ratings.")
+    print("\nThis demo shows the Country Stability Agent with:")
+    print("  - MOCK mode (test data)")
+    print("  - REAL mode (real data from data service)")
+    print("  - Comparison between modes")
     print("\n")
     
     try:
+        # Initialize data service for REAL mode
+        data_service = initialize_data_service()
+        
         # Run demos
-        demo_direct_agent_usage()
-        demo_convenience_function()
+        demo_mock_mode()
+        demo_real_mode(data_service)
+        demo_mock_vs_real_comparison(data_service)
+        demo_convenience_function(data_service)
         demo_service_layer()
         demo_scoring_rubric()
         demo_all_countries()
-        demo_comparison_with_ambition()
+        demo_data_service_status(data_service)
+        demo_integration_guide()
         
         print("\n" + "="*70)
         print("✅ ALL DEMOS COMPLETED SUCCESSFULLY!")
         print("="*70)
         print("\nNext steps:")
-        print("1. Review the agent code in src/agents/parameter_agents/country_stability_agent.py")
-        print("2. Try modifying mock ECR ratings in MOCK_DATA dictionary")
-        print("3. Implement the next parameter agent (e.g., Support Scheme)")
-        print("4. Notice how regulation subcategory now uses TWO parameters!")
+        print("1. Review updated agent code in country_stability_agent.py")
+        print("2. Test MOCK mode: Works immediately ✅")
+        print("3. Test REAL mode: Add ECR CSV files to data/files/")
+        print("4. Apply same pattern to other 17 agents")
+        print("5. Notice backward compatibility: MOCK mode unchanged!")
         print("\n")
         
     except Exception as e:

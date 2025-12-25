@@ -26,8 +26,12 @@ Score 4:  ECR 6.0-7.0  - Unstable
 Score 3:  ECR 7.0-8.0  - Very unstable
 Score 2:  ECR 8.0-9.0  - Extremely unstable
 Score 1:  ECR ≥ 9.0    - Failed/fragile state
+
+MODES:
+- MOCK: Uses hardcoded test data (for testing)
+- REAL: Fetches real ECR data from data service (production)
 """
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from datetime import datetime
 
 from ..base_agent import BaseParameterAgent, AgentMode
@@ -59,18 +63,42 @@ class CountryStabilityAgent(BaseParameterAgent):
         "Argentina": {"ecr_rating": 5.8, "risk_category": "Moderate Instability"},
     }
     
-    def __init__(self, mode: AgentMode = AgentMode.MOCK, config: Dict[str, Any] = None):
-        """Initialize Country Stability Agent."""
+    def __init__(
+        self, 
+        mode: AgentMode = AgentMode.MOCK, 
+        config: Dict[str, Any] = None,
+        data_service = None  # DataService instance for REAL mode
+    ):
+        """Initialize Country Stability Agent.
+        
+        Args:
+            mode: Agent operation mode (MOCK or REAL)
+            config: Configuration dictionary
+            data_service: DataService instance (required for REAL mode)
+        """
         super().__init__(
             parameter_name="Country Stability",
             mode=mode,
             config=config
         )
         
+        # Store data service for REAL mode
+        self.data_service = data_service
+        
+        # Validate data service if in REAL mode
+        if self.mode == AgentMode.REAL and self.data_service is None:
+            logger.warning(
+                "REAL mode enabled but no data_service provided. "
+                "Agent will fall back to MOCK data."
+            )
+        
         # Load scoring rubric from config (NO HARDCODING!)
         self.scoring_rubric = self._load_scoring_rubric()
         
-        logger.debug(f"Loaded scoring rubric with {len(self.scoring_rubric)} levels")
+        logger.debug(
+            f"Initialized CountryStabilityAgent in {mode.value} mode "
+            f"with {len(self.scoring_rubric)} scoring levels"
+        )
     
     def _load_scoring_rubric(self) -> List[Dict[str, Any]]:
         """Load scoring rubric from configuration.
@@ -147,7 +175,7 @@ class CountryStabilityAgent(BaseParameterAgent):
             ParameterScore with score, justification, confidence
         """
         try:
-            logger.info(f"Analyzing Country Stability for {country} ({period})")
+            logger.info(f"Analyzing Country Stability for {country} ({period}) in {self.mode.value} mode")
             
             # Step 1: Fetch data
             data = self._fetch_data(country, period, **kwargs)
@@ -162,12 +190,18 @@ class CountryStabilityAgent(BaseParameterAgent):
             justification = self._generate_justification(data, score, country, period)
             
             # Step 5: Estimate confidence
-            # ECR ratings are official and regularly updated, so high confidence
-            data_quality = "high" if data else "low"
+            # Real data has higher confidence than mock data
+            if self.mode == AgentMode.REAL and data.get('source') == 'real':
+                data_quality = "high"
+                confidence = 0.9  # High confidence for real ECR data
+            else:
+                data_quality = "medium"
+                confidence = 0.7  # Lower confidence for mock data
+            
             confidence = self._estimate_confidence(data, data_quality)
             
             # Step 6: Identify data sources
-            data_sources = self._get_data_sources(country)
+            data_sources = self._get_data_sources(country, data)
             
             # Create result
             result = ParameterScore(
@@ -181,7 +215,7 @@ class CountryStabilityAgent(BaseParameterAgent):
             
             logger.info(
                 f"Country Stability analysis complete for {country}: "
-                f"Score={score}, Confidence={confidence}"
+                f"Score={score:.1f}, Confidence={confidence:.2f}, Mode={self.mode.value}"
             )
             
             return result
@@ -199,15 +233,16 @@ class CountryStabilityAgent(BaseParameterAgent):
         """Fetch country risk data.
         
         In MOCK mode: Returns mock ECR ratings
-        In RULE mode: Would query database
-        In AI mode: Would use LLM to extract from documents
+        In REAL mode: Fetches real ECR data from data service
+        In RULE mode: Would query database (not yet implemented)
+        In AI mode: Would use LLM to extract from documents (not yet implemented)
         
         Args:
             country: Country name
             period: Time period
             
         Returns:
-            Dictionary with ECR rating and risk category
+            Dictionary with ECR rating, risk category, and source
         """
         if self.mode == AgentMode.MOCK:
             # Return mock data
@@ -216,8 +251,56 @@ class CountryStabilityAgent(BaseParameterAgent):
                 logger.warning(f"No mock data for {country}, using default moderate risk")
                 data = {"ecr_rating": 5.0, "risk_category": "Moderate Instability"}
             
-            logger.debug(f"Fetched mock data for {country}: {data}")
+            # Add source indicator
+            data['source'] = 'mock'
+            
+            logger.debug(f"Fetched mock data for {country}: ECR={data.get('ecr_rating')}")
             return data
+        
+        elif self.mode == AgentMode.REAL:
+            # Fetch real data from data service
+            if self.data_service is None:
+                logger.warning("No data_service available, falling back to MOCK data")
+                return self._fetch_data_mock_fallback(country)
+            
+            try:
+                # Try to fetch ECR rating from data service
+                # Indicator name: 'ecr' (from our CSV files or future data sources)
+                ecr_rating = self.data_service.get_value(
+                    country=country,
+                    indicator='ecr',
+                    default=None
+                )
+                
+                if ecr_rating is None:
+                    logger.warning(
+                        f"No real ECR data found for {country}, falling back to MOCK data"
+                    )
+                    return self._fetch_data_mock_fallback(country)
+                
+                # Determine risk category based on ECR rating
+                risk_category = self._determine_risk_category(ecr_rating)
+                
+                data = {
+                    'ecr_rating': float(ecr_rating),
+                    'risk_category': risk_category,
+                    'source': 'real',
+                    'period': period
+                }
+                
+                logger.info(
+                    f"Fetched REAL data for {country}: ECR={ecr_rating:.1f}, "
+                    f"Category={risk_category}"
+                )
+                
+                return data
+                
+            except Exception as e:
+                logger.error(
+                    f"Error fetching real data for {country}: {e}. "
+                    f"Falling back to MOCK data"
+                )
+                return self._fetch_data_mock_fallback(country)
         
         elif self.mode == AgentMode.RULE_BASED:
             # TODO Phase 2: Query from database
@@ -231,6 +314,48 @@ class CountryStabilityAgent(BaseParameterAgent):
         
         else:
             raise AgentError(f"Unknown agent mode: {self.mode}")
+    
+    def _fetch_data_mock_fallback(self, country: str) -> Dict[str, Any]:
+        """Fallback to mock data when real data is unavailable.
+        
+        Args:
+            country: Country name
+            
+        Returns:
+            Mock data dictionary
+        """
+        data = self.MOCK_DATA.get(country, {
+            "ecr_rating": 5.0, 
+            "risk_category": "Moderate Instability"
+        })
+        data['source'] = 'mock_fallback'
+        
+        logger.debug(f"Using mock fallback data for {country}")
+        return data
+    
+    def _determine_risk_category(self, ecr_rating: float) -> str:
+        """Determine risk category from ECR rating.
+        
+        Args:
+            ecr_rating: ECR rating value
+            
+        Returns:
+            Risk category string
+        """
+        # Map ECR rating to risk category using scoring rubric
+        for level in self.scoring_rubric:
+            min_ecr = level.get('min_ecr', 0.0)
+            max_ecr = level.get('max_ecr', 100.0)
+            
+            if min_ecr <= ecr_rating < max_ecr:
+                # Extract category from description
+                description = level.get('description', '')
+                # Get first part before parenthesis
+                category = description.split('(')[0].strip()
+                return category.title()
+        
+        # Fallback
+        return "Unknown Risk"
     
     def _calculate_score(
         self,
@@ -291,6 +416,7 @@ class CountryStabilityAgent(BaseParameterAgent):
         """
         ecr_rating = data.get("ecr_rating", 0.0)
         risk_category = data.get("risk_category", "Unknown")
+        source = data.get("source", "unknown")
         
         # Find description from rubric
         description = "moderate risk profile"
@@ -300,29 +426,44 @@ class CountryStabilityAgent(BaseParameterAgent):
                 break
         
         # Build justification
-        justification = (
-            f"ECR rating of {ecr_rating:.1f} indicates {risk_category.lower()}. "
-            f"{description.capitalize()}. "
-            f"Political and economic environment supports renewable energy investments."
-        )
+        if source == 'real':
+            justification = (
+                f"Based on real ECR data: rating of {ecr_rating:.1f} indicates "
+                f"{risk_category.lower()}. {description.capitalize()}. "
+                f"Political and economic environment supports renewable energy investments."
+            )
+        else:
+            justification = (
+                f"ECR rating of {ecr_rating:.1f} indicates {risk_category.lower()}. "
+                f"{description.capitalize()}. "
+                f"Political and economic environment supports renewable energy investments."
+            )
         
         return justification
     
-    def _get_data_sources(self, country: str) -> List[str]:
+    def _get_data_sources(self, country: str, data: Dict[str, Any] = None) -> List[str]:
         """Get data sources used for this analysis.
         
         Args:
             country: Country name
+            data: Data dictionary with source info
             
         Returns:
             List of data source identifiers
         """
-        # In production, these would be actual URLs/documents
-        return [
-            "Euromoney Country Risk (ECR) 2024",
-            f"{country} Political Risk Assessment",
-            "World Bank Governance Indicators 2024"
-        ]
+        sources = []
+        
+        # Check if we used real or mock data
+        if data and data.get('source') == 'real':
+            sources.append("Euromoney Country Risk (ECR) - Real Data")
+            sources.append(f"{country} Political Risk Assessment")
+        else:
+            sources.append("Euromoney Country Risk (ECR) - Mock Data")
+            sources.append(f"{country} Political Risk Assessment (Estimated)")
+        
+        sources.append("World Bank Governance Indicators 2024")
+        
+        return sources
     
     def _get_scoring_rubric(self) -> List[Dict[str, Any]]:
         """Get scoring rubric for Country Stability parameter.
@@ -351,17 +492,19 @@ class CountryStabilityAgent(BaseParameterAgent):
 def analyze_country_stability(
     country: str,
     period: str = "Q3 2024",
-    mode: AgentMode = AgentMode.MOCK
+    mode: AgentMode = AgentMode.MOCK,
+    data_service = None
 ) -> ParameterScore:
     """Convenience function to analyze country stability.
     
     Args:
         country: Country name
         period: Time period
-        mode: Agent mode
+        mode: Agent mode (MOCK or REAL)
+        data_service: DataService instance (required for REAL mode)
         
     Returns:
         ParameterScore
     """
-    agent = CountryStabilityAgent(mode=mode)
+    agent = CountryStabilityAgent(mode=mode, data_service=data_service)
     return agent.analyze(country, period)

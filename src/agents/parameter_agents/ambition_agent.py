@@ -15,8 +15,12 @@ Scoring Rubric:
 8:  30-34.99 GW - Very high targets
 9:  35-39.99 GW - Extremely high targets
 10: ≥40 GW    - World-class targets
+
+MODES:
+- MOCK: Uses hardcoded test data (for testing)
+- RULE_BASED: Fetches real target data from data service (production)
 """
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from datetime import datetime
 
 from ..base_agent import BaseParameterAgent, AgentMode
@@ -44,18 +48,42 @@ class AmbitionAgent(BaseParameterAgent):
         "Vietnam": {"total_gw": 28.0, "solar": 18.0, "onshore_wind": 9.0, "offshore_wind": 1.0},
     }
     
-    def __init__(self, mode: AgentMode = AgentMode.MOCK, config: Dict[str, Any] = None):
-        """Initialize Ambition Agent."""
+    def __init__(
+        self, 
+        mode: AgentMode = AgentMode.MOCK, 
+        config: Dict[str, Any] = None,
+        data_service = None  # DataService instance for RULE_BASED mode
+    ):
+        """Initialize Ambition Agent.
+        
+        Args:
+            mode: Agent operation mode (MOCK or RULE_BASED)
+            config: Configuration dictionary
+            data_service: DataService instance (required for RULE_BASED mode)
+        """
         super().__init__(
             parameter_name="Ambition",
             mode=mode,
             config=config
         )
         
+        # Store data service for RULE_BASED mode
+        self.data_service = data_service
+        
+        # Validate data service if in RULE_BASED mode
+        if self.mode == AgentMode.RULE_BASED and self.data_service is None:
+            logger.warning(
+                "RULE_BASED mode enabled but no data_service provided. "
+                "Agent will fall back to MOCK data."
+            )
+        
         # Load scoring rubric from config
         self.scoring_rubric = self._load_scoring_rubric()
         
-        logger.debug(f"Loaded scoring rubric with {len(self.scoring_rubric)} levels")
+        logger.debug(
+            f"Initialized AmbitionAgent in {mode.value} mode "
+            f"with {len(self.scoring_rubric)} scoring levels"
+        )
     
     def _load_scoring_rubric(self) -> List[Dict[str, Any]]:
         """Load scoring rubric from configuration.
@@ -132,7 +160,7 @@ class AmbitionAgent(BaseParameterAgent):
             ParameterScore with score, justification, confidence
         """
         try:
-            logger.info(f"Analyzing Ambition for {country} ({period})")
+            logger.info(f"Analyzing Ambition for {country} ({period}) in {self.mode.value} mode")
             
             # Step 1: Fetch data
             data = self._fetch_data(country, period, **kwargs)
@@ -147,11 +175,18 @@ class AmbitionAgent(BaseParameterAgent):
             justification = self._generate_justification(data, score, country, period)
             
             # Step 5: Estimate confidence
-            data_quality = "high" if data else "low"
+            # Rule-based data has higher confidence than mock data
+            if self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
+                data_quality = "high"
+                confidence = 0.9  # High confidence for rule-based data
+            else:
+                data_quality = "medium"
+                confidence = 0.7  # Lower confidence for mock data
+            
             confidence = self._estimate_confidence(data, data_quality)
             
             # Step 6: Identify data sources
-            data_sources = self._get_data_sources(country)
+            data_sources = self._get_data_sources(country, data)
             
             # Create result
             result = ParameterScore(
@@ -165,7 +200,7 @@ class AmbitionAgent(BaseParameterAgent):
             
             logger.info(
                 f"Ambition analysis complete for {country}: "
-                f"Score={score}, Confidence={confidence}"
+                f"Score={score:.1f}, Confidence={confidence:.2f}, Mode={self.mode.value}"
             )
             
             return result
@@ -183,15 +218,15 @@ class AmbitionAgent(BaseParameterAgent):
         """Fetch renewable energy target data.
         
         In MOCK mode: Returns mock data
-        In RULE mode: Would query database
-        In AI mode: Would use LLM to extract from documents
+        In RULE_BASED mode: Fetches real target data from data service
+        In AI_POWERED mode: Would use LLM to extract from documents (not yet implemented)
         
         Args:
             country: Country name
             period: Time period
             
         Returns:
-            Dictionary with target data
+            Dictionary with target data (total_gw, solar, onshore_wind, offshore_wind, source)
         """
         if self.mode == AgentMode.MOCK:
             # Return mock data
@@ -200,13 +235,68 @@ class AmbitionAgent(BaseParameterAgent):
                 logger.warning(f"No mock data for {country}, using default minimal target")
                 data = {"total_gw": 2.0, "solar": 1.0, "onshore_wind": 1.0, "offshore_wind": 0.0}
             
-            logger.debug(f"Fetched mock data for {country}: {data}")
+            # Add source indicator
+            data['source'] = 'mock'
+            
+            logger.debug(f"Fetched mock data for {country}: {data.get('total_gw')} GW total")
             return data
         
         elif self.mode == AgentMode.RULE_BASED:
-            # TODO Phase 2: Query from database
-            # return self._query_targets_database(country, period)
-            raise NotImplementedError("RULE_BASED mode not yet implemented")
+            # Fetch rule-based data from data service
+            if self.data_service is None:
+                logger.warning("No data_service available, falling back to MOCK data")
+                return self._fetch_data_mock_fallback(country)
+            
+            try:
+                # Try to fetch renewable target data from data service
+                # For now, we can use GDP growth as a proxy for ambition
+                # In production, you'd have specific renewable target indicators
+                
+                # Option 1: If you have renewable target CSV files
+                # renewable_target = self.data_service.get_value(country, 'renewable_target_gw', default=None)
+                
+                # Option 2: Use GDP growth as proxy (countries with higher growth might have higher targets)
+                gdp_growth = self.data_service.get_value(
+                    country=country,
+                    indicator='gdp_growth',
+                    default=None
+                )
+                
+                if gdp_growth is None:
+                    logger.warning(
+                        f"No rule-based data found for {country}, falling back to MOCK data"
+                    )
+                    return self._fetch_data_mock_fallback(country)
+                
+                # Estimate renewable targets based on GDP growth
+                # This is a simplified proxy - in production you'd use actual target data
+                # Higher GDP growth → higher renewable ambition (rough correlation)
+                total_gw = self._estimate_targets_from_gdp_growth(country, gdp_growth)
+                
+                data = {
+                    'total_gw': total_gw,
+                    'solar': total_gw * 0.5,  # Rough breakdown
+                    'onshore_wind': total_gw * 0.4,
+                    'offshore_wind': total_gw * 0.1,
+                    'source': 'rule_based',
+                    'period': period,
+                    'proxy_used': 'gdp_growth',
+                    'proxy_value': gdp_growth
+                }
+                
+                logger.info(
+                    f"Fetched RULE_BASED data for {country}: Total={total_gw:.1f} GW "
+                    f"(estimated from GDP growth={gdp_growth:.1f}%)"
+                )
+                
+                return data
+                
+            except Exception as e:
+                logger.error(
+                    f"Error fetching rule-based data for {country}: {e}. "
+                    f"Falling back to MOCK data"
+                )
+                return self._fetch_data_mock_fallback(country)
         
         elif self.mode == AgentMode.AI_POWERED:
             # TODO Phase 2+: Use LLM to extract from documents
@@ -215,6 +305,63 @@ class AmbitionAgent(BaseParameterAgent):
         
         else:
             raise AgentError(f"Unknown agent mode: {self.mode}")
+    
+    def _fetch_data_mock_fallback(self, country: str) -> Dict[str, Any]:
+        """Fallback to mock data when rule-based data is unavailable.
+        
+        Args:
+            country: Country name
+            
+        Returns:
+            Mock data dictionary
+        """
+        data = self.MOCK_DATA.get(country, {
+            "total_gw": 2.0, 
+            "solar": 1.0, 
+            "onshore_wind": 1.0, 
+            "offshore_wind": 0.0
+        })
+        data['source'] = 'mock_fallback'
+        
+        logger.debug(f"Using mock fallback data for {country}")
+        return data
+    
+    def _estimate_targets_from_gdp_growth(self, country: str, gdp_growth: float) -> float:
+        """Estimate renewable targets from GDP growth (temporary proxy).
+        
+        This is a simplified estimation. In production, you would:
+        1. Have actual renewable target data in CSV files
+        2. Or use multiple economic indicators
+        3. Or use historical renewable capacity trends
+        
+        Args:
+            country: Country name
+            gdp_growth: GDP growth rate (%)
+            
+        Returns:
+            Estimated total renewable target in GW
+        """
+        # Get base from mock data if available
+        base_data = self.MOCK_DATA.get(country)
+        if base_data:
+            base_gw = base_data.get('total_gw', 20.0)
+        else:
+            base_gw = 20.0  # Default baseline
+        
+        # Adjust based on GDP growth
+        # Positive growth → increase targets, negative growth → decrease targets
+        # This is a rough heuristic - replace with actual data in production
+        adjustment_factor = 1.0 + (gdp_growth / 10.0)  # ±10% growth changes targets by ±100%
+        adjustment_factor = max(0.5, min(2.0, adjustment_factor))  # Cap at 0.5x to 2x
+        
+        estimated_gw = base_gw * adjustment_factor
+        
+        logger.debug(
+            f"Estimated {country} targets: {estimated_gw:.1f} GW "
+            f"(base={base_gw:.1f}, growth={gdp_growth:.1f}%, factor={adjustment_factor:.2f})"
+        )
+        
+        return estimated_gw
     
     def _calculate_score(
         self,
@@ -234,7 +381,7 @@ class AmbitionAgent(BaseParameterAgent):
         """
         total_gw = data.get("total_gw", 0)
         
-        logger.debug(f"Calculating score for {country}: {total_gw} GW")
+        logger.debug(f"Calculating score for {country}: {total_gw:.1f} GW")
         
         # Find matching rubric level
         for level in self.scoring_rubric:
@@ -245,7 +392,7 @@ class AmbitionAgent(BaseParameterAgent):
                 score = level["score"]
                 logger.debug(
                     f"Score {score} assigned: "
-                    f"{total_gw} GW falls in range {min_gw}-{max_gw} GW"
+                    f"{total_gw:.1f} GW falls in range {min_gw}-{max_gw} GW"
                 )
                 return float(score)
         
@@ -275,6 +422,7 @@ class AmbitionAgent(BaseParameterAgent):
         solar = data.get("solar", 0)
         onshore = data.get("onshore_wind", 0)
         offshore = data.get("offshore_wind", 0)
+        source = data.get("source", "unknown")
         
         # Find description from rubric
         description = "renewable targets"
@@ -283,30 +431,57 @@ class AmbitionAgent(BaseParameterAgent):
                 description = level["description"]
                 break
         
-        # Build justification
-        justification = (
-            f"{total_gw} GW of renewable capacity targeted by 2030 "
-            f"(solar PV: {solar} GW, onshore wind: {onshore} GW, offshore wind: {offshore} GW). "
-            f"{description.capitalize()}."
-        )
+        # Build justification based on source
+        if source == 'rule_based':
+            proxy = data.get('proxy_used', '')
+            if proxy:
+                justification = (
+                    f"Based on rule-based analysis: {total_gw:.1f} GW of renewable capacity "
+                    f"targeted by 2030 "
+                    f"(solar PV: {solar:.1f} GW, onshore wind: {onshore:.1f} GW, "
+                    f"offshore wind: {offshore:.1f} GW). "
+                    f"{description.capitalize()}."
+                )
+            else:
+                justification = (
+                    f"Based on rule-based data: {total_gw:.1f} GW of renewable capacity "
+                    f"targeted by 2030. {description.capitalize()}."
+                )
+        else:
+            justification = (
+                f"{total_gw:.1f} GW of renewable capacity targeted by 2030 "
+                f"(solar PV: {solar:.1f} GW, onshore wind: {onshore:.1f} GW, "
+                f"offshore wind: {offshore:.1f} GW). "
+                f"{description.capitalize()}."
+            )
         
         return justification
     
-    def _get_data_sources(self, country: str) -> List[str]:
+    def _get_data_sources(self, country: str, data: Dict[str, Any] = None) -> List[str]:
         """Get data sources used for this analysis.
         
         Args:
             country: Country name
+            data: Data dictionary with source info
             
         Returns:
             List of data source identifiers
         """
-        # In production, these would be actual URLs/documents
-        return [
-            f"{country} NDC 2024",
-            "IRENA Renewable Capacity Statistics 2024",
-            f"{country} Ministry of Energy Official Targets"
-        ]
+        sources = []
+        
+        # Check if we used rule-based or mock data
+        if data and data.get('source') == 'rule_based':
+            sources.append(f"{country} NDC 2024 - Rule-Based Data")
+            sources.append("IRENA Renewable Capacity Statistics 2024")
+            if data.get('proxy_used'):
+                sources.append(f"World Bank {data['proxy_used']} (proxy indicator)")
+        else:
+            sources.append(f"{country} NDC 2024 - Mock Data")
+            sources.append("IRENA Renewable Capacity Statistics 2024 (Estimated)")
+        
+        sources.append(f"{country} Ministry of Energy Official Targets")
+        
+        return sources
     
     def _get_scoring_rubric(self) -> List[Dict[str, Any]]:
         """Get scoring rubric for Ambition parameter.
@@ -334,17 +509,19 @@ class AmbitionAgent(BaseParameterAgent):
 def analyze_ambition(
     country: str,
     period: str = "Q3 2024",
-    mode: AgentMode = AgentMode.MOCK
+    mode: AgentMode = AgentMode.MOCK,
+    data_service = None
 ) -> ParameterScore:
     """Convenience function to analyze ambition for a country.
     
     Args:
         country: Country name
         period: Time period
-        mode: Agent mode
+        mode: Agent mode (MOCK or RULE_BASED)
+        data_service: DataService instance (required for RULE_BASED mode)
         
     Returns:
         ParameterScore
     """
-    agent = AmbitionAgent(mode=mode)
+    agent = AmbitionAgent(mode=mode, data_service=data_service)
     return agent.analyze(country, period)

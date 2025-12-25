@@ -130,6 +130,13 @@ COUNTRY_CODES = {
 # Reverse mapping
 CODE_TO_COUNTRY = {v: k for k, v in COUNTRY_CODES.items()}
 
+# World Bank indicators - combined mapping for convenience
+WORLD_BANK_INDICATORS = {
+    **ECONOMIC_INDICATORS,
+    **ENERGY_INDICATORS,
+    **FINANCIAL_INDICATORS
+}
+
 # Default cache TTL by data frequency
 CACHE_TTL_SECONDS = {
     DataFrequency.REALTIME: 60,          # 1 minute

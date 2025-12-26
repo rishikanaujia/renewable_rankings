@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
-"""Demo script for testing the Power Market Size Agent.
+"""Demo script for testing the Power Market Size Agent with RULE_BASED mode support.
 
 This script demonstrates:
-1. Direct agent usage
-2. Service layer usage
-3. Score calculation based on TWh consumption
-4. Comparison across all three agents
+1. MOCK mode (using hardcoded test data)
+2. RULE_BASED mode (using real data from data service)
+3. Comparison between MOCK and RULE_BASED modes
+4. Service layer usage
+5. Score calculation based on TWh consumption
+6. Comparison across all three agents
 
 Run from project root:
     python scripts/demo_power_market_size_agent.py
@@ -31,13 +33,35 @@ setup_logger(log_level="INFO")
 logger = get_logger(__name__)
 
 
-def demo_direct_agent_usage():
-    """Demonstrate direct agent usage."""
+def initialize_data_service():
+    """Initialize data service for RULE_BASED mode."""
+    try:
+        import yaml
+        from src.data import DataService
+        
+        # Load configuration
+        with open('config/data_sources.yaml') as f:
+            config = yaml.safe_load(f)
+        
+        # Create data service
+        data_service = DataService(config)
+        
+        logger.info("Data service initialized successfully")
+        return data_service
+        
+    except Exception as e:
+        logger.warning(f"Could not initialize data service: {e}")
+        logger.warning("RULE_BASED mode demos will fall back to MOCK data")
+        return None
+
+
+def demo_mock_mode():
+    """Demonstrate MOCK mode (traditional usage)."""
     print("\n" + "="*70)
-    print("DEMO 1: Direct Agent Usage")
+    print("DEMO 1: MOCK Mode (Test Data)")
     print("="*70)
     
-    # Create agent
+    # Create agent in MOCK mode
     agent = PowerMarketSizeAgent(mode=AgentMode.MOCK)
     
     # Test countries with different market sizes
@@ -51,7 +75,7 @@ def demo_direct_agent_usage():
     ]
     
     for country, expected_size in countries:
-        print(f"\n📍 {country} ({expected_size})")
+        print(f"\n🏴 {country} ({expected_size})")
         print("-" * 60)
         
         # Analyze
@@ -62,35 +86,116 @@ def demo_direct_agent_usage():
         # Display results
         print(f"Consumption:    {twh:,.0f} TWh/year")
         print(f"Score:          {result.score}/10")
-        print(f"Justification:  {result.justification}")
+        print(f"Justification:  {result.justification[:80]}...")
         print(f"Confidence:     {result.confidence*100:.0f}%")
 
 
-def demo_convenience_function():
-    """Demonstrate convenience function."""
+def demo_rule_based_mode(data_service):
+    """Demonstrate RULE_BASED mode (using real data)."""
     print("\n" + "="*70)
-    print("DEMO 2: Convenience Function")
+    print("DEMO 2: RULE_BASED Mode (Real Data from Data Service)")
     print("="*70)
     
-    # Use convenience function
-    result = analyze_power_market_size("Brazil", "Q3 2024")
+    if data_service is None:
+        print("\n⚠️  Data service not available. Skipping RULE_BASED mode demo.")
+        print("    Make sure config/data_sources.yaml exists and is valid.")
+        return
     
-    print(f"\n{result.parameter_name} Score for Brazil:")
-    print(f"  Score: {result.score}/10")
-    print(f"  {result.justification}")
+    # Create agent in RULE_BASED mode
+    agent = PowerMarketSizeAgent(mode=AgentMode.RULE_BASED, data_service=data_service)
+    
+    # Test countries (these should have electricity data from World Bank)
+    countries = ["Germany", "USA", "Brazil"]
+    
+    for country in countries:
+        print(f"\n🌍 {country} (RULE_BASED DATA)")
+        print("-" * 60)
+        
+        # Analyze
+        result = agent.analyze(country, "Q3 2024")
+        
+        # Display results
+        print(f"Score:          {result.score}/10")
+        print(f"Justification:  {result.justification}")
+        print(f"Confidence:     {result.confidence*100:.0f}%")
+        print(f"Data Sources:   {', '.join(result.data_sources[:2])}")
+
+
+def demo_mock_vs_rule_based_comparison(data_service):
+    """Compare MOCK vs RULE_BASED mode for same country."""
+    print("\n" + "="*70)
+    print("DEMO 3: MOCK vs RULE_BASED Mode Comparison")
+    print("="*70)
+    
+    if data_service is None:
+        print("\n⚠️  Data service not available. Skipping comparison.")
+        return
+    
+    # Create both agents
+    mock_agent = PowerMarketSizeAgent(mode=AgentMode.MOCK)
+    rule_based_agent = PowerMarketSizeAgent(mode=AgentMode.RULE_BASED, data_service=data_service)
+    
+    countries = ["Germany", "Brazil", "USA"]
+    
+    print("\nComparing MOCK vs RULE_BASED data:")
+    print("-" * 70)
+    print(f"{'Country':<15} {'MOCK Score':<12} {'RULE_BASED':<12} {'Difference'}")
+    print("-" * 70)
+    
+    for country in countries:
+        mock_result = mock_agent.analyze(country, "Q3 2024")
+        rule_based_result = rule_based_agent.analyze(country, "Q3 2024")
+        
+        diff = rule_based_result.score - mock_result.score
+        diff_str = f"{diff:+.1f}" if diff != 0 else "Same"
+        
+        print(
+            f"{country:<15} "
+            f"{mock_result.score:<12.1f} "
+            f"{rule_based_result.score:<12.1f} "
+            f"{diff_str}"
+        )
+    
+    print("\n💡 Note: RULE_BASED uses World Bank electricity production data.")
+    print("   Small differences expected due to data year variations!")
+
+
+def demo_convenience_function(data_service):
+    """Demonstrate convenience function."""
+    print("\n" + "="*70)
+    print("DEMO 4: Convenience Function (Both Modes)")
+    print("="*70)
+    
+    # MOCK mode
+    print("\nMOCK Mode:")
+    result = analyze_power_market_size("Brazil", "Q3 2024", mode=AgentMode.MOCK)
+    print(f"  {result.parameter_name} Score for Brazil: {result.score}/10")
+    print(f"  {result.justification[:100]}...")
+    
+    # RULE_BASED mode
+    if data_service:
+        print("\nRULE_BASED Mode:")
+        result = analyze_power_market_size(
+            "Germany", 
+            "Q3 2024", 
+            mode=AgentMode.RULE_BASED, 
+            data_service=data_service
+        )
+        print(f"  {result.parameter_name} Score for Germany: {result.score}/10")
+        print(f"  {result.justification[:100]}...")
 
 
 def demo_service_layer():
     """Demonstrate service layer usage."""
     print("\n" + "="*70)
-    print("DEMO 3: Service Layer (UI Integration Pattern)")
+    print("DEMO 5: Service Layer (UI Integration Pattern)")
     print("="*70)
     
     # This is how the UI will use agents
     print("\n📊 Analyzing single parameter...")
     result = agent_service.analyze_parameter("power_market_size", "USA", "Q3 2024")
     print(f"USA Power Market Size: {result.score}/10")
-    print(f"Justification: {result.justification}")
+    print(f"Justification: {result.justification[:100]}...")
     
     # Analyze subcategory (Market Size Fundamentals)
     print("\n📊 Analyzing subcategory (Market Size Fundamentals)...")
@@ -108,7 +213,7 @@ def demo_service_layer():
 def demo_scoring_rubric():
     """Demonstrate scoring rubric."""
     print("\n" + "="*70)
-    print("DEMO 4: Scoring Rubric Visualization")
+    print("DEMO 6: Scoring Rubric Visualization")
     print("="*70)
     
     agent = PowerMarketSizeAgent()
@@ -156,7 +261,7 @@ def demo_scoring_rubric():
 def demo_all_countries():
     """Test all mock countries."""
     print("\n" + "="*70)
-    print("DEMO 5: All Mock Countries Comparison")
+    print("DEMO 7: All Mock Countries Comparison")
     print("="*70)
     
     agent = PowerMarketSizeAgent()
@@ -181,7 +286,7 @@ def demo_all_countries():
 def demo_comparison_all_agents():
     """Compare all three agents."""
     print("\n" + "="*70)
-    print("DEMO 6: Comparison Across All Three Agents")
+    print("DEMO 8: Comparison Across All Three Agents")
     print("="*70)
     
     ambition_agent = AmbitionAgent()
@@ -217,66 +322,42 @@ def demo_comparison_all_agents():
     print("\n  → All three factors matter for investment attractiveness!")
 
 
-def demo_per_capita_insights():
-    """Show per capita consumption insights."""
-    print("\n" + "="*70)
-    print("DEMO 7: Per Capita Insights")
-    print("="*70)
-    
-    agent = PowerMarketSizeAgent()
-    
-    print("\nCountries ranked by per capita consumption:")
-    print("(Note: Market size score is based on TOTAL TWh, not per capita)")
-    print("-" * 70)
-    
-    results = []
-    for country, data in agent.MOCK_DATA.items():
-        per_capita = data.get("per_capita_kwh", 0)
-        twh = data.get("twh_consumption", 0)
-        results.append((country, per_capita, twh))
-    
-    results.sort(key=lambda x: x[1], reverse=True)
-    
-    print(f"{'Country':<20} {'Per Capita (kWh)':<20} {'Total (TWh)'}")
-    print("-" * 70)
-    
-    for country, per_capita, twh in results:
-        print(f"{country:<20} {per_capita:>18,.0f} {twh:>15,.0f}")
-    
-    print("\n💡 Key Observation:")
-    print("  - USA: Highest per capita (12,200 kWh) + massive market (4,050 TWh)")
-    print("  - India: Low per capita (1,229 kWh) BUT major market (1,730 TWh)")
-    print("  - Nigeria: Very low per capita (142 kWh) + tiny market (31 TWh)")
-    print("\n  → Total market size (TWh) matters more than per capita for absolute opportunity!")
-
-
 def main():
     """Run all demos."""
     print("\n" + "="*70)
-    print("⚡ POWER MARKET SIZE AGENT DEMO")
+    print("⚡ POWER MARKET SIZE AGENT DEMO - MOCK & RULE_BASED MODES")
     print("="*70)
-    print("\nThis demo shows the Power Market Size Agent in action.")
-    print("The agent analyzes total electricity consumption to assess market opportunity.")
+    print("\nThis demo shows the Power Market Size Agent with:")
+    print("  - MOCK mode (test data)")
+    print("  - RULE_BASED mode (real data from data service)")
+    print("  - Uses World Bank electricity production data")
     print("\n")
     
     try:
+        # Initialize data service for RULE_BASED mode
+        data_service = initialize_data_service()
+        
         # Run demos
-        demo_direct_agent_usage()
-        demo_convenience_function()
+        demo_mock_mode()
+        demo_rule_based_mode(data_service)
+        demo_mock_vs_rule_based_comparison(data_service)
+        demo_convenience_function(data_service)
         demo_service_layer()
         demo_scoring_rubric()
         demo_all_countries()
         demo_comparison_all_agents()
-        demo_per_capita_insights()
         
         print("\n" + "="*70)
         print("✅ ALL DEMOS COMPLETED SUCCESSFULLY!")
         print("="*70)
         print("\nNext steps:")
-        print("1. Review the agent code in src/agents/parameter_agents/power_market_size_agent.py")
-        print("2. Try modifying mock TWh data in MOCK_DATA dictionary")
-        print("3. Implement the next parameter agent (e.g., Resource Availability)")
+        print("1. Review updated agent code in power_market_size_agent.py")
+        print("2. Test MOCK mode: Works immediately ✅")
+        print("3. Test RULE_BASED mode: Uses World Bank electricity data ✅")
         print("4. You now have 3 agents spanning 2 subcategories!")
+        print("5. Apply same pattern to next agents!")
+        print("\n💡 You've completed agents 1-3 in Tier 1!")
+        print("   Move to Tier 2: RenewablesPenetrationAgent next")
         print("\n")
         
     except Exception as e:

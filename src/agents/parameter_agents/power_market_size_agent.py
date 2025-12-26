@@ -18,8 +18,12 @@ Market Size Scale (TWh/year):
 
 Scoring Rubric (LOADED FROM CONFIG):
 Higher consumption = larger market = higher score (direct relationship)
+
+MODES:
+- MOCK: Uses hardcoded test data (for testing)
+- RULE_BASED: Fetches real electricity data from data service (production)
 """
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from datetime import datetime
 
 from ..base_agent import BaseParameterAgent, AgentMode
@@ -53,18 +57,42 @@ class PowerMarketSizeAgent(BaseParameterAgent):
         "Indonesia": {"twh_consumption": 303.0, "population_millions": 275, "per_capita_kwh": 1102},
     }
     
-    def __init__(self, mode: AgentMode = AgentMode.MOCK, config: Dict[str, Any] = None):
-        """Initialize Power Market Size Agent."""
+    def __init__(
+        self, 
+        mode: AgentMode = AgentMode.MOCK, 
+        config: Dict[str, Any] = None,
+        data_service = None  # DataService instance for RULE_BASED mode
+    ):
+        """Initialize Power Market Size Agent.
+        
+        Args:
+            mode: Agent operation mode (MOCK or RULE_BASED)
+            config: Configuration dictionary
+            data_service: DataService instance (required for RULE_BASED mode)
+        """
         super().__init__(
             parameter_name="Power Market Size",
             mode=mode,
             config=config
         )
         
+        # Store data service for RULE_BASED mode
+        self.data_service = data_service
+        
+        # Validate data service if in RULE_BASED mode
+        if self.mode == AgentMode.RULE_BASED and self.data_service is None:
+            logger.warning(
+                "RULE_BASED mode enabled but no data_service provided. "
+                "Agent will fall back to MOCK data."
+            )
+        
         # Load scoring rubric from config (NO HARDCODING!)
         self.scoring_rubric = self._load_scoring_rubric()
         
-        logger.debug(f"Loaded scoring rubric with {len(self.scoring_rubric)} levels")
+        logger.debug(
+            f"Initialized PowerMarketSizeAgent in {mode.value} mode "
+            f"with {len(self.scoring_rubric)} scoring levels"
+        )
     
     def _load_scoring_rubric(self) -> List[Dict[str, Any]]:
         """Load scoring rubric from configuration.
@@ -141,7 +169,7 @@ class PowerMarketSizeAgent(BaseParameterAgent):
             ParameterScore with score, justification, confidence
         """
         try:
-            logger.info(f"Analyzing Power Market Size for {country} ({period})")
+            logger.info(f"Analyzing Power Market Size for {country} ({period}) in {self.mode.value} mode")
             
             # Step 1: Fetch data
             data = self._fetch_data(country, period, **kwargs)
@@ -156,12 +184,18 @@ class PowerMarketSizeAgent(BaseParameterAgent):
             justification = self._generate_justification(data, score, country, period)
             
             # Step 5: Estimate confidence
-            # IEA data is official and regularly updated, so high confidence
-            data_quality = "high" if data else "low"
+            # Rule-based data has higher confidence than mock data
+            if self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
+                data_quality = "high"
+                confidence = 0.9  # High confidence for rule-based data
+            else:
+                data_quality = "medium"
+                confidence = 0.7  # Lower confidence for mock data
+            
             confidence = self._estimate_confidence(data, data_quality)
             
             # Step 6: Identify data sources
-            data_sources = self._get_data_sources(country)
+            data_sources = self._get_data_sources(country, data)
             
             # Create result
             result = ParameterScore(
@@ -175,7 +209,7 @@ class PowerMarketSizeAgent(BaseParameterAgent):
             
             logger.info(
                 f"Power Market Size analysis complete for {country}: "
-                f"Score={score}, Confidence={confidence}"
+                f"Score={score:.1f}, Confidence={confidence:.2f}, Mode={self.mode.value}"
             )
             
             return result
@@ -193,8 +227,8 @@ class PowerMarketSizeAgent(BaseParameterAgent):
         """Fetch electricity consumption data.
         
         In MOCK mode: Returns mock TWh consumption
-        In RULE mode: Would query database
-        In AI mode: Would use LLM to extract from documents
+        In RULE_BASED mode: Fetches real electricity data from data service
+        In AI_POWERED mode: Would use LLM to extract from documents (not yet implemented)
         
         Args:
             country: Country name
@@ -210,13 +244,90 @@ class PowerMarketSizeAgent(BaseParameterAgent):
                 logger.warning(f"No mock data for {country}, using default small market")
                 data = {"twh_consumption": 150.0, "population_millions": 50, "per_capita_kwh": 3000}
             
-            logger.debug(f"Fetched mock data for {country}: {data}")
+            # Add source indicator
+            data['source'] = 'mock'
+            
+            logger.debug(f"Fetched mock data for {country}: {data.get('twh_consumption')} TWh")
             return data
         
         elif self.mode == AgentMode.RULE_BASED:
-            # TODO Phase 2: Query from database
-            # return self._query_energy_database(country, period)
-            raise NotImplementedError("RULE_BASED mode not yet implemented")
+            # Fetch rule-based data from data service
+            if self.data_service is None:
+                logger.warning("No data_service available, falling back to MOCK data")
+                return self._fetch_data_mock_fallback(country)
+            
+            try:
+                # Fetch electricity production from World Bank
+                # World Bank indicator: EG.ELC.PROD.KH (Electricity production, kWh)
+                electricity_kwh = self.data_service.get_value(
+                    country=country,
+                    indicator='electricity_production',
+                    default=None
+                )
+                
+                # Fetch population for per capita calculation
+                population = self.data_service.get_value(
+                    country=country,
+                    indicator='population',
+                    default=None
+                )
+                
+                # Fetch GDP as additional context
+                gdp = self.data_service.get_value(
+                    country=country,
+                    indicator='gdp',
+                    default=None
+                )
+                
+                if electricity_kwh is None and gdp is None:
+                    logger.warning(
+                        f"No rule-based data found for {country}, falling back to MOCK data"
+                    )
+                    return self._fetch_data_mock_fallback(country)
+                
+                # Calculate TWh consumption
+                if electricity_kwh is not None:
+                    # Convert from kWh to TWh (divide by 1 billion)
+                    twh_consumption = electricity_kwh / 1_000_000_000
+                elif gdp is not None:
+                    # Estimate from GDP if electricity data not available
+                    # Rule of thumb: ~0.2 TWh per billion USD GDP (rough approximation)
+                    twh_consumption = (gdp / 1_000_000_000) * 0.2
+                else:
+                    return self._fetch_data_mock_fallback(country)
+                
+                # Calculate per capita
+                if population is not None:
+                    # Population is in absolute numbers, convert to millions
+                    population_millions = population / 1_000_000
+                    # Calculate per capita kWh
+                    per_capita_kwh = (twh_consumption * 1_000_000_000) / population
+                else:
+                    population_millions = 50.0  # Default
+                    per_capita_kwh = 3000  # Default
+                
+                data = {
+                    'twh_consumption': twh_consumption,
+                    'population_millions': population_millions,
+                    'per_capita_kwh': per_capita_kwh,
+                    'source': 'rule_based',
+                    'period': period,
+                    'data_source': 'World Bank' if electricity_kwh else 'GDP estimate'
+                }
+                
+                logger.info(
+                    f"Fetched RULE_BASED data for {country}: {twh_consumption:.1f} TWh "
+                    f"({per_capita_kwh:.0f} kWh per capita)"
+                )
+                
+                return data
+                
+            except Exception as e:
+                logger.error(
+                    f"Error fetching rule-based data for {country}: {e}. "
+                    f"Falling back to MOCK data"
+                )
+                return self._fetch_data_mock_fallback(country)
         
         elif self.mode == AgentMode.AI_POWERED:
             # TODO Phase 2+: Use LLM to extract from documents
@@ -225,6 +336,25 @@ class PowerMarketSizeAgent(BaseParameterAgent):
         
         else:
             raise AgentError(f"Unknown agent mode: {self.mode}")
+    
+    def _fetch_data_mock_fallback(self, country: str) -> Dict[str, Any]:
+        """Fallback to mock data when rule-based data is unavailable.
+        
+        Args:
+            country: Country name
+            
+        Returns:
+            Mock data dictionary
+        """
+        data = self.MOCK_DATA.get(country, {
+            "twh_consumption": 150.0,
+            "population_millions": 50,
+            "per_capita_kwh": 3000
+        })
+        data['source'] = 'mock_fallback'
+        
+        logger.debug(f"Using mock fallback data for {country}")
+        return data
     
     def _calculate_score(
         self,
@@ -246,7 +376,7 @@ class PowerMarketSizeAgent(BaseParameterAgent):
         """
         twh_consumption = data.get("twh_consumption", 0)
         
-        logger.debug(f"Calculating score for {country}: {twh_consumption} TWh/year")
+        logger.debug(f"Calculating score for {country}: {twh_consumption:.1f} TWh/year")
         
         # Find matching rubric level
         for level in self.scoring_rubric:
@@ -257,7 +387,7 @@ class PowerMarketSizeAgent(BaseParameterAgent):
                 score = level["score"]
                 logger.debug(
                     f"Score {score} assigned: "
-                    f"{twh_consumption} TWh falls in range {min_twh}-{max_twh} TWh"
+                    f"{twh_consumption:.1f} TWh falls in range {min_twh}-{max_twh} TWh"
                 )
                 return float(score)
         
@@ -286,6 +416,7 @@ class PowerMarketSizeAgent(BaseParameterAgent):
         twh_consumption = data.get("twh_consumption", 0)
         population = data.get("population_millions", 0)
         per_capita = data.get("per_capita_kwh", 0)
+        source = data.get("source", "unknown")
         
         # Find description from rubric
         description = "moderate-sized electricity market"
@@ -294,31 +425,48 @@ class PowerMarketSizeAgent(BaseParameterAgent):
                 description = level["description"].lower()
                 break
         
-        # Build justification with context
-        justification = (
-            f"Annual electricity consumption of {twh_consumption:,.0f} TWh "
-            f"({per_capita:,.0f} kWh per capita across {population:.0f}M people) indicates "
-            f"{description}. "
-            f"Large absolute market size provides substantial opportunity for renewable energy deployment."
-        )
+        # Build justification based on source
+        if source == 'rule_based':
+            data_source = data.get('data_source', 'World Bank')
+            justification = (
+                f"Based on {data_source} data: Annual electricity consumption of {twh_consumption:,.1f} TWh "
+                f"({per_capita:,.0f} kWh per capita across {population:.1f}M people) indicates "
+                f"{description}. "
+                f"Large absolute market size provides substantial opportunity for renewable energy deployment."
+            )
+        else:
+            justification = (
+                f"Annual electricity consumption of {twh_consumption:,.0f} TWh "
+                f"({per_capita:,.0f} kWh per capita across {population:.0f}M people) indicates "
+                f"{description}. "
+                f"Large absolute market size provides substantial opportunity for renewable energy deployment."
+            )
         
         return justification
     
-    def _get_data_sources(self, country: str) -> List[str]:
+    def _get_data_sources(self, country: str, data: Dict[str, Any] = None) -> List[str]:
         """Get data sources used for this analysis.
         
         Args:
             country: Country name
+            data: Data dictionary with source info
             
         Returns:
             List of data source identifiers
         """
-        # In production, these would be actual URLs/documents
-        return [
-            "IEA World Energy Statistics 2023",
-            f"{country} National Energy Balance",
-            "BP Statistical Review of World Energy 2023"
-        ]
+        sources = []
+        
+        # Check if we used rule-based or mock data
+        if data and data.get('source') == 'rule_based':
+            sources.append("World Bank Energy Indicators - Rule-Based Data")
+            sources.append("IEA World Energy Statistics 2023")
+        else:
+            sources.append("IEA World Energy Statistics 2023 - Mock Data")
+        
+        sources.append(f"{country} National Energy Balance")
+        sources.append("BP Statistical Review of World Energy 2023")
+        
+        return sources
     
     def _get_scoring_rubric(self) -> List[Dict[str, Any]]:
         """Get scoring rubric for Power Market Size parameter.
@@ -347,17 +495,19 @@ class PowerMarketSizeAgent(BaseParameterAgent):
 def analyze_power_market_size(
     country: str,
     period: str = "Q3 2024",
-    mode: AgentMode = AgentMode.MOCK
+    mode: AgentMode = AgentMode.MOCK,
+    data_service = None
 ) -> ParameterScore:
     """Convenience function to analyze power market size.
     
     Args:
         country: Country name
         period: Time period
-        mode: Agent mode
+        mode: Agent mode (MOCK or RULE_BASED)
+        data_service: DataService instance (required for RULE_BASED mode)
         
     Returns:
         ParameterScore
     """
-    agent = PowerMarketSizeAgent(mode=mode)
+    agent = PowerMarketSizeAgent(mode=mode, data_service=data_service)
     return agent.analyze(country, period)

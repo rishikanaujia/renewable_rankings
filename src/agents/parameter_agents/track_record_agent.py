@@ -21,6 +21,10 @@ Installed Capacity Scale:
 
 Scoring Rubric (LOADED FROM CONFIG):
 Higher installed capacity = Better track record = Higher score (DIRECT relationship)
+
+MODES:
+- MOCK: Uses hardcoded test data (for testing)
+- RULE_BASED: Fetches from World Bank renewable capacity data or estimates from generation data (production)
 """
 from typing import Dict, Any, List
 from datetime import datetime
@@ -170,18 +174,42 @@ class TrackRecordAgent(BaseParameterAgent):
         },
     }
     
-    def __init__(self, mode: AgentMode = AgentMode.MOCK, config: Dict[str, Any] = None):
-        """Initialize Track Record Agent."""
+    def __init__(
+        self,
+        mode: AgentMode = AgentMode.MOCK,
+        config: Dict[str, Any] = None,
+        data_service = None  # DataService instance for RULE_BASED mode
+    ):
+        """Initialize Track Record Agent.
+
+        Args:
+            mode: Agent operation mode (MOCK or RULE_BASED)
+            config: Configuration dictionary
+            data_service: DataService instance (required for RULE_BASED mode)
+        """
         super().__init__(
             parameter_name="Track Record",
             mode=mode,
             config=config
         )
-        
+
+        # Store data service for RULE_BASED mode
+        self.data_service = data_service
+
+        # Validate data service if in RULE_BASED mode
+        if self.mode == AgentMode.RULE_BASED and self.data_service is None:
+            logger.warning(
+                "RULE_BASED mode enabled but no data_service provided. "
+                "Agent will fall back to MOCK data."
+            )
+
         # Load scoring rubric from config
         self.scoring_rubric = self._load_scoring_rubric()
-        
-        logger.debug(f"Loaded scoring rubric with {len(self.scoring_rubric)} levels")
+
+        logger.debug(
+            f"Initialized TrackRecordAgent in {mode.value} mode "
+            f"with {len(self.scoring_rubric)} scoring levels"
+        )
     
     def _load_scoring_rubric(self) -> List[Dict[str, Any]]:
         """Load scoring rubric from configuration."""
@@ -264,8 +292,21 @@ class TrackRecordAgent(BaseParameterAgent):
             raise AgentError(f"Track Record analysis failed: {str(e)}")
     
     def _fetch_data(self, country: str, period: str, **kwargs) -> Dict[str, Any]:
-        """Fetch track record data."""
+        """Fetch track record data.
+
+        In MOCK mode: Returns mock installed capacity data
+        In RULE_BASED mode: Fetches from World Bank renewable capacity data
+        In AI_POWERED mode: Would use LLM to extract from IRENA/IEA reports (not yet implemented)
+
+        Args:
+            country: Country name
+            period: Time period
+
+        Returns:
+            Dictionary with track record data
+        """
         if self.mode == AgentMode.MOCK:
+            # Return mock data
             data = self.MOCK_DATA.get(country, None)
             if not data:
                 logger.warning(f"No mock data for {country}, using default limited track record")
@@ -277,16 +318,112 @@ class TrackRecordAgent(BaseParameterAgent):
                     "recent_deployment_gw_per_year": 0.1,
                     "status": "Limited track record"
                 }
-            
-            logger.debug(f"Fetched mock data for {country}: {data}")
+
+            # Add source indicator
+            data['source'] = 'mock'
+
+            logger.debug(f"Fetched mock data for {country}: {data.get('capacity_mw', 0):.0f} MW")
             return data
-        
+
         elif self.mode == AgentMode.RULE_BASED:
-            raise NotImplementedError("RULE_BASED mode not yet implemented")
-        
+            # Fetch from World Bank renewable capacity data
+            if self.data_service is None:
+                logger.warning("No data_service available, falling back to MOCK data")
+                return self._fetch_data_mock_fallback(country)
+
+            try:
+                # Fetch renewable capacity from World Bank
+                # World Bank indicator: EG.ELC.RNWX.KH (Renewable electricity output, kWh)
+                # or renewable_capacity if available
+                renewable_capacity_gw = self.data_service.get_value(
+                    country=country,
+                    indicator='renewable_capacity',
+                    default=None
+                )
+
+                # Also try to get electricity production for context
+                electricity_production_kwh = self.data_service.get_value(
+                    country=country,
+                    indicator='electricity_production',
+                    default=None
+                )
+
+                # Get renewable consumption % for additional context
+                renewable_consumption_pct = self.data_service.get_value(
+                    country=country,
+                    indicator='renewable_consumption',
+                    default=None
+                )
+
+                if renewable_capacity_gw is None:
+                    # Try to estimate from electricity production and renewable percentage
+                    if electricity_production_kwh and renewable_consumption_pct:
+                        # Very rough estimation: assume capacity factor of ~25% (typical for solar/wind)
+                        # electricity_production_kwh is total annual electricity production in kWh
+                        renewable_generation_kwh = electricity_production_kwh * (renewable_consumption_pct / 100)
+                        hours_per_year = 8760
+                        capacity_factor = 0.25
+                        # Capacity (kW) = Annual generation (kWh) / (hours/year * capacity_factor)
+                        estimated_capacity_kw = renewable_generation_kwh / (hours_per_year * capacity_factor)
+                        # Convert kW to GW
+                        renewable_capacity_gw = estimated_capacity_kw / 1_000_000
+
+                        logger.info(
+                            f"Estimated renewable capacity for {country}: {renewable_capacity_gw:.2f} GW "
+                            f"(from {renewable_generation_kwh:.0f} kWh annual generation, "
+                            f"{renewable_consumption_pct:.1f}% renewable share)"
+                        )
+                    else:
+                        logger.warning(
+                            f"No renewable capacity data for {country}, falling back to MOCK data"
+                        )
+                        return self._fetch_data_mock_fallback(country)
+
+                # Convert GW to MW
+                capacity_mw = renewable_capacity_gw * 1000
+
+                # Estimate breakdown (we don't have detailed breakdown from World Bank)
+                # Use typical global ratios as proxy: ~40% solar, ~55% wind, ~5% offshore
+                solar_mw = capacity_mw * 0.40
+                onshore_wind_mw = capacity_mw * 0.50
+                offshore_wind_mw = capacity_mw * 0.05
+
+                # Estimate recent deployment (assume ~15% annual growth rate as global average)
+                recent_deployment_gw_per_year = renewable_capacity_gw * 0.15
+
+                # Determine status based on capacity
+                status = self._determine_deployment_status(capacity_mw)
+
+                data = {
+                    'capacity_mw': capacity_mw,
+                    'solar_mw': solar_mw,
+                    'onshore_wind_mw': onshore_wind_mw,
+                    'offshore_wind_mw': offshore_wind_mw,
+                    'recent_deployment_gw_per_year': recent_deployment_gw_per_year,
+                    'status': status,
+                    'source': 'rule_based',
+                    'period': period
+                }
+
+                logger.info(
+                    f"Calculated RULE_BASED data for {country}: {capacity_mw:.0f} MW capacity "
+                    f"({renewable_capacity_gw:.2f} GW total)"
+                )
+
+                return data
+
+            except Exception as e:
+                logger.error(
+                    f"Error fetching track record for {country}: {e}. "
+                    f"Falling back to MOCK data"
+                )
+                return self._fetch_data_mock_fallback(country)
+
         elif self.mode == AgentMode.AI_POWERED:
+            # TODO Phase 2+: Use LLM to extract from IRENA/IEA reports
+            # return self._llm_extract_track_record(country, period)
             raise NotImplementedError("AI_POWERED mode not yet implemented")
-        
+
         else:
             raise AgentError(f"Unknown agent mode: {self.mode}")
     
@@ -374,12 +511,80 @@ class TrackRecordAgent(BaseParameterAgent):
             "Project databases and registries"
         ]
 
+    def _fetch_data_mock_fallback(self, country: str) -> Dict[str, Any]:
+        """Fallback to mock data when rule-based data is unavailable.
+
+        Args:
+            country: Country name
+
+        Returns:
+            Mock data with source indicator
+        """
+        data = self.MOCK_DATA.get(country, None)
+        if not data:
+            logger.warning(f"No mock fallback data for {country}, using default")
+            data = {
+                "capacity_mw": 800,
+                "solar_mw": 400,
+                "onshore_wind_mw": 400,
+                "offshore_wind_mw": 0,
+                "recent_deployment_gw_per_year": 0.1,
+                "status": "Limited track record (estimated)"
+            }
+
+        # Add source indicator
+        data['source'] = 'mock_fallback'
+
+        logger.debug(f"Using mock fallback data for {country}")
+        return data
+
+    def _determine_deployment_status(self, capacity_mw: float) -> str:
+        """Determine deployment status description based on capacity.
+
+        Args:
+            capacity_mw: Installed renewable capacity in MW
+
+        Returns:
+            Status description string
+        """
+        if capacity_mw >= 100000:
+            return "Outstanding track record (world leader)"
+        elif capacity_mw >= 50000:
+            return "Excellent track record (major market)"
+        elif capacity_mw >= 25000:
+            return "Very good track record"
+        elif capacity_mw >= 10000:
+            return "Good track record (established market)"
+        elif capacity_mw >= 5000:
+            return "Above moderate track record"
+        elif capacity_mw >= 2500:
+            return "Moderate track record (emerging market)"
+        elif capacity_mw >= 1000:
+            return "Below moderate track record"
+        elif capacity_mw >= 500:
+            return "Limited track record (early stage)"
+        elif capacity_mw >= 100:
+            return "Very limited track record"
+        else:
+            return "Minimal track record (nascent market)"
+
 
 def analyze_track_record(
     country: str,
     period: str = "Q3 2024",
-    mode: AgentMode = AgentMode.MOCK
+    mode: AgentMode = AgentMode.MOCK,
+    data_service = None
 ) -> ParameterScore:
-    """Convenience function to analyze track record."""
-    agent = TrackRecordAgent(mode=mode)
+    """Convenience function to analyze track record.
+
+    Args:
+        country: Country name
+        period: Time period
+        mode: Agent operation mode
+        data_service: DataService instance (required for RULE_BASED mode)
+
+    Returns:
+        ParameterScore with track record analysis
+    """
+    agent = TrackRecordAgent(mode=mode, data_service=data_service)
     return agent.analyze(country, period)

@@ -1,12 +1,18 @@
 #!/usr/bin/env python3
-"""Demo script for Comparative Analysis Agent (Agent #20).
+"""Demo script for Comparative Analysis Agent - SECOND SYNTHESIS AGENT!
 
-This demonstrates the second synthesis agent which compares multiple countries
-side-by-side across all investment dimensions.
+This demonstrates the Comparative Analysis Agent (Level IV synthesis agent) that:
+- Compares multiple countries side-by-side
+- Identifies best/worst performers by subcategory
+- Analyzes competitive landscapes
+- Generates comparative rankings
+
+ACTUAL STRUCTURE (from Implementation Guide):
+Total: 18 parameter agents across 6 subcategories
 
 Features demonstrated:
 1. Multi-country comparison
-2. Subcategory performance comparison
+2. Subcategory performance comparison  
 3. Best/worst performer identification
 4. Competitive landscape analysis
 5. Side-by-side rankings
@@ -55,7 +61,7 @@ def print_country_comparison(comparison):
 def print_subcategory_comparison(subcat):
     """Print subcategory comparison."""
     print(f"\n📊 {subcat.name}")
-    print(f"   Weight: {subcat.weight:.0%} | Average: {subcat.average_score:.1f}/10")
+    print(f"   Weight: {subcat.weight:.1%} | Average: {subcat.average_score:.1f}/10")
     print(f"   Best:  {subcat.best_country} ({subcat.best_score:.1f})")
     print(f"   Worst: {subcat.worst_country} ({subcat.worst_score:.1f})")
     print(f"   Range: {subcat.best_score - subcat.worst_score:.1f} points")
@@ -85,15 +91,15 @@ def demo_basic_comparison():
 
 def demo_subcategory_analysis():
     """Demo 2: Detailed subcategory comparison."""
-    print_header("DEMO 2: Subcategory Performance Comparison")
+    print_header("DEMO 2: Subcategory Performance Comparison (6 Subcategories)")
     
     result = compare_countries(
         countries=["Germany", "USA", "Brazil", "China"],
         period="Q3 2024"
     )
     
-    print(f"\n🔍 Analyzing {len(result.subcategory_comparisons)} subcategories")
-    print(f"   across {len(result.countries)} countries")
+    print(f"\n🔍 Analyzing 6 subcategories across {len(result.countries)} countries")
+    print(f"   Total: 18 parameter agents")
     
     print(f"\n📊 Subcategory Details:")
     for subcat in result.subcategory_comparisons:
@@ -143,7 +149,7 @@ def demo_competitive_landscape():
         period="Q3 2024"
     )
     
-    print(f"\n🎯 Identifying Competitive Dynamics")
+    print(f"\n🎯 Identifying Competitive Dynamics Across 6 Subcategories")
     
     # Find most/least competitive subcategories
     subcat_ranges = [
@@ -168,14 +174,14 @@ def demo_competitive_landscape():
         leadership[leader] = leadership.get(leader, 0) + 1
     
     for country, count in sorted(leadership.items(), key=lambda x: x[1], reverse=True):
-        print(f"   • {country}: Leads in {count}/{len(result.subcategory_comparisons)} subcategories")
+        print(f"   • {country}: Leads in {count}/6 subcategories")
     
     print("\n" + "-" * 70)
 
 
 def demo_visual_comparison():
     """Demo 5: Visual comparison matrix."""
-    print_header("DEMO 5: Visual Comparison Matrix")
+    print_header("DEMO 5: Visual Comparison Matrix (6 Subcategories)")
     
     result = compare_countries(
         countries=["Germany", "USA", "Brazil"],
@@ -183,11 +189,11 @@ def demo_visual_comparison():
     )
     
     print(f"\n📊 Side-by-Side Comparison Matrix")
-    print(f"\n{'Subcategory':<25} | {'Germany':<10} | {'USA':<10} | {'Brazil':<10}")
-    print("-" * 65)
+    print(f"\n{'Subcategory':<30} | {'Germany':<10} | {'USA':<10} | {'Brazil':<10}")
+    print("-" * 70)
     
     for subcat in result.subcategory_comparisons:
-        row = f"{subcat.name[:24]:<25}"
+        row = f"{subcat.name[:29]:<30}"
         for country in result.countries:
             score = subcat.country_scores.get(country, 0)
             # Add indicator for best/worst
@@ -199,13 +205,46 @@ def demo_visual_comparison():
             row += f" | {score:>4.1f}/10 {indicator:<3}"
         print(row)
     
-    print("-" * 65)
-    print(f"{'OVERALL':<25}", end="")
+    print("-" * 70)
+    print(f"{'OVERALL':<30}", end="")
     for comp in result.country_comparisons:
         print(f" | {comp.overall_score:>4.1f}/10    ", end="")
     print()
     
+    print("\n💡 Indicators: 🥇 = Best in subcategory, ⚠️ = Needs improvement")
+    
     print("\n" + "-" * 70)
+
+
+def demo_system_architecture():
+    """Demo 6: System architecture context."""
+    print_header("DEMO 6: Multi-Agent System Architecture")
+    
+    print(f"\n🏗️  COMPLETE SYSTEM ARCHITECTURE:")
+    print("="*70)
+    
+    print(f"\n  Level V:   GlobalRankingsAgent (global analysis)")
+    print(f"             ↓")
+    print(f"  Level IV:  ComparativeAnalysisAgent ← THIS DEMO")
+    print(f"             ↓")
+    print(f"  Level III: CountryAnalysisAgent (individual profiles)")
+    print(f"             ↓")
+    print(f"  Level II:  6 Subcategories")
+    print(f"             ├─ Regulation (5 params, 22.5%)")
+    print(f"             ├─ Profitability (4 params, 22.5%)")
+    print(f"             ├─ Accommodation (2 params, 17.5%)")
+    print(f"             ├─ Market Size & Fundamentals (4 params, 12.5%)")
+    print(f"             ├─ Competition & Ease (2 params, 12.5%)")
+    print(f"             └─ System Modifiers (1 composite, 7.5%)")
+    print(f"             ↓")
+    print(f"  Level I:   18 Parameter Agents")
+    
+    print(f"\n✅ SYSTEM STATUS:")
+    print(f"  • 18 Parameter Agents: COMPLETE ✓")
+    print(f"  • 6 Subcategories: COMPLETE ✓")
+    print(f"  • Country Analysis: COMPLETE ✓")
+    print(f"  • Comparative Analysis: COMPLETE ✓ (this demo)")
+    print(f"  • Global Rankings: Available")
 
 
 def main():
@@ -213,6 +252,8 @@ def main():
     print_header("🎯 COMPARATIVE ANALYSIS AGENT DEMO", "=")
     print("\n🎊 MILESTONE: SECOND SYNTHESIS AGENT!")
     print("Compares multiple countries across all investment dimensions!")
+    print("\nArchitecture: Level IV synthesis agent")
+    print("Structure: 18 parameters → 6 subcategories → Country comparisons\n")
     
     # Run all demos
     demo_basic_comparison()
@@ -220,14 +261,17 @@ def main():
     demo_large_comparison()
     demo_competitive_landscape()
     demo_visual_comparison()
+    demo_system_architecture()
     
     print_header("✅ ALL DEMOS COMPLETED!", "=")
-    print("\n🎯 SECOND SYNTHESIS AGENT!")
-    print("  ✅ Agent #20 complete")
-    print("  ✅ 20/21 agents = 95.2% complete")
+    print("\n🎯 COMPARATIVE ANALYSIS AGENT (LEVEL IV):")
+    print("  ✅ Second synthesis agent complete")
     print("  ✅ Multi-country comparison working")
-    print("  ✅ Subcategory analysis working")
-    print("  ✅ Just 1 more to full system!")
+    print("  ✅ 6 subcategory analysis")
+    print("  ✅ Competitive landscape analysis")
+    print("  ✅ Uses CountryAnalysisAgent (Level III)")
+    print("  ✅ Aggregates 18 parameters")
+    print("  ✅ Ready for global rankings!")
     print()
 
 

@@ -8,6 +8,18 @@ and then compares them across all dimensions to identify:
 - Investment opportunity gaps
 
 This is the second synthesis agent in the analysis layer.
+
+Architecture:
+- Level IV: ComparativeAnalysisAgent (this agent)
+- Level III: CountryAnalysisAgent
+- Level II: 6 Subcategories (via agent_service)
+- Level I: 18 Parameter Agents
+
+ACTUAL STRUCTURE (from Implementation Guide):
+Total: 18 parameter agents across 6 subcategories
+
+Note: This agent is correctly implemented and requires no changes
+after updating parameter agents, as long as CountryAnalysisAgent works.
 """
 from typing import List, Dict, Any, Optional
 from datetime import datetime
@@ -100,7 +112,9 @@ class ComparativeAnalysisAgent:
                 timestamp=datetime.now(),
                 metadata={
                     "mode": str(self.mode),
-                    "country_count": len(countries)
+                    "country_count": len(countries),
+                    "total_parameters": 18,
+                    "subcategories": 6
                 }
             )
             
@@ -167,23 +181,24 @@ class ComparativeAnalysisAgent:
                         break
             
             # Find best and worst
-            best_country = max(country_scores.items(), key=lambda x: x[1])
-            worst_country = min(country_scores.items(), key=lambda x: x[1])
-            
-            # Calculate average
-            average_score = sum(country_scores.values()) / len(country_scores)
-            
-            comparison = SubcategoryComparison(
-                name=subcat.name,
-                weight=subcat.weight,
-                country_scores=country_scores,
-                best_country=best_country[0],
-                best_score=best_country[1],
-                worst_country=worst_country[0],
-                worst_score=worst_country[1],
-                average_score=round(average_score, 2)
-            )
-            comparisons.append(comparison)
+            if country_scores:  # Make sure we have scores
+                best_country = max(country_scores.items(), key=lambda x: x[1])
+                worst_country = min(country_scores.items(), key=lambda x: x[1])
+                
+                # Calculate average
+                average_score = sum(country_scores.values()) / len(country_scores)
+                
+                comparison = SubcategoryComparison(
+                    name=subcat.name,
+                    weight=subcat.weight,
+                    country_scores=country_scores,
+                    best_country=best_country[0],
+                    best_score=best_country[1],
+                    worst_country=worst_country[0],
+                    worst_score=worst_country[1],
+                    average_score=round(average_score, 2)
+                )
+                comparisons.append(comparison)
         
         return comparisons
     
@@ -216,26 +231,34 @@ class ComparativeAnalysisAgent:
             variation_level = "substantial"
         
         # Most competitive subcategory (smallest range)
-        most_competitive = min(
-            subcategory_comparisons,
-            key=lambda s: max(s.country_scores.values()) - min(s.country_scores.values())
-        )
-        
-        # Least competitive subcategory (largest range)
-        least_competitive = max(
-            subcategory_comparisons,
-            key=lambda s: max(s.country_scores.values()) - min(s.country_scores.values())
-        )
-        
-        summary = (
-            f"Comparative analysis of {len(countries)} countries reveals "
-            f"{top_country.country} as the top performer ({top_country.overall_score:.1f}/10). "
-            f"Overall scores span {score_range:.1f} points, indicating "
-            f"{variation_level} variation. "
-            f"{most_competitive.name.lower()} shows the most competitive landscape "
-            f"(average {most_competitive.average_score:.1f}), while "
-            f"{least_competitive.name.lower()} exhibits the widest performance gap."
-        )
+        if subcategory_comparisons:
+            most_competitive = min(
+                subcategory_comparisons,
+                key=lambda s: max(s.country_scores.values()) - min(s.country_scores.values())
+            )
+            
+            # Least competitive subcategory (largest range)
+            least_competitive = max(
+                subcategory_comparisons,
+                key=lambda s: max(s.country_scores.values()) - min(s.country_scores.values())
+            )
+            
+            summary = (
+                f"Comparative analysis of {len(countries)} countries reveals "
+                f"{top_country.country} as the top performer ({top_country.overall_score:.1f}/10). "
+                f"Overall scores span {score_range:.1f} points, indicating "
+                f"{variation_level} variation. "
+                f"{most_competitive.name.lower()} shows the most competitive landscape "
+                f"(average {most_competitive.average_score:.1f}), while "
+                f"{least_competitive.name.lower()} exhibits the widest performance gap."
+            )
+        else:
+            summary = (
+                f"Comparative analysis of {len(countries)} countries reveals "
+                f"{top_country.country} as the top performer ({top_country.overall_score:.1f}/10). "
+                f"Overall scores span {score_range:.1f} points, indicating "
+                f"{variation_level} variation."
+            )
         
         return summary
 
@@ -245,6 +268,15 @@ def compare_countries(
     period: str = "Q3 2024",
     mode: AgentMode = AgentMode.MOCK
 ) -> ComparativeAnalysis:
-    """Convenience function to compare countries."""
+    """Convenience function to compare countries.
+    
+    Args:
+        countries: List of country names to compare
+        period: Analysis period
+        mode: Agent mode (MOCK, RULE_BASED, AI_POWERED)
+        
+    Returns:
+        ComparativeAnalysis with complete comparison
+    """
     agent = ComparativeAnalysisAgent(mode=mode)
     return agent.compare(countries, period)

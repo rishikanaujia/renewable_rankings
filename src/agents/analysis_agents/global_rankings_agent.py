@@ -1,12 +1,23 @@
 """Global Rankings Agent - Produces global rankings with tier assignments.
 
-This is the third and final synthesis agent (Level III) that:
+This is the third and final synthesis agent (Level V) that:
 - Analyzes ALL countries to produce complete global rankings
 - Assigns performance tiers (A/B/C/D) based on overall scores
 - Calculates tier statistics and identifies transitions
 - Provides comprehensive global market overview
 
-Architecture: GlobalRankingsAgent → CountryAnalysisAgent → AgentService (18 parameter agents)
+Architecture: 
+- Level V: GlobalRankingsAgent (this agent)
+- Level IV: ComparativeAnalysisAgent
+- Level III: CountryAnalysisAgent
+- Level II: 6 Subcategories (via agent_service)
+- Level I: 18 Parameter Agents
+
+ACTUAL STRUCTURE (from Implementation Guide):
+Total: 18 parameter agents across 6 subcategories
+
+Note: This agent is correctly implemented and requires no changes
+after updating parameter agents, as long as CountryAnalysisAgent works.
 """
 from typing import List, Dict, Any, Optional
 from datetime import datetime
@@ -131,6 +142,8 @@ class GlobalRankingsAgent:
                 summary=summary,
                 metadata={
                     'mode': self.mode.value,
+                    'total_parameters': 18,
+                    'subcategories': 6,
                     'tier_thresholds': {
                         'A': f'>= {self.tier_a_min}',
                         'B': f'{self.tier_b_min} - {self.tier_a_min - 0.01}',

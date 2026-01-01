@@ -73,7 +73,6 @@ Part of the Renewable Energy Rankings Platform
 
 ## Author
 
-Built for Python Institute LLP
 Renewable Energy Market Attractiveness Ranking System
 
 ## Support

@@ -18,8 +18,12 @@ Credit Rating Scale:
 
 Scoring Rubric (LOADED FROM CONFIG):
 Higher credit rating = Lower default risk = Higher score (DIRECT relationship)
+
+MODES:
+- MOCK: Uses hardcoded credit ratings from S&P/Moody's/Fitch (for testing)
+- RULE_BASED: Estimates from World Bank economic indicators (production)
 """
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from datetime import datetime
 
 from ..base_agent import BaseParameterAgent, AgentMode
@@ -181,18 +185,42 @@ class OfftakerStatusAgent(BaseParameterAgent):
         "distressed": 1        # CCC/D
     }
     
-    def __init__(self, mode: AgentMode = AgentMode.MOCK, config: Dict[str, Any] = None):
-        """Initialize Offtaker Status Agent."""
+    def __init__(
+        self, 
+        mode: AgentMode = AgentMode.MOCK, 
+        config: Dict[str, Any] = None,
+        data_service = None  # DataService instance for RULE_BASED mode
+    ):
+        """Initialize Offtaker Status Agent.
+        
+        Args:
+            mode: Agent operation mode (MOCK or RULE_BASED)
+            config: Configuration dictionary
+            data_service: DataService instance (required for RULE_BASED mode)
+        """
         super().__init__(
             parameter_name="Offtaker Status",
             mode=mode,
             config=config
         )
         
+        # Store data service for RULE_BASED mode
+        self.data_service = data_service
+        
+        # Validate data service if in RULE_BASED mode
+        if self.mode == AgentMode.RULE_BASED and self.data_service is None:
+            logger.warning(
+                "RULE_BASED mode enabled but no data_service provided. "
+                "Agent will fall back to MOCK data."
+            )
+        
         # Load scoring rubric from config
         self.scoring_rubric = self._load_scoring_rubric()
         
-        logger.debug(f"Loaded scoring rubric with {len(self.scoring_rubric)} levels")
+        logger.debug(
+            f"Initialized OfftakerStatusAgent in {mode.value} mode "
+            f"with {len(self.scoring_rubric)} scoring levels"
+        )
     
     def _load_scoring_rubric(self) -> List[Dict[str, Any]]:
         """Load scoring rubric from configuration."""
@@ -239,20 +267,51 @@ class OfftakerStatusAgent(BaseParameterAgent):
             {"score": 10, "category": "superior", "range": "AA+/AAA", "description": "Superior credit (sovereign/AAA utilities)"}
         ]
     
-    def analyze(self, country: str, period: str, **kwargs) -> ParameterScore:
-        """Analyze offtaker status for a country."""
-        try:
-            logger.info(f"Analyzing Offtaker Status for {country} ({period})")
+    def analyze(
+        self,
+        country: str,
+        period: str,
+        **kwargs
+    ) -> ParameterScore:
+        """Analyze offtaker status for a country.
+        
+        Args:
+            country: Country name
+            period: Time period (e.g., "Q3 2024")
+            **kwargs: Additional context
             
+        Returns:
+            ParameterScore with score, justification, confidence
+        """
+        try:
+            logger.info(f"Analyzing Offtaker Status for {country} ({period}) in {self.mode.value} mode")
+            
+            # Step 1: Fetch data
             data = self._fetch_data(country, period, **kwargs)
+            
+            # Step 2: Calculate score
             score = self._calculate_score(data, country, period)
+            
+            # Step 3: Validate score
             score = self._validate_score(score)
+            
+            # Step 4: Generate justification
             justification = self._generate_justification(data, score, country, period)
             
-            data_quality = "high" if data else "low"
-            confidence = self._estimate_confidence(data, data_quality)
-            data_sources = self._get_data_sources(country)
+            # Step 5: Estimate confidence
+            if self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
+                data_quality = "medium"
+                confidence = 0.60  # Lower confidence for estimated credit
+            else:
+                data_quality = "high"
+                confidence = 0.85  # High confidence for actual ratings
             
+            confidence = self._estimate_confidence(data, data_quality)
+            
+            # Step 6: Identify data sources
+            data_sources = self._get_data_sources(country, data)
+            
+            # Create result
             result = ParameterScore(
                 parameter_name=self.parameter_name,
                 score=score,
@@ -264,7 +323,8 @@ class OfftakerStatusAgent(BaseParameterAgent):
             
             logger.info(
                 f"Offtaker Status analysis complete for {country}: "
-                f"Score={score}, Rating={data.get('credit_rating', 'N/A')}, Confidence={confidence}"
+                f"Score={score:.1f}, Rating={data.get('credit_rating', 'N/A')}, "
+                f"Confidence={confidence:.2f}, Mode={self.mode.value}"
             )
             
             return result
@@ -273,9 +333,27 @@ class OfftakerStatusAgent(BaseParameterAgent):
             logger.error(f"Offtaker Status analysis failed for {country}: {str(e)}", exc_info=True)
             raise AgentError(f"Offtaker Status analysis failed: {str(e)}")
     
-    def _fetch_data(self, country: str, period: str, **kwargs) -> Dict[str, Any]:
-        """Fetch offtaker status data."""
+    def _fetch_data(
+        self,
+        country: str,
+        period: str,
+        **kwargs
+    ) -> Dict[str, Any]:
+        """Fetch offtaker status data.
+        
+        In MOCK mode: Returns actual credit ratings from agencies
+        In RULE_BASED mode: Estimates from World Bank economic indicators
+        In AI_POWERED mode: Would use LLM to extract from financial statements (not yet implemented)
+        
+        Args:
+            country: Country name
+            period: Time period
+            
+        Returns:
+            Dictionary with offtaker status data
+        """
         if self.mode == AgentMode.MOCK:
+            # Return mock data
             data = self.MOCK_DATA.get(country, None)
             if not data:
                 logger.warning(f"No mock data for {country}, using default adequate credit")
@@ -288,22 +366,312 @@ class OfftakerStatusAgent(BaseParameterAgent):
                     "status": "Adequate credit"
                 }
             
-            logger.debug(f"Fetched mock data for {country}: {data}")
+            # Add source indicator
+            data['source'] = 'mock'
+            
+            logger.debug(f"Fetched mock data for {country}: Rating={data.get('credit_rating')}")
             return data
         
         elif self.mode == AgentMode.RULE_BASED:
-            raise NotImplementedError("RULE_BASED mode not yet implemented")
+            # Estimate from World Bank economic indicators
+            if self.data_service is None:
+                logger.warning("No data_service available, falling back to MOCK data")
+                return self._fetch_data_mock_fallback(country)
+            
+            try:
+                # Fetch GDP per capita (proxy for economic strength)
+                gdp_per_capita = self.data_service.get_value(
+                    country=country,
+                    indicator='gdp_per_capita',
+                    default=None
+                )
+                
+                # Fetch FDI net inflows (investor confidence)
+                fdi_inflows_pct = self.data_service.get_value(
+                    country=country,
+                    indicator='fdi_net_inflows',
+                    default=None
+                )
+                
+                # Fetch GDP growth (economic momentum)
+                gdp_growth = self.data_service.get_value(
+                    country=country,
+                    indicator='gdp_growth',
+                    default=None
+                )
+                
+                if gdp_per_capita is None:
+                    logger.warning(
+                        f"Insufficient data for {country}, falling back to MOCK data"
+                    )
+                    return self._fetch_data_mock_fallback(country)
+                
+                # Estimate credit quality
+                score, category = self._estimate_credit_quality(
+                    country,
+                    gdp_per_capita,
+                    fdi_inflows_pct,
+                    gdp_growth
+                )
+                
+                # Estimate characteristics
+                credit_rating = self._determine_credit_rating(category, score)
+                offtaker = self._determine_offtaker_type(gdp_per_capita)
+                sovereign_rating = self._estimate_sovereign_rating(gdp_per_capita, category)
+                status = self._determine_credit_status(category, score)
+                
+                data = {
+                    'offtaker': offtaker,
+                    'credit_rating': credit_rating,
+                    'rating_agency': 'Estimated',
+                    'category': category,
+                    'sovereign_rating': sovereign_rating,
+                    'status': status,
+                    'source': 'rule_based',
+                    'period': period,
+                    'raw_gdp_per_capita': gdp_per_capita,
+                    'raw_fdi_inflows_pct': fdi_inflows_pct if fdi_inflows_pct else 0,
+                    'raw_gdp_growth': gdp_growth if gdp_growth else 0
+                }
+                
+                logger.info(
+                    f"Estimated RULE_BASED data for {country}: score={score:.1f} ({category}, {credit_rating}) "
+                    f"from GDP/capita=${gdp_per_capita:,.0f}"
+                )
+                
+                return data
+                
+            except Exception as e:
+                logger.error(
+                    f"Error estimating credit quality for {country}: {e}. "
+                    f"Falling back to MOCK data"
+                )
+                return self._fetch_data_mock_fallback(country)
         
         elif self.mode == AgentMode.AI_POWERED:
+            # TODO Phase 2+: Use LLM to extract from financial statements
+            # return self._llm_extract_credit_ratings(country, period)
             raise NotImplementedError("AI_POWERED mode not yet implemented")
         
         else:
             raise AgentError(f"Unknown agent mode: {self.mode}")
     
-    def _calculate_score(self, data: Dict[str, Any], country: str, period: str) -> float:
+    def _fetch_data_mock_fallback(self, country: str) -> Dict[str, Any]:
+        """Fallback to mock data when rule-based data is unavailable.
+        
+        Args:
+            country: Country name
+            
+        Returns:
+            Mock data dictionary
+        """
+        data = self.MOCK_DATA.get(country, {
+            "offtaker": "Utility",
+            "credit_rating": "BBB-",
+            "rating_agency": "S&P",
+            "category": "adequate",
+            "sovereign_rating": "BBB-",
+            "status": "Adequate credit"
+        })
+        data['source'] = 'mock_fallback'
+        
+        logger.debug(f"Using mock fallback data for {country}")
+        return data
+    
+    def _estimate_credit_quality(
+        self,
+        country: str,
+        gdp_per_capita: float,
+        fdi_inflows_pct: Optional[float],
+        gdp_growth: Optional[float]
+    ) -> tuple:
+        """Estimate credit quality from World Bank indicators.
+        
+        State-backed offtakers typically track sovereign credit quality
+        Higher GDP + Stable economy = Better credit
+        
+        Args:
+            country: Country name
+            gdp_per_capita: GDP per capita (USD)
+            fdi_inflows_pct: FDI net inflows (% of GDP)
+            gdp_growth: GDP growth (annual %)
+            
+        Returns:
+            Tuple of (score, category)
+        """
+        # Get base estimate from mock data if available (for calibration)
+        base_data = self.MOCK_DATA.get(country)
+        
+        # Start with GDP-based score (economic strength correlates with credit)
+        if gdp_per_capita >= 50000:
+            # Very high income (Germany, USA, Australia, UK)
+            base_score = 9.5
+        elif gdp_per_capita >= 40000:
+            # High income
+            base_score = 9.0
+        elif gdp_per_capita >= 20000:
+            # Upper-middle income (Chile)
+            base_score = 7.5
+        elif gdp_per_capita >= 10000:
+            # Middle income (Brazil, China, Mexico)
+            base_score = 6.5
+        elif gdp_per_capita >= 5000:
+            # Lower-middle income (India, Indonesia)
+            base_score = 6.0
+        else:
+            # Low income (Nigeria, Vietnam)
+            base_score = 4.0
+        
+        # Adjust based on FDI confidence
+        fdi_adjustment = 0.0
+        if fdi_inflows_pct is not None:
+            if fdi_inflows_pct >= 4.0:
+                # Very high FDI (strong confidence)
+                fdi_adjustment = +1.0
+            elif fdi_inflows_pct >= 2.0:
+                # High FDI
+                fdi_adjustment = +0.5
+            elif fdi_inflows_pct >= 1.0:
+                # Moderate FDI
+                fdi_adjustment = 0.0
+            elif fdi_inflows_pct < 0.5:
+                # Low FDI (weak confidence)
+                fdi_adjustment = -0.5
+        
+        # Adjust based on GDP growth (economic momentum)
+        growth_adjustment = 0.0
+        if gdp_growth is not None:
+            if gdp_growth >= 5.0:
+                # Strong growth
+                growth_adjustment = +0.5
+            elif gdp_growth >= 3.0:
+                # Moderate growth
+                growth_adjustment = +0.3
+            elif gdp_growth < 1.0:
+                # Weak growth
+                growth_adjustment = -0.5
+        
+        # Calculate estimated score
+        score = base_score + fdi_adjustment + growth_adjustment
+        
+        # Calibrate with mock data if available (50/50 blend - less confident)
+        if base_data:
+            base_score_mock = self.CATEGORY_SCORES.get(base_data.get('category', 'adequate'), score)
+            score = score * 0.5 + base_score_mock * 0.5
+        
+        # Clamp to valid range
+        score = max(1.0, min(score, 10.0))
+        
+        # Determine category from score
+        category = self._determine_category_from_score(score)
+        
+        logger.debug(
+            f"Credit quality estimation for {country}: "
+            f"GDP/capita=${gdp_per_capita:,.0f} → base={base_score:.1f}, "
+            f"FDI={fdi_inflows_pct if fdi_inflows_pct else 0:.1f}% → adj={fdi_adjustment:+.1f}, "
+            f"growth={gdp_growth if gdp_growth else 0:.1f}% → adj={growth_adjustment:+.1f}, "
+            f"final_score={score:.1f} ({category})"
+        )
+        
+        return score, category
+    
+    def _determine_category_from_score(self, score: float) -> str:
+        """Determine category from score."""
+        if score >= 9.5:
+            return "superior"
+        elif score >= 8.5:
+            return "excellent"
+        elif score >= 7.5:
+            return "very_good"
+        elif score >= 6.5:
+            return "good"
+        elif score >= 5.5:
+            return "adequate"
+        elif score >= 4.5:
+            return "moderate"
+        elif score >= 3.5:
+            return "below_moderate"
+        elif score >= 2.5:
+            return "weak"
+        elif score >= 1.5:
+            return "very_weak"
+        else:
+            return "distressed"
+    
+    def _determine_credit_rating(self, category: str, score: float) -> str:
+        """Determine credit rating from category."""
+        rating_map = {
+            "superior": "AAA",
+            "excellent": "AA",
+            "very_good": "A",
+            "good": "BBB",
+            "adequate": "BBB-",
+            "moderate": "BB",
+            "below_moderate": "BB-",
+            "weak": "B",
+            "very_weak": "B-",
+            "distressed": "CCC"
+        }
+        return rating_map.get(category, "BBB-")
+    
+    def _determine_offtaker_type(self, gdp_per_capita: float) -> str:
+        """Determine typical offtaker type."""
+        if gdp_per_capita >= 40000:
+            return "Investment grade utilities / Government-backed"
+        elif gdp_per_capita >= 15000:
+            return "State utilities / Corporate PPAs"
+        else:
+            return "State utility (government-backed)"
+    
+    def _estimate_sovereign_rating(self, gdp_per_capita: float, category: str) -> str:
+        """Estimate sovereign rating."""
+        if gdp_per_capita >= 50000:
+            return f"AAA (estimated)"
+        elif gdp_per_capita >= 40000:
+            return f"AA+ (estimated)"
+        elif gdp_per_capita >= 20000:
+            return f"A (estimated)"
+        elif gdp_per_capita >= 10000:
+            return f"BBB (estimated)"
+        elif gdp_per_capita >= 5000:
+            return f"BBB- (estimated)"
+        else:
+            return f"BB or below (estimated)"
+    
+    def _determine_credit_status(self, category: str, score: float) -> str:
+        """Determine credit status description."""
+        if score >= 9:
+            return "Superior credit quality with government backing or AAA utility"
+        elif score >= 8:
+            return "Excellent credit with very strong payment capacity"
+        elif score >= 7:
+            return "Good credit quality (solid investment grade)"
+        elif score >= 6:
+            return "Adequate credit (lower investment grade, government backing helps)"
+        elif score >= 5:
+            return "Moderate credit (below investment grade, manageable risk)"
+        elif score >= 4:
+            return "Below investment grade with notable credit concerns"
+        else:
+            return "Weak credit with significant payment default risk"
+    
+    def _calculate_score(
+        self,
+        data: Dict[str, Any],
+        country: str,
+        period: str
+    ) -> float:
         """Calculate offtaker status score based on credit category.
         
         DIRECT: Higher credit rating = lower default risk = higher score
+        
+        Args:
+            data: Offtaker status data
+            country: Country name
+            period: Time period
+            
+        Returns:
+            Score between 1-10
         """
         category = data.get("category", "adequate")
         
@@ -317,51 +685,106 @@ class OfftakerStatusAgent(BaseParameterAgent):
         
         return float(score)
     
-    def _generate_justification(self, data: Dict[str, Any], score: float, country: str, period: str) -> str:
-        """Generate justification for the offtaker status score."""
+    def _generate_justification(
+        self,
+        data: Dict[str, Any],
+        score: float,
+        country: str,
+        period: str
+    ) -> str:
+        """Generate justification for the offtaker status score.
+        
+        Args:
+            data: Offtaker status data
+            score: Calculated score
+            country: Country name
+            period: Time period
+            
+        Returns:
+            Human-readable justification string
+        """
         offtaker = data.get("offtaker", "utility")
         credit_rating = data.get("credit_rating", "N/A")
         rating_agency = data.get("rating_agency", "S&P")
         sovereign_rating = data.get("sovereign_rating", "")
         status = data.get("status", "moderate credit")
+        source = data.get("source", "unknown")
         
+        # Find description from rubric
         description = "moderate credit"
         for level in self.scoring_rubric:
             if level["score"] == int(score):
                 description = level["description"].lower()
                 break
         
-        justification = (
-            f"Offtaker {offtaker} carries {rating_agency} credit rating of {credit_rating}, indicating {description}. "
-            f"{status.capitalize()}. "
-        )
+        # Build justification based on source
+        if source == 'rule_based':
+            gdp = data.get('raw_gdp_per_capita', 0)
+            fdi = data.get('raw_fdi_inflows_pct', 0)
+            justification = (
+                f"Based on World Bank data: Estimated offtaker {offtaker} carries "
+                f"estimated {rating_agency} credit rating of {credit_rating}, indicating {description} "
+                f"(derived from GDP/capita ${gdp:,.0f} and FDI inflows {fdi:.1f}%). "
+                f"{status.capitalize()}. "
+            )
+        else:
+            # Mock data - use actual ratings
+            justification = (
+                f"Offtaker {offtaker} carries {rating_agency} credit rating of {credit_rating}, "
+                f"indicating {description}. {status.capitalize()}. "
+            )
         
         if sovereign_rating:
             justification += f"Sovereign rating of {sovereign_rating} provides context for offtaker creditworthiness. "
         
         justification += (
             f"This credit profile {'strongly' if score >= 8 else 'adequately' if score >= 6 else 'partially'} "
-            f"supports project financing and reduces payment default risk."
+            f"supports project financing and {'significantly reduces' if score >= 8 else 'moderately reduces' if score >= 6 else 'addresses'} "
+            f"payment default risk. "
         )
         
         return justification
     
-    def _get_data_sources(self, country: str) -> List[str]:
-        """Get data sources used for this analysis."""
-        return [
-            "S&P Global Ratings",
-            "Moody's Ratings",
-            "Fitch Ratings",
-            f"{country} Offtaker financial statements",
-            "Sovereign credit ratings"
-        ]
+    def _get_data_sources(self, country: str, data: Dict[str, Any] = None) -> List[str]:
+        """Get data sources used for this analysis.
+        
+        Args:
+            country: Country name
+            data: Data dictionary with source info
+            
+        Returns:
+            List of data source identifiers
+        """
+        sources = []
+        
+        # Check if we used rule-based or mock data
+        if data and data.get('source') == 'rule_based':
+            sources.append("World Bank Economic Indicators - Rule-Based Estimation")
+            sources.append("Credit rating agencies (Reference)")
+        else:
+            sources.append("S&P Global Ratings - Mock Data")
+            sources.append("Moody's Ratings")
+            sources.append("Fitch Ratings")
+        
+        sources.append(f"{country} Offtaker financial statements")
+        sources.append("Sovereign credit ratings")
+        
+        return sources
     
     def _get_scoring_rubric(self) -> List[Dict[str, Any]]:
-        """Get scoring rubric for Offtaker Status parameter."""
+        """Get scoring rubric for Offtaker Status parameter.
+        
+        Returns:
+            Complete scoring rubric
+        """
         return self.scoring_rubric
     
     def get_data_sources(self) -> List[str]:
-        """Get general data sources for this parameter."""
+        """Get general data sources for this parameter.
+        
+        Returns:
+            List of typical data sources
+        """
         return [
             "S&P Global Ratings",
             "Moody's Ratings",
@@ -375,8 +798,19 @@ class OfftakerStatusAgent(BaseParameterAgent):
 def analyze_offtaker_status(
     country: str,
     period: str = "Q3 2024",
-    mode: AgentMode = AgentMode.MOCK
+    mode: AgentMode = AgentMode.MOCK,
+    data_service = None
 ) -> ParameterScore:
-    """Convenience function to analyze offtaker status."""
-    agent = OfftakerStatusAgent(mode=mode)
+    """Convenience function to analyze offtaker status.
+    
+    Args:
+        country: Country name
+        period: Time period
+        mode: Agent mode (MOCK or RULE_BASED)
+        data_service: DataService instance (required for RULE_BASED mode)
+        
+    Returns:
+        ParameterScore
+    """
+    agent = OfftakerStatusAgent(mode=mode, data_service=data_service)
     return agent.analyze(country, period)

@@ -30,8 +30,12 @@ Market Openness Categories (1-10):
 
 Scoring Rubric (LOADED FROM CONFIG):
 Lower barriers = More competitive = Higher score
+
+MODES:
+- MOCK: Uses hardcoded market entry assessments (for testing)
+- RULE_BASED: Estimates from World Bank business ease + FDI indicators (production)
 """
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from datetime import datetime
 
 from ..base_agent import BaseParameterAgent, AgentMode
@@ -173,72 +177,110 @@ class CompetitiveLandscapeAgent(BaseParameterAgent):
         "Nigeria": {
             "score": 2,
             "category": "very_high_barriers",
-            "licensing_complexity": "Very High (complex, uncertain process)",
+            "licensing_complexity": "Very High (complex, uncertain)",
             "permitting_timeline_months": 36,
-            "grid_connection_ease": "Very Low (poor grid, NBET challenges)",
-            "market_openness": "Low (limited framework)",
-            "competitive_intensity": "Very Low (nascent market)",
-            "entry_examples": "Very limited private sector entry",
-            "status": "Severe barriers to entry with limited market opening"
+            "grid_connection_ease": "Very Low (grid unreliability)",
+            "market_openness": "Low (limited by infrastructure and policy)",
+            "competitive_intensity": "Very Low (limited market activity)",
+            "entry_examples": "Few successful entries, major barriers",
+            "status": "Very high barriers with infrastructure and regulatory challenges"
         },
         "Argentina": {
             "score": 5,
             "category": "moderate_barriers",
-            "licensing_complexity": "Moderate to High (policy uncertainty)",
-            "permitting_timeline_months": 20,
-            "grid_connection_ease": "Moderate (CAMMESA process)",
-            "market_openness": "Moderate (RenovAr but policy risk)",
-            "competitive_intensity": "Moderate (episodic activity)",
-            "entry_examples": "RenovAr attracted players but policy risk",
-            "status": "Moderate barriers with significant policy and currency risk"
+            "licensing_complexity": "Moderate (RenovAr framework)",
+            "permitting_timeline_months": 18,
+            "grid_connection_ease": "Moderate",
+            "market_openness": "Moderate to High (auction-based)",
+            "competitive_intensity": "Moderate",
+            "entry_examples": "RenovAr program attracted diverse bidders",
+            "status": "Moderate barriers with auction framework but economic volatility"
         },
         "Mexico": {
-            "score": 3,
-            "category": "high_barriers",
-            "licensing_complexity": "High (policy reversal, CFE preference)",
-            "permitting_timeline_months": 30,
+            "score": 4,
+            "category": "above_moderate_barriers",
+            "licensing_complexity": "High (policy reversal post-2018)",
+            "permitting_timeline_months": 24,
             "grid_connection_ease": "Low (CFE control, barriers)",
-            "market_openness": "Low (market closing post-policy changes)",
-            "competitive_intensity": "Low (CFE dominance increasing)",
-            "entry_examples": "Entry severely restricted by policy changes",
-            "status": "High barriers due to policy reversal favoring state utility"
+            "market_openness": "Moderate (deteriorating post-2018)",
+            "competitive_intensity": "Low to Moderate (declining)",
+            "entry_examples": "Entry declining after policy changes",
+            "status": "Above moderate barriers with policy reversal creating challenges"
         },
         "Indonesia": {
-            "score": 2,
-            "category": "very_high_barriers",
-            "licensing_complexity": "Very High (PLN monopoly, complex process)",
-            "permitting_timeline_months": 36,
-            "grid_connection_ease": "Very Low (PLN control)",
-            "market_openness": "Very Low (PLN dominance)",
-            "competitive_intensity": "Very Low (limited private entry)",
-            "entry_examples": "Minimal private sector participation",
-            "status": "Severe barriers with PLN monopoly limiting market opening"
+            "score": 4,
+            "category": "above_moderate_barriers",
+            "licensing_complexity": "High (PLN control, complex approvals)",
+            "permitting_timeline_months": 24,
+            "grid_connection_ease": "Low to Moderate (PLN monopoly)",
+            "market_openness": "Moderate (opening slowly)",
+            "competitive_intensity": "Low to Moderate",
+            "entry_examples": "Limited IPP participation",
+            "status": "Above moderate barriers with PLN control and complex processes"
         },
         "Saudi Arabia": {
-            "score": 6,
-            "category": "below_moderate_barriers",
-            "licensing_complexity": "Moderate (NREP process structured)",
-            "permitting_timeline_months": 14,
-            "grid_connection_ease": "Moderate to High (improving)",
-            "market_openness": "Moderate to High (Vision 2030 opening)",
-            "competitive_intensity": "Moderate (growing activity)",
-            "entry_examples": "International developers participating in NREP",
-            "status": "Market opening under Vision 2030 with moderate entry barriers"
+            "score": 7,
+            "category": "low_barriers",
+            "licensing_complexity": "Low to Moderate (REPDO auctions)",
+            "permitting_timeline_months": 12,
+            "grid_connection_ease": "Moderate to High (state support)",
+            "market_openness": "High (Vision 2030 opening)",
+            "competitive_intensity": "High (competitive auctions)",
+            "entry_examples": "Strong international participation in auctions",
+            "status": "Low barriers with Vision 2030 driving market opening"
         },
     }
     
-    def __init__(self, mode: AgentMode = AgentMode.MOCK, config: Dict[str, Any] = None):
-        """Initialize Competitive Landscape Agent."""
+    # Category to score mapping
+    CATEGORY_SCORES = {
+        "extreme_barriers": 1,
+        "very_high_barriers": 2,
+        "high_barriers": 3,
+        "above_moderate_barriers": 4,
+        "moderate_barriers": 5,
+        "below_moderate_barriers": 6,
+        "low_barriers": 7,
+        "very_low_barriers": 8,
+        "minimal_barriers": 9,
+        "no_barriers": 10
+    }
+    
+    def __init__(
+        self, 
+        mode: AgentMode = AgentMode.MOCK, 
+        config: Dict[str, Any] = None,
+        data_service = None  # DataService instance for RULE_BASED mode
+    ):
+        """Initialize Competitive Landscape Agent.
+        
+        Args:
+            mode: Agent operation mode (MOCK or RULE_BASED)
+            config: Configuration dictionary
+            data_service: DataService instance (required for RULE_BASED mode)
+        """
         super().__init__(
             parameter_name="Competitive Landscape",
             mode=mode,
             config=config
         )
         
+        # Store data service for RULE_BASED mode
+        self.data_service = data_service
+        
+        # Validate data service if in RULE_BASED mode
+        if self.mode == AgentMode.RULE_BASED and self.data_service is None:
+            logger.warning(
+                "RULE_BASED mode enabled but no data_service provided. "
+                "Agent will fall back to MOCK data."
+            )
+        
         # Load scoring rubric from config
         self.scoring_rubric = self._load_scoring_rubric()
         
-        logger.debug(f"Loaded scoring rubric with {len(self.scoring_rubric)} levels")
+        logger.debug(
+            f"Initialized CompetitiveLandscapeAgent in {mode.value} mode "
+            f"with {len(self.scoring_rubric)} scoring levels"
+        )
     
     def _load_scoring_rubric(self) -> List[Dict[str, Any]]:
         """Load scoring rubric from configuration."""
@@ -246,8 +288,8 @@ class CompetitiveLandscapeAgent(BaseParameterAgent):
             from ...core.config_loader import config_loader
             params_config = config_loader.get_parameters()
             
-            competitive_config = params_config['parameters'].get('competitive_landscape', {})
-            scoring = competitive_config.get('scoring', [])
+            landscape_config = params_config['parameters'].get('competitive_landscape', {})
+            scoring = landscape_config.get('scoring', [])
             
             if scoring:
                 logger.info("Loaded scoring rubric from config/parameters.yaml")
@@ -284,20 +326,51 @@ class CompetitiveLandscapeAgent(BaseParameterAgent):
             {"score": 10, "range": "No barriers", "description": "Completely open market"}
         ]
     
-    def analyze(self, country: str, period: str, **kwargs) -> ParameterScore:
-        """Analyze competitive landscape for a country."""
-        try:
-            logger.info(f"Analyzing Competitive Landscape for {country} ({period})")
+    def analyze(
+        self,
+        country: str,
+        period: str,
+        **kwargs
+    ) -> ParameterScore:
+        """Analyze competitive landscape for a country.
+        
+        Args:
+            country: Country name
+            period: Time period (e.g., "Q3 2024")
+            **kwargs: Additional context
             
+        Returns:
+            ParameterScore with score, justification, confidence
+        """
+        try:
+            logger.info(f"Analyzing Competitive Landscape for {country} ({period}) in {self.mode.value} mode")
+            
+            # Step 1: Fetch data
             data = self._fetch_data(country, period, **kwargs)
+            
+            # Step 2: Calculate score
             score = self._calculate_score(data, country, period)
+            
+            # Step 3: Validate score
             score = self._validate_score(score)
+            
+            # Step 4: Generate justification
             justification = self._generate_justification(data, score, country, period)
             
-            data_quality = "high" if data else "low"
-            confidence = self._estimate_confidence(data, data_quality)
-            data_sources = self._get_data_sources(country)
+            # Step 5: Estimate confidence
+            if self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
+                data_quality = "medium"
+                confidence = 0.65  # Lower confidence for estimated data
+            else:
+                data_quality = "high"
+                confidence = 0.85  # High confidence for detailed assessments
             
+            confidence = self._estimate_confidence(data, data_quality)
+            
+            # Step 6: Identify data sources
+            data_sources = self._get_data_sources(country, data)
+            
+            # Create result
             result = ParameterScore(
                 parameter_name=self.parameter_name,
                 score=score,
@@ -309,8 +382,8 @@ class CompetitiveLandscapeAgent(BaseParameterAgent):
             
             logger.info(
                 f"Competitive Landscape analysis complete for {country}: "
-                f"Score={score}, Category={data.get('category', 'unknown')}, "
-                f"Confidence={confidence}"
+                f"Score={score:.1f}, Category={data.get('category', 'unknown')}, "
+                f"Confidence={confidence:.2f}, Mode={self.mode.value}"
             )
             
             return result
@@ -319,9 +392,27 @@ class CompetitiveLandscapeAgent(BaseParameterAgent):
             logger.error(f"Competitive Landscape analysis failed for {country}: {str(e)}", exc_info=True)
             raise AgentError(f"Competitive Landscape analysis failed: {str(e)}")
     
-    def _fetch_data(self, country: str, period: str, **kwargs) -> Dict[str, Any]:
-        """Fetch competitive landscape data."""
+    def _fetch_data(
+        self,
+        country: str,
+        period: str,
+        **kwargs
+    ) -> Dict[str, Any]:
+        """Fetch competitive landscape data.
+        
+        In MOCK mode: Returns mock market entry assessments
+        In RULE_BASED mode: Estimates from World Bank business ease + FDI indicators
+        In AI_POWERED mode: Would use LLM to extract from market reports (not yet implemented)
+        
+        Args:
+            country: Country name
+            period: Time period
+            
+        Returns:
+            Dictionary with competitive landscape data
+        """
         if self.mode == AgentMode.MOCK:
+            # Return mock data
             data = self.MOCK_DATA.get(country, None)
             if not data:
                 logger.warning(f"No mock data for {country}, using default moderate barriers")
@@ -337,40 +428,372 @@ class CompetitiveLandscapeAgent(BaseParameterAgent):
                     "status": "Moderate barriers to entry"
                 }
             
-            logger.debug(f"Fetched mock data for {country}: {data}")
+            # Add source indicator
+            data['source'] = 'mock'
+            
+            logger.debug(f"Fetched mock data for {country}: score={data.get('score')}")
             return data
         
         elif self.mode == AgentMode.RULE_BASED:
-            raise NotImplementedError("RULE_BASED mode not yet implemented")
+            # Estimate from World Bank indicators
+            if self.data_service is None:
+                logger.warning("No data_service available, falling back to MOCK data")
+                return self._fetch_data_mock_fallback(country)
+            
+            try:
+                # Fetch FDI net inflows (% of GDP) - proxy for market openness
+                fdi_inflows_pct = self.data_service.get_value(
+                    country=country,
+                    indicator='fdi_net_inflows',
+                    default=None
+                )
+                
+                # Fetch GDP per capita (development level correlates with market maturity)
+                gdp_per_capita = self.data_service.get_value(
+                    country=country,
+                    indicator='gdp_per_capita',
+                    default=None
+                )
+                
+                # Fetch trade openness (% of GDP)
+                trade_pct_gdp = self.data_service.get_value(
+                    country=country,
+                    indicator='trade',
+                    default=None
+                )
+                
+                # Fetch renewable electricity output (market activity indicator)
+                renewable_output = self.data_service.get_value(
+                    country=country,
+                    indicator='renewable_electricity_output',
+                    default=None
+                )
+                
+                if fdi_inflows_pct is None or gdp_per_capita is None:
+                    logger.warning(
+                        f"Insufficient data for {country}, falling back to MOCK data"
+                    )
+                    return self._fetch_data_mock_fallback(country)
+                
+                # Estimate competitive landscape score
+                score, category = self._estimate_competitive_landscape(
+                    country,
+                    fdi_inflows_pct,
+                    gdp_per_capita,
+                    trade_pct_gdp,
+                    renewable_output
+                )
+                
+                # Estimate characteristics
+                licensing = self._determine_licensing_complexity(category, gdp_per_capita)
+                timeline = self._estimate_permitting_timeline(category)
+                grid_ease = self._determine_grid_connection_ease(category)
+                openness = self._determine_market_openness(category, fdi_inflows_pct)
+                intensity = self._determine_competitive_intensity(category)
+                status = self._determine_landscape_status(category, score)
+                
+                data = {
+                    'score': score,
+                    'category': category,
+                    'licensing_complexity': licensing,
+                    'permitting_timeline_months': timeline,
+                    'grid_connection_ease': grid_ease,
+                    'market_openness': openness,
+                    'competitive_intensity': intensity,
+                    'entry_examples': 'Estimated from market indicators',
+                    'status': status,
+                    'source': 'rule_based',
+                    'period': period,
+                    'raw_fdi_inflows_pct': fdi_inflows_pct,
+                    'raw_gdp_per_capita': gdp_per_capita
+                }
+                
+                logger.info(
+                    f"Estimated RULE_BASED data for {country}: score={score:.1f} ({category}) "
+                    f"from FDI={fdi_inflows_pct:.1f}%, GDP/capita=${gdp_per_capita:,.0f}"
+                )
+                
+                return data
+                
+            except Exception as e:
+                logger.error(
+                    f"Error estimating competitive landscape for {country}: {e}. "
+                    f"Falling back to MOCK data"
+                )
+                return self._fetch_data_mock_fallback(country)
         
         elif self.mode == AgentMode.AI_POWERED:
+            # TODO Phase 2+: Use LLM to extract from market reports
+            # return self._llm_extract_competitive_landscape(country, period)
             raise NotImplementedError("AI_POWERED mode not yet implemented")
         
         else:
             raise AgentError(f"Unknown agent mode: {self.mode}")
     
-    def _calculate_score(self, data: Dict[str, Any], country: str, period: str) -> float:
+    def _fetch_data_mock_fallback(self, country: str) -> Dict[str, Any]:
+        """Fallback to mock data when rule-based data is unavailable.
+        
+        Args:
+            country: Country name
+            
+        Returns:
+            Mock data dictionary
+        """
+        data = self.MOCK_DATA.get(country, {
+            "score": 5,
+            "category": "moderate_barriers",
+            "licensing_complexity": "Moderate",
+            "permitting_timeline_months": 18,
+            "grid_connection_ease": "Moderate",
+            "market_openness": "Moderate",
+            "competitive_intensity": "Moderate",
+            "entry_examples": "Some entry activity",
+            "status": "Moderate barriers to entry"
+        })
+        data['source'] = 'mock_fallback'
+        
+        logger.debug(f"Using mock fallback data for {country}")
+        return data
+    
+    def _estimate_competitive_landscape(
+        self,
+        country: str,
+        fdi_inflows_pct: float,
+        gdp_per_capita: float,
+        trade_pct_gdp: Optional[float],
+        renewable_output: Optional[float]
+    ) -> tuple:
+        """Estimate competitive landscape from World Bank indicators.
+        
+        Higher FDI + Higher development = More competitive, open markets
+        
+        Args:
+            country: Country name
+            fdi_inflows_pct: FDI net inflows (% of GDP)
+            gdp_per_capita: GDP per capita in current USD
+            trade_pct_gdp: Trade (% of GDP)
+            renewable_output: Renewable electricity output (kWh)
+            
+        Returns:
+            Tuple of (score, category)
+        """
+        # Get base estimate from mock data if available (for calibration)
+        base_data = self.MOCK_DATA.get(country)
+        
+        # Start with FDI openness score (higher FDI = more open market)
+        if fdi_inflows_pct >= 4.0:
+            # Very high FDI (Chile, Vietnam pre-policy change)
+            fdi_score = 8.0
+        elif fdi_inflows_pct >= 3.0:
+            # High FDI
+            fdi_score = 7.0
+        elif fdi_inflows_pct >= 2.0:
+            # Moderate-high FDI
+            fdi_score = 6.0
+        elif fdi_inflows_pct >= 1.0:
+            # Moderate FDI
+            fdi_score = 5.0
+        elif fdi_inflows_pct >= 0.5:
+            # Low-moderate FDI
+            fdi_score = 4.0
+        else:
+            # Low FDI (may indicate barriers or low activity)
+            fdi_score = 3.0
+        
+        # Adjust based on development level
+        # High-income countries tend to have more mature, competitive markets
+        if gdp_per_capita >= 40000:
+            # High income (Germany, UK, USA, Australia)
+            gdp_adjustment = +2.0
+        elif gdp_per_capita >= 15000:
+            # Upper middle income (Brazil, China)
+            gdp_adjustment = +1.0
+        elif gdp_per_capita >= 5000:
+            # Lower middle income (India, Vietnam)
+            gdp_adjustment = 0.0
+        else:
+            # Low income (Nigeria)
+            gdp_adjustment = -1.5
+        
+        # Adjust based on trade openness (if available)
+        trade_adjustment = 0.0
+        if trade_pct_gdp is not None:
+            if trade_pct_gdp >= 80:  # Very open (small trading nations)
+                trade_adjustment = +0.5
+            elif trade_pct_gdp >= 50:  # Open
+                trade_adjustment = +0.3
+            elif trade_pct_gdp < 30:  # Relatively closed
+                trade_adjustment = -0.3
+        
+        # Calculate estimated score
+        score = fdi_score + gdp_adjustment + trade_adjustment
+        
+        # Calibrate with mock data if available (60/40 blend - less confident)
+        if base_data:
+            base_score = base_data.get('score', score)
+            score = score * 0.6 + base_score * 0.4
+        
+        # Clamp to valid range
+        score = max(1.0, min(score, 10.0))
+        
+        # Determine category from score
+        category = self._determine_category_from_score(score)
+        
+        logger.debug(
+            f"Competitive landscape estimation for {country}: "
+            f"FDI={fdi_inflows_pct:.1f}% → fdi_score={fdi_score:.1f}, "
+            f"GDP/capita=${gdp_per_capita:,.0f} → adj={gdp_adjustment:+.1f}, "
+            f"final_score={score:.1f} ({category})"
+        )
+        
+        return score, category
+    
+    def _determine_category_from_score(self, score: float) -> str:
+        """Determine category from score."""
+        if score >= 9.5:
+            return "no_barriers"
+        elif score >= 8.5:
+            return "minimal_barriers"
+        elif score >= 7.5:
+            return "very_low_barriers"
+        elif score >= 6.5:
+            return "low_barriers"
+        elif score >= 5.5:
+            return "below_moderate_barriers"
+        elif score >= 4.5:
+            return "moderate_barriers"
+        elif score >= 3.5:
+            return "above_moderate_barriers"
+        elif score >= 2.5:
+            return "high_barriers"
+        elif score >= 1.5:
+            return "very_high_barriers"
+        else:
+            return "extreme_barriers"
+    
+    def _determine_licensing_complexity(self, category: str, gdp_per_capita: float) -> str:
+        """Determine licensing complexity level."""
+        if category in ["no_barriers", "minimal_barriers"]:
+            return "Low (streamlined process)"
+        elif category in ["very_low_barriers", "low_barriers"]:
+            return "Low to Moderate"
+        elif category in ["below_moderate_barriers", "moderate_barriers"]:
+            return "Moderate"
+        elif category == "above_moderate_barriers":
+            return "Moderate to High"
+        else:
+            return "High to Very High"
+    
+    def _estimate_permitting_timeline(self, category: str) -> int:
+        """Estimate permitting timeline in months."""
+        timeline_map = {
+            "no_barriers": 4,
+            "minimal_barriers": 6,
+            "very_low_barriers": 8,
+            "low_barriers": 10,
+            "below_moderate_barriers": 14,
+            "moderate_barriers": 18,
+            "above_moderate_barriers": 24,
+            "high_barriers": 30,
+            "very_high_barriers": 36,
+            "extreme_barriers": 48
+        }
+        return timeline_map.get(category, 18)
+    
+    def _determine_grid_connection_ease(self, category: str) -> str:
+        """Determine grid connection ease."""
+        if category in ["no_barriers", "minimal_barriers"]:
+            return "High (mature infrastructure)"
+        elif category in ["very_low_barriers", "low_barriers"]:
+            return "Moderate to High"
+        elif category in ["below_moderate_barriers", "moderate_barriers"]:
+            return "Moderate"
+        else:
+            return "Low (infrastructure challenges)"
+    
+    def _determine_market_openness(self, category: str, fdi_pct: float) -> str:
+        """Determine market openness level."""
+        if category in ["no_barriers", "minimal_barriers"]:
+            return "Very High (fully open)"
+        elif category in ["very_low_barriers", "low_barriers"]:
+            return "High (open to competition)"
+        elif category in ["below_moderate_barriers", "moderate_barriers"]:
+            return "Moderate (some restrictions)"
+        else:
+            return "Low (significant restrictions)"
+    
+    def _determine_competitive_intensity(self, category: str) -> str:
+        """Determine competitive intensity."""
+        if category in ["no_barriers", "minimal_barriers"]:
+            return "Very High (active competition)"
+        elif category in ["very_low_barriers", "low_barriers"]:
+            return "High (competitive market)"
+        elif category in ["below_moderate_barriers", "moderate_barriers"]:
+            return "Moderate"
+        else:
+            return "Low (limited competition)"
+    
+    def _determine_landscape_status(self, category: str, score: float) -> str:
+        """Determine landscape status description."""
+        if score >= 8:
+            return "Highly competitive market with low barriers and strong participation"
+        elif score >= 6:
+            return "Competitive market with relatively low entry barriers"
+        elif score >= 4:
+            return "Moderate competition with some entry barriers"
+        else:
+            return "Significant barriers limiting market competition"
+    
+    def _calculate_score(
+        self,
+        data: Dict[str, Any],
+        country: str,
+        period: str
+    ) -> float:
         """Calculate competitive landscape score.
         
         Lower barriers = More competitive = Higher score
+        
+        Args:
+            data: Competitive landscape data
+            country: Country name
+            period: Time period
+            
+        Returns:
+            Score between 1-10
         """
         # Use pre-calculated score from data if available
         if "score" in data:
             score = data["score"]
-            logger.debug(f"Using pre-calculated score {score} for {country}")
+            logger.debug(f"Using score {score} for {country}")
             return float(score)
         
-        # Otherwise could calculate from components
-        # (This would require complex weighting of licensing, permitting, etc.)
-        # For now, default to moderate
-        score = 5
+        # Otherwise use category if available
+        category = data.get("category", "moderate_barriers")
+        score = self.CATEGORY_SCORES.get(category, 5)
         
-        logger.debug(f"Using default score {score} for {country}")
+        logger.debug(f"Using category {category} → score {score} for {country}")
         
         return float(score)
     
-    def _generate_justification(self, data: Dict[str, Any], score: float, country: str, period: str) -> str:
-        """Generate justification for the competitive landscape score."""
+    def _generate_justification(
+        self,
+        data: Dict[str, Any],
+        score: float,
+        country: str,
+        period: str
+    ) -> str:
+        """Generate justification for the competitive landscape score.
+        
+        Args:
+            data: Competitive landscape data
+            score: Calculated score
+            country: Country name
+            period: Time period
+            
+        Returns:
+            Human-readable justification string
+        """
         category = data.get("category", "moderate_barriers")
         licensing = data.get("licensing_complexity", "moderate")
         timeline = data.get("permitting_timeline_months", 18)
@@ -379,45 +802,78 @@ class CompetitiveLandscapeAgent(BaseParameterAgent):
         intensity = data.get("competitive_intensity", "moderate")
         examples = data.get("entry_examples", "some activity")
         status = data.get("status", "")
+        source = data.get("source", "unknown")
         
+        # Find description from rubric
         description = "moderate barriers"
         for level in self.scoring_rubric:
             if level["score"] == int(score):
                 description = level.get("range", level["description"]).lower()
                 break
         
-        justification = (
-            f"Market shows {description}. "
-            f"Licensing complexity: {licensing.lower()}, "
-            f"permitting timeline ~{timeline} months, "
-            f"grid connection: {grid.lower()}. "
-        )
-        
-        justification += (
-            f"Market openness: {openness.lower()}, "
-            f"competitive intensity: {intensity.lower()}. "
-        )
-        
-        justification += f"{examples}. {status}."
+        # Build justification based on source
+        if source == 'rule_based':
+            fdi = data.get('raw_fdi_inflows_pct', 0)
+            gdp = data.get('raw_gdp_per_capita', 0)
+            justification = (
+                f"Based on World Bank data: Estimated market shows {description} "
+                f"(derived from FDI inflows {fdi:.1f}% of GDP and GDP/capita ${gdp:,.0f}). "
+                f"Estimated licensing complexity: {licensing.lower()}, "
+                f"permitting timeline ~{timeline} months. {status}. "
+            )
+        else:
+            # Mock data - use detailed assessments
+            justification = (
+                f"Market shows {description}. "
+                f"Licensing complexity: {licensing.lower()}, "
+                f"permitting timeline ~{timeline} months, "
+                f"grid connection: {grid.lower()}. "
+                f"Market openness: {openness.lower()}, "
+                f"competitive intensity: {intensity.lower()}. "
+                f"{examples}. {status}. "
+            )
         
         return justification
     
-    def _get_data_sources(self, country: str) -> List[str]:
-        """Get data sources used for this analysis."""
-        return [
-            "Market entry analysis and regulatory frameworks",
-            "World Bank Doing Business indicators",
-            "Competitive intensity assessments",
-            f"{country} licensing and permitting requirements",
-            "Industry entry and exit data"
-        ]
+    def _get_data_sources(self, country: str, data: Dict[str, Any] = None) -> List[str]:
+        """Get data sources used for this analysis.
+        
+        Args:
+            country: Country name
+            data: Data dictionary with source info
+            
+        Returns:
+            List of data source identifiers
+        """
+        sources = []
+        
+        # Check if we used rule-based or mock data
+        if data and data.get('source') == 'rule_based':
+            sources.append("World Bank FDI & Trade Indicators - Rule-Based Estimation")
+            sources.append("Market entry analysis (Reference)")
+        else:
+            sources.append("Market entry analysis and regulatory frameworks - Mock Data")
+            sources.append("World Bank Doing Business indicators")
+        
+        sources.append("Competitive intensity assessments")
+        sources.append(f"{country} licensing and permitting requirements")
+        
+        return sources
     
     def _get_scoring_rubric(self) -> List[Dict[str, Any]]:
-        """Get scoring rubric for Competitive Landscape parameter."""
+        """Get scoring rubric for Competitive Landscape parameter.
+        
+        Returns:
+            Complete scoring rubric
+        """
         return self.scoring_rubric
     
     def get_data_sources(self) -> List[str]:
-        """Get general data sources for this parameter."""
+        """Get general data sources for this parameter.
+        
+        Returns:
+            List of typical data sources
+        """
         return [
             "Market entry analysis and regulatory frameworks",
             "Competitive intensity assessments",
@@ -430,8 +886,19 @@ class CompetitiveLandscapeAgent(BaseParameterAgent):
 def analyze_competitive_landscape(
     country: str,
     period: str = "Q3 2024",
-    mode: AgentMode = AgentMode.MOCK
+    mode: AgentMode = AgentMode.MOCK,
+    data_service = None
 ) -> ParameterScore:
-    """Convenience function to analyze competitive landscape."""
-    agent = CompetitiveLandscapeAgent(mode=mode)
+    """Convenience function to analyze competitive landscape.
+    
+    Args:
+        country: Country name
+        period: Time period
+        mode: Agent mode (MOCK or RULE_BASED)
+        data_service: DataService instance (required for RULE_BASED mode)
+        
+    Returns:
+        ParameterScore
+    """
+    agent = CompetitiveLandscapeAgent(mode=mode, data_service=data_service)
     return agent.analyze(country, period)

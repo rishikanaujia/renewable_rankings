@@ -27,8 +27,12 @@ Resource Quality Scale:
 
 Scoring Rubric (LOADED FROM CONFIG):
 Higher combined resource score = better renewable potential = higher score
+
+MODES:
+- MOCK: Uses actual solar/wind resource data from Global Solar/Wind Atlas (for testing)
+- RULE_BASED: Estimates from geographic heuristics (production fallback)
 """
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 from datetime import datetime
 
 from ..base_agent import BaseParameterAgent, AgentMode
@@ -136,21 +140,81 @@ class ResourceAvailabilityAgent(BaseParameterAgent):
             "solar_quality": "Excellent",
             "wind_quality": "Very Good"
         },
+        "Saudi Arabia": {
+            "solar_kwh_m2_day": 6.2,  # World-class solar (desert)
+            "wind_m_s": 5.5,          # Moderate to good wind
+            "solar_quality": "World-class",
+            "wind_quality": "Good"
+        },
+        "Indonesia": {
+            "solar_kwh_m2_day": 4.5,  # Good solar (equatorial)
+            "wind_m_s": 5.0,          # Moderate wind
+            "solar_quality": "Good",
+            "wind_quality": "Moderate"
+        },
     }
     
-    def __init__(self, mode: AgentMode = AgentMode.MOCK, config: Dict[str, Any] = None):
-        """Initialize Resource Availability Agent."""
+    # Geographic resource database for RULE_BASED estimation
+    # Based on known geographic characteristics
+    GEOGRAPHIC_RESOURCES = {
+        # Exceptional solar resources (desert, low latitude)
+        "Chile": {"solar_base": 6.5, "wind_base": 8.5, "reason": "Atacama desert + Patagonia wind"},
+        "Australia": {"solar_base": 6.0, "wind_base": 7.0, "reason": "Outback solar + coastal wind"},
+        "Saudi Arabia": {"solar_base": 6.2, "wind_base": 5.5, "reason": "Desert solar"},
+        "Morocco": {"solar_base": 5.8, "wind_base": 7.5, "reason": "Sahara solar + Atlantic wind"},
+        
+        # Very good solar + good wind (mid-low latitude, varied geography)
+        "India": {"solar_base": 5.8, "wind_base": 6.0, "reason": "Tropical solar + monsoon wind"},
+        "Mexico": {"solar_base": 5.5, "wind_base": 7.0, "reason": "Southern latitude + coastal"},
+        "Argentina": {"solar_base": 5.5, "wind_base": 9.0, "reason": "Puna solar + Patagonia wind"},
+        "South Africa": {"solar_base": 5.5, "wind_base": 6.0, "reason": "Good latitude + coastal"},
+        "USA": {"solar_base": 5.5, "wind_base": 7.0, "reason": "Southwest solar + Great Plains wind"},
+        
+        # Good balanced resources
+        "Brazil": {"solar_base": 5.2, "wind_base": 7.5, "reason": "Northeast solar + coastal wind"},
+        "Spain": {"solar_base": 5.0, "wind_base": 6.5, "reason": "Mediterranean climate"},
+        "Vietnam": {"solar_base": 4.8, "wind_base": 7.0, "reason": "Tropical + coastal"},
+        "China": {"solar_base": 4.5, "wind_base": 6.5, "reason": "Western solar + northern wind"},
+        "Indonesia": {"solar_base": 4.5, "wind_base": 5.0, "reason": "Equatorial solar"},
+        
+        # Moderate solar, good wind (higher latitude, coastal)
+        "UK": {"solar_base": 2.5, "wind_base": 8.0, "reason": "High latitude, North Sea wind"},
+        "Germany": {"solar_base": 3.0, "wind_base": 6.0, "reason": "Northern Europe"},
+        
+        # Moderate resources
+        "Nigeria": {"solar_base": 5.0, "wind_base": 4.5, "reason": "Tropical but limited wind"},
+    }
+    
+    def __init__(
+        self, 
+        mode: AgentMode = AgentMode.MOCK, 
+        config: Dict[str, Any] = None,
+        data_service = None  # DataService instance (not used for this agent)
+    ):
+        """Initialize Resource Availability Agent.
+        
+        Args:
+            mode: Agent operation mode (MOCK or RULE_BASED)
+            config: Configuration dictionary
+            data_service: DataService instance (not required for this agent)
+        """
         super().__init__(
             parameter_name="Resource Availability",
             mode=mode,
             config=config
         )
         
+        # Store data service (not used but kept for consistency)
+        self.data_service = data_service
+        
         # Load scoring rubric and calculation params from config (NO HARDCODING!)
         self.scoring_rubric = self._load_scoring_rubric()
         self.calculation_params = self._load_calculation_params()
         
-        logger.debug(f"Loaded scoring rubric with {len(self.scoring_rubric)} levels")
+        logger.debug(
+            f"Initialized ResourceAvailabilityAgent in {mode.value} mode "
+            f"with {len(self.scoring_rubric)} scoring levels"
+        )
         logger.debug(f"Calculation params: {self.calculation_params}")
     
     def _load_scoring_rubric(self) -> List[Dict[str, Any]]:
@@ -208,49 +272,40 @@ class ResourceAvailabilityAgent(BaseParameterAgent):
                 return {
                     "solar_weight": calc_config.get('solar_weight', 0.5),
                     "wind_weight": calc_config.get('wind_weight', 0.5),
-                    "solar_normalization": calc_config.get('solar_normalization', 2.5),
-                    "wind_normalization": calc_config.get('wind_normalization', 1.0)
+                    "solar_normalization": calc_config.get('solar_normalization', 6.5),
+                    "wind_normalization": calc_config.get('wind_normalization', 9.0)
                 }
             else:
                 logger.warning("No calculation params in config, using defaults")
-                return self._get_default_calculation_params()
+                return {
+                    "solar_weight": 0.5,
+                    "wind_weight": 0.5,
+                    "solar_normalization": 6.5,  # World-class solar ~6.5 kWh/m²/day
+                    "wind_normalization": 9.0    # Outstanding wind ~9 m/s
+                }
                 
         except Exception as e:
             logger.warning(f"Could not load calculation params: {e}. Using defaults.")
-            return self._get_default_calculation_params()
-    
-    def _get_default_calculation_params(self) -> Dict[str, float]:
-        """Get default calculation parameters.
-        
-        Returns:
-            Default normalization and weighting parameters
-        """
-        return {
-            "solar_weight": 0.5,
-            "wind_weight": 0.5,
-            "solar_normalization": 6.5,
-            "wind_normalization": 9.0
-        }
+            return {
+                "solar_weight": 0.5,
+                "wind_weight": 0.5,
+                "solar_normalization": 6.5,
+                "wind_normalization": 9.0
+            }
     
     def _get_fallback_rubric(self) -> List[Dict[str, Any]]:
-        """Fallback scoring rubric if config is not available.
-        
-        This ensures agent works even without full config.
-        
-        Returns:
-            Default scoring rubric
-        """
+        """Fallback scoring rubric if config is not available."""
         return [
-            {"score": 1, "min_combined": 0.0, "max_combined": 2.0, "range": "< 2.0", "description": "Very poor resources (both solar and wind weak)"},
-            {"score": 2, "min_combined": 2.0, "max_combined": 3.0, "range": "2.0-3.0", "description": "Poor resources"},
-            {"score": 3, "min_combined": 3.0, "max_combined": 4.0, "range": "3.0-4.0", "description": "Below average resources"},
-            {"score": 4, "min_combined": 4.0, "max_combined": 5.0, "range": "4.0-5.0", "description": "Moderate resources"},
-            {"score": 5, "min_combined": 5.0, "max_combined": 6.0, "range": "5.0-6.0", "description": "Average resources"},
-            {"score": 6, "min_combined": 6.0, "max_combined": 7.0, "range": "6.0-7.0", "description": "Good resources"},
-            {"score": 7, "min_combined": 7.0, "max_combined": 8.0, "range": "7.0-8.0", "description": "Very good resources"},
-            {"score": 8, "min_combined": 8.0, "max_combined": 9.0, "range": "8.0-9.0", "description": "Excellent resources"},
-            {"score": 9, "min_combined": 9.0, "max_combined": 10.0, "range": "9.0-10.0", "description": "Outstanding resources"},
-            {"score": 10, "min_combined": 10.0, "max_combined": 100.0, "range": "≥ 10.0", "description": "World-class resources (exceptional solar and wind)"}
+            {"score": 1, "min_combined": 0.0, "max_combined": 2.0, "range": "< 2.0", "description": "Very poor resources"},
+            {"score": 2, "min_combined": 2.0, "max_combined": 3.0, "range": "2-3", "description": "Poor resources"},
+            {"score": 3, "min_combined": 3.0, "max_combined": 4.0, "range": "3-4", "description": "Below average"},
+            {"score": 4, "min_combined": 4.0, "max_combined": 5.0, "range": "4-5", "description": "Moderate resources"},
+            {"score": 5, "min_combined": 5.0, "max_combined": 6.0, "range": "5-6", "description": "Average resources"},
+            {"score": 6, "min_combined": 6.0, "max_combined": 7.0, "range": "6-7", "description": "Good resources"},
+            {"score": 7, "min_combined": 7.0, "max_combined": 8.0, "range": "7-8", "description": "Very good resources"},
+            {"score": 8, "min_combined": 8.0, "max_combined": 9.0, "range": "8-9", "description": "Excellent resources"},
+            {"score": 9, "min_combined": 9.0, "max_combined": 10.0, "range": "9-10", "description": "Outstanding resources"},
+            {"score": 10, "min_combined": 10.0, "max_combined": 100.0, "range": "≥ 10", "description": "World-class resources"}
         ]
     
     def analyze(
@@ -270,15 +325,15 @@ class ResourceAvailabilityAgent(BaseParameterAgent):
             ParameterScore with score, justification, confidence
         """
         try:
-            logger.info(f"Analyzing Resource Availability for {country} ({period})")
+            logger.info(f"Analyzing Resource Availability for {country} ({period}) in {self.mode.value} mode")
             
-            # Step 1: Fetch data
+            # Step 1: Fetch resource data
             data = self._fetch_data(country, period, **kwargs)
             
             # Step 2: Calculate combined resource score
             combined_score = self._calculate_combined_resource_score(data, country)
             
-            # Step 3: Map to 1-10 score
+            # Step 3: Map to 1-10 rating
             score = self._calculate_score(combined_score, country, period)
             
             # Step 4: Validate score
@@ -288,12 +343,17 @@ class ResourceAvailabilityAgent(BaseParameterAgent):
             justification = self._generate_justification(data, combined_score, score, country, period)
             
             # Step 6: Estimate confidence
-            # Solar and wind atlas data is high quality
-            data_quality = "high" if data else "low"
+            if self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
+                data_quality = "medium"
+                confidence = 0.65  # Medium confidence for geographic estimates
+            else:
+                data_quality = "high"
+                confidence = 0.90  # High confidence for atlas data
+            
             confidence = self._estimate_confidence(data, data_quality)
             
             # Step 7: Identify data sources
-            data_sources = self._get_data_sources(country)
+            data_sources = self._get_data_sources(country, data)
             
             # Create result
             result = ParameterScore(
@@ -307,7 +367,8 @@ class ResourceAvailabilityAgent(BaseParameterAgent):
             
             logger.info(
                 f"Resource Availability analysis complete for {country}: "
-                f"Score={score}, Combined={combined_score:.1f}, Confidence={confidence}"
+                f"Score={score:.1f}, Combined={combined_score:.1f}, "
+                f"Confidence={confidence:.2f}, Mode={self.mode.value}"
             )
             
             return result
@@ -322,11 +383,11 @@ class ResourceAvailabilityAgent(BaseParameterAgent):
         period: str,
         **kwargs
     ) -> Dict[str, Any]:
-        """Fetch renewable resource data.
+        """Fetch resource availability data.
         
-        In MOCK mode: Returns mock solar and wind data
-        In RULE mode: Would query GIS database
-        In AI mode: Would use LLM to extract from atlas documents
+        In MOCK mode: Returns actual solar/wind data from Global Solar/Wind Atlas
+        In RULE_BASED mode: Estimates from geographic database
+        In AI_POWERED mode: Would use LLM to extract from atlas documents (not yet implemented)
         
         Args:
             country: Country name
@@ -347,13 +408,64 @@ class ResourceAvailabilityAgent(BaseParameterAgent):
                     "wind_quality": "Moderate"
                 }
             
-            logger.debug(f"Fetched mock data for {country}: {data}")
+            # Add source indicator
+            data['source'] = 'mock'
+            
+            logger.debug(
+                f"Fetched mock data for {country}: "
+                f"Solar={data.get('solar_kwh_m2_day')} kWh/m²/day, "
+                f"Wind={data.get('wind_m_s')} m/s"
+            )
             return data
         
         elif self.mode == AgentMode.RULE_BASED:
-            # TODO Phase 2: Query from GIS database
-            # return self._query_resource_database(country, period)
-            raise NotImplementedError("RULE_BASED mode not yet implemented")
+            # Estimate from geographic database
+            try:
+                # Check if country has specific geographic data
+                if country in self.GEOGRAPHIC_RESOURCES:
+                    geo_data = self.GEOGRAPHIC_RESOURCES[country]
+                    solar_kwh = geo_data['solar_base']
+                    wind_ms = geo_data['wind_base']
+                    reason = geo_data['reason']
+                else:
+                    # Fallback to mock data if available
+                    if country in self.MOCK_DATA:
+                        logger.info(f"Using mock data for RULE_BASED mode for {country}")
+                        return self._fetch_data_mock_fallback(country)
+                    
+                    # Default moderate resources
+                    logger.warning(f"No geographic data for {country}, using global average")
+                    solar_kwh = 4.5
+                    wind_ms = 6.0
+                    reason = "Global average estimate"
+                
+                # Determine quality descriptions
+                solar_quality = self._determine_solar_quality(solar_kwh)
+                wind_quality = self._determine_wind_quality(wind_ms)
+                
+                data = {
+                    'solar_kwh_m2_day': solar_kwh,
+                    'wind_m_s': wind_ms,
+                    'solar_quality': solar_quality,
+                    'wind_quality': wind_quality,
+                    'source': 'rule_based',
+                    'estimation_basis': reason,
+                    'period': period
+                }
+                
+                logger.info(
+                    f"Estimated RULE_BASED data for {country}: "
+                    f"Solar={solar_kwh:.1f} kWh/m²/day, Wind={wind_ms:.1f} m/s ({reason})"
+                )
+                
+                return data
+                
+            except Exception as e:
+                logger.error(
+                    f"Error estimating resources for {country}: {e}. "
+                    f"Falling back to MOCK data"
+                )
+                return self._fetch_data_mock_fallback(country)
         
         elif self.mode == AgentMode.AI_POWERED:
             # TODO Phase 2+: Use LLM to extract from atlas documents
@@ -362,6 +474,58 @@ class ResourceAvailabilityAgent(BaseParameterAgent):
         
         else:
             raise AgentError(f"Unknown agent mode: {self.mode}")
+    
+    def _fetch_data_mock_fallback(self, country: str) -> Dict[str, Any]:
+        """Fallback to mock data when rule-based data is unavailable.
+        
+        Args:
+            country: Country name
+            
+        Returns:
+            Mock data dictionary
+        """
+        data = self.MOCK_DATA.get(country, {
+            "solar_kwh_m2_day": 4.0,
+            "wind_m_s": 5.0,
+            "solar_quality": "Moderate",
+            "wind_quality": "Moderate"
+        })
+        data['source'] = 'mock_fallback'
+        
+        logger.debug(f"Using mock fallback data for {country}")
+        return data
+    
+    def _determine_solar_quality(self, solar_kwh: float) -> str:
+        """Determine solar quality description from irradiation value."""
+        if solar_kwh >= 6.2:
+            return "World-class"
+        elif solar_kwh >= 5.5:
+            return "Outstanding"
+        elif solar_kwh >= 5.0:
+            return "Excellent"
+        elif solar_kwh >= 4.5:
+            return "Good"
+        elif solar_kwh >= 3.5:
+            return "Moderate"
+        elif solar_kwh >= 3.0:
+            return "Below average"
+        else:
+            return "Low"
+    
+    def _determine_wind_quality(self, wind_ms: float) -> str:
+        """Determine wind quality description from wind speed value."""
+        if wind_ms >= 8.5:
+            return "Outstanding"
+        elif wind_ms >= 7.5:
+            return "Excellent"
+        elif wind_ms >= 6.5:
+            return "Very good"
+        elif wind_ms >= 5.5:
+            return "Good"
+        elif wind_ms >= 4.5:
+            return "Moderate"
+        else:
+            return "Below average"
     
     def _calculate_combined_resource_score(
         self,
@@ -397,8 +561,8 @@ class ResourceAvailabilityAgent(BaseParameterAgent):
         
         logger.debug(
             f"Combined score for {country}: "
-            f"Solar {solar_kwh} kWh/m²/day ({solar_normalized:.1f}/10) × {solar_weight} + "
-            f"Wind {wind_ms} m/s ({wind_normalized:.1f}/10) × {wind_weight} = "
+            f"Solar {solar_kwh:.1f} kWh/m²/day ({solar_normalized:.1f}/10) × {solar_weight} + "
+            f"Wind {wind_ms:.1f} m/s ({wind_normalized:.1f}/10) × {wind_weight} = "
             f"{combined:.1f}"
         )
         
@@ -435,6 +599,11 @@ class ResourceAvailabilityAgent(BaseParameterAgent):
                 )
                 return float(score)
         
+        # Handle scores >= 10 (world-class)
+        if combined_score >= 10.0:
+            logger.debug(f"Score 10 assigned: combined {combined_score:.1f} >= 10.0")
+            return 10.0
+        
         # Fallback (shouldn't reach here with proper rubric)
         logger.warning(f"No rubric match for combined score {combined_score:.1f}, defaulting to 5")
         return 5.0
@@ -463,6 +632,7 @@ class ResourceAvailabilityAgent(BaseParameterAgent):
         wind_ms = data.get("wind_m_s", 0)
         solar_quality = data.get("solar_quality", "moderate")
         wind_quality = data.get("wind_quality", "moderate")
+        source = data.get("source", "unknown")
         
         # Find description from rubric
         description = "average renewable energy resources"
@@ -471,32 +641,54 @@ class ResourceAvailabilityAgent(BaseParameterAgent):
                 description = level["description"].lower()
                 break
         
-        # Build justification
-        justification = (
-            f"Solar irradiation of {solar_kwh:.1f} kWh/m²/day ({solar_quality.lower()}) "
-            f"and wind speeds of {wind_ms:.1f} m/s ({wind_quality.lower()}) "
-            f"indicate {description}. "
-            f"Combined resource score of {combined_score:.1f} enables cost-effective "
-            f"renewable energy deployment."
+        # Build justification based on source
+        if source == 'rule_based':
+            estimation_basis = data.get('estimation_basis', 'geographic characteristics')
+            justification = (
+                f"Based on geographic data: Estimated solar irradiation of {solar_kwh:.1f} kWh/m²/day "
+                f"({solar_quality.lower()}) and wind speeds of {wind_ms:.1f} m/s ({wind_quality.lower()}) "
+                f"indicate {description} ({estimation_basis}). "
+            )
+        else:
+            # Mock/atlas data
+            justification = (
+                f"Solar irradiation of {solar_kwh:.1f} kWh/m²/day ({solar_quality.lower()}) "
+                f"and wind speeds of {wind_ms:.1f} m/s ({wind_quality.lower()}) "
+                f"indicate {description}. "
+            )
+        
+        justification += (
+            f"Combined resource score of {combined_score:.1f} enables "
+            f"{'highly' if score >= 8 else 'moderately' if score >= 6 else 'reasonably'} "
+            f"cost-effective renewable energy deployment. "
         )
         
         return justification
     
-    def _get_data_sources(self, country: str) -> List[str]:
+    def _get_data_sources(self, country: str, data: Dict[str, Any] = None) -> List[str]:
         """Get data sources used for this analysis.
         
         Args:
             country: Country name
+            data: Data dictionary with source info
             
         Returns:
             List of data source identifiers
         """
-        # In production, these would be actual URLs/documents
-        return [
-            "Global Solar Atlas (World Bank) 2024",
-            "Global Wind Atlas (DTU) 2024",
-            f"{country} Renewable Energy Resource Assessment"
-        ]
+        sources = []
+        
+        # Check if we used rule-based or mock data
+        if data and data.get('source') == 'rule_based':
+            sources.append("Geographic resource database - Rule-Based Estimation")
+            sources.append("Global Solar Atlas (Reference)")
+            sources.append("Global Wind Atlas (Reference)")
+        else:
+            sources.append("Global Solar Atlas (World Bank) 2024 - Mock Data")
+            sources.append("Global Wind Atlas (DTU) 2024")
+        
+        sources.append(f"{country} Renewable Energy Resource Assessment")
+        
+        return sources
     
     def _get_scoring_rubric(self) -> List[Dict[str, Any]]:
         """Get scoring rubric for Resource Availability parameter.
@@ -525,17 +717,19 @@ class ResourceAvailabilityAgent(BaseParameterAgent):
 def analyze_resource_availability(
     country: str,
     period: str = "Q3 2024",
-    mode: AgentMode = AgentMode.MOCK
+    mode: AgentMode = AgentMode.MOCK,
+    data_service = None
 ) -> ParameterScore:
     """Convenience function to analyze resource availability.
     
     Args:
         country: Country name
         period: Time period
-        mode: Agent mode
+        mode: Agent mode (MOCK or RULE_BASED)
+        data_service: DataService instance (not required for this agent)
         
     Returns:
         ParameterScore
     """
-    agent = ResourceAvailabilityAgent(mode=mode)
+    agent = ResourceAvailabilityAgent(mode=mode, data_service=data_service)
     return agent.analyze(country, period)

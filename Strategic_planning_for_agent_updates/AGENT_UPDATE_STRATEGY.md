@@ -16,7 +16,7 @@
 7. **GridInfrastructureAgent** - Grid quality and capacity
 8. **ResourceQualityAgent** - Solar/wind resource availability
 9. **LandAvailabilityAgent** - Available land for projects
-10. **FinancingCostAgent** - Cost of capital/financing
+10. **FinancingCostAgent** - Cost of capital/financing (Long Term Interest Rates Agent)
 11. **TechnicalCapabilityAgent** - Local technical expertise
 
 ### Policy & Incentives Subcategory (4 agents)

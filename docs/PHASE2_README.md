@@ -334,9 +334,9 @@ else:
 - 🔄 Ownership Consolidation
 - 🔄 Competitive Landscape
 
-### Level III: Modifiers (4 agents)
+### Level III: Modifiers (1 agents)
 
-**System/External (4 agents, could be combined):**
+**System/External (1 agents, could be combined):**
 - 🔄 Cannibalization
 - 🔄 Curtailment
 - 🔄 Queue Dynamics

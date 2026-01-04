@@ -313,11 +313,11 @@ global_rankings:
 agent = ComparativeAnalysisAgent(mode=AgentMode.MOCK)
 
 # Right - with config
-with open('config/parameters.yaml') as f:
-    config = yaml.safe_load(f)
+with open('../config/parameters.yaml') as f:
+   config = yaml.safe_load(f)
 agent = ComparativeAnalysisAgent(
-    mode=AgentMode.MOCK, 
-    config=config['analysis']
+   mode=AgentMode.MOCK,
+   config=config['analysis']
 )
 ```
 

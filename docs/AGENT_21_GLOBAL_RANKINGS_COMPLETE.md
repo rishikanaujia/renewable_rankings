@@ -298,13 +298,14 @@ GlobalRankings {
 ## **USAGE EXAMPLES**
 
 ### **Basic Usage**
+
 ```python
 import yaml
 from src.agents.analysis_agents.global_rankings_agent import GlobalRankingsAgent
 from src.agents.base_agent import AgentMode
 
 # Load configuration
-with open('config/parameters.yaml') as f:
+with open('../config/parameters.yaml') as f:
     config = yaml.safe_load(f)
 
 # Initialize agent

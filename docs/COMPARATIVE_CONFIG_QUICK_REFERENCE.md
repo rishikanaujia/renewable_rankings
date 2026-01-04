@@ -97,7 +97,7 @@ import yaml
 from src.agents.analysis_agents import ComparativeAnalysisAgent
 
 # Load config
-with open('config/parameters.yaml') as f:
+with open('../config/parameters.yaml') as f:
     config = yaml.safe_load(f)
 
 # Initialize with config

@@ -1,7 +1,0 @@
-# Package created: Wed Dec 17 03:50:36 UTC 2025
-# All fixes verified and included
-
-Critical fixes:
-1. ambition_agent.py line 81-82: extracts min_gw/max_gw
-2. parameters.yaml line 59: max_gw: 10000 (not .inf)
-3. demo_ambition_agent.py line 19: from src.agents

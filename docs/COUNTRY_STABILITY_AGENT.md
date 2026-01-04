@@ -443,4 +443,4 @@ You've successfully built your **second parameter agent** following all best pra
 - Support Scheme - Categorical analysis (FiT, auction, etc.)
 - Track Record - Historical deployment analysis
 
-**See `docs/AGENT_SYSTEM_GUIDE.md` for templates!**
+**See `docs/PARAMETER_AGENT_SYSTEM_GUIDE.md` for templates!**

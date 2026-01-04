@@ -427,5 +427,3 @@ Ambition: Policy choice (government decision)
 **Recommendation: Energy Dependence** - Completes 75% of Market Size Fundamentals!
 
 ---
-
-**YOU'RE CRUSHING IT! 4 AGENTS DONE! 🎉**

@@ -33,7 +33,7 @@ from langchain_core.messages import (
     BaseMessage,
 )
 
-from langchain.callbacks import get_openai_callback
+from langchain_community.callbacks import get_openai_callback
 from pydantic import BaseModel, Field
 
 

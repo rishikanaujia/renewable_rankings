@@ -25,14 +25,16 @@ from enum import Enum
 import logging
 from datetime import datetime
 
-from langchain.document_loaders import (
+from langchain_community.document_loaders import (
     PyPDFLoader,
     UnstructuredHTMLLoader,
     TextLoader,
-    WebBaseLoader
+    WebBaseLoader,
 )
-from langchain.text_splitter import RecursiveCharacterTextSplitter
-from langchain.schema import Document as LangChainDocument
+
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_core.documents import Document as LangChainDocument
+
 from pydantic import BaseModel, Field
 
 

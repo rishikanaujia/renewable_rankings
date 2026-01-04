@@ -14,12 +14,12 @@ import sys
 from pathlib import Path
 
 # Add src to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
+sys.path.insert(0, str(Path(__file__).parent))
 
 import yaml
 from datetime import datetime
 from typing import Dict, Any
-from src.memory import (
+from src import (
     MemoryManager,
     MemoryMixin,
     MemoryType,
@@ -31,15 +31,15 @@ from src.agents.base_agent import BaseParameterAgent, AgentMode
 
 def print_section(title: str):
     """Print a section header."""
-    print(f"\n{'='*70}")
+    print(f"\n{'=' * 70}")
     print(f"  {title}")
-    print(f"{'='*70}\n")
+    print(f"{'=' * 70}\n")
 
 
 def demo_1_initialization():
     """Demo 1: Initialize memory system."""
     print_section("Demo 1: Memory System Initialization")
-    
+
     # Create configuration
     config = {
         'enabled': True,
@@ -55,30 +55,30 @@ def demo_1_initialization():
             'min_pattern_occurrences': 2
         }
     }
-    
+
     # Initialize memory manager
     print("Initializing memory manager...")
     memory_manager = MemoryManager(config)
-    
+
     print(f"✓ Memory system initialized")
     print(f"✓ Enabled: {memory_manager.is_enabled()}")
     print(f"✓ Store type: {config['store_type']}")
     print(f"✓ Persist directory: {config['store_config']['persist_directory']}")
-    
+
     return memory_manager
 
 
 def demo_2_episodic_memory(memory_manager: MemoryManager):
     """Demo 2: Recording analyses in episodic memory."""
     print_section("Demo 2: Recording Analyses (Episodic Memory)")
-    
+
     # Record several analyses
     countries = ["Germany", "United States", "China", "Germany", "India"]
     periods = ["Q1 2024", "Q1 2024", "Q1 2024", "Q2 2024", "Q1 2024"]
     scores = [9.2, 8.5, 7.8, 9.4, 6.5]
-    
+
     print("Recording multiple analyses...")
-    
+
     for country, period, score in zip(countries, periods, scores):
         memory_id = memory_manager.record_analysis(
             agent_name="CountryStability",
@@ -96,7 +96,7 @@ def demo_2_episodic_memory(memory_manager: MemoryManager):
             success=True
         )
         print(f"  ✓ Recorded: {country} ({period}) - Score: {score:.1f} - ID: {memory_id[:8]}")
-    
+
     # Get statistics
     stats = memory_manager.get_memory_statistics()
     print(f"\n📊 Memory Statistics:")
@@ -107,7 +107,7 @@ def demo_2_episodic_memory(memory_manager: MemoryManager):
 def demo_3_semantic_memory(memory_manager: MemoryManager):
     """Demo 3: Storing knowledge in semantic memory."""
     print_section("Demo 3: Storing Knowledge (Semantic Memory)")
-    
+
     knowledge_items = [
         {
             'subject': 'Germany',
@@ -128,13 +128,13 @@ def demo_3_semantic_memory(memory_manager: MemoryManager):
             'source': 'IRA 2024'
         }
     ]
-    
+
     print("Recording knowledge items...")
-    
+
     for item in knowledge_items:
         memory_id = memory_manager.record_knowledge(**item)
         print(f"  ✓ {item['subject']}: {item['fact_content'][:50]}... - ID: {memory_id[:8]}")
-    
+
     # Query knowledge
     print(f"\n🔍 Querying knowledge about Germany:")
     knowledge = memory_manager.get_knowledge_about("Germany")
@@ -147,17 +147,17 @@ def demo_3_semantic_memory(memory_manager: MemoryManager):
 def demo_4_similarity_search(memory_manager: MemoryManager):
     """Demo 4: Finding similar analyses."""
     print_section("Demo 4: Similarity Search")
-    
+
     # Find similar analyses for Germany
     print("Finding similar analyses for Germany...")
-    
+
     similar = memory_manager.get_similar_analyses(
         country="Germany",
         agent="CountryStability",
         top_k=3,
         strategy=RetrievalStrategy.HYBRID
     )
-    
+
     if similar:
         print(f"\n✓ Found {len(similar)} similar cases:")
         for i, (memory, similarity) in enumerate(similar, 1):
@@ -174,10 +174,10 @@ def demo_4_similarity_search(memory_manager: MemoryManager):
 def demo_5_feedback_recording(memory_manager: MemoryManager):
     """Demo 5: Recording expert feedback."""
     print_section("Demo 5: Expert Feedback Recording")
-    
+
     # Simulate expert feedback
     print("Recording expert feedback...")
-    
+
     # Score adjustment
     feedback_id_1 = memory_manager.record_feedback(
         feedback_type=FeedbackType.SCORE_ADJUSTMENT,
@@ -189,7 +189,7 @@ def demo_5_feedback_recording(memory_manager: MemoryManager):
         impact_scope="category"
     )
     print(f"  ✓ Score adjustment feedback recorded - ID: {feedback_id_1[:8]}")
-    
+
     # Reasoning correction
     feedback_id_2 = memory_manager.record_feedback(
         feedback_type=FeedbackType.REASONING_CORRECTION,
@@ -201,7 +201,7 @@ def demo_5_feedback_recording(memory_manager: MemoryManager):
         impact_scope="specific"
     )
     print(f"  ✓ Reasoning correction feedback recorded - ID: {feedback_id_2[:8]}")
-    
+
     # Get feedback statistics
     print(f"\n📊 Feedback Statistics:")
     stats = memory_manager.get_feedback_statistics(country="Germany")
@@ -213,22 +213,22 @@ def demo_5_feedback_recording(memory_manager: MemoryManager):
 def demo_6_pattern_recognition(memory_manager: MemoryManager):
     """Demo 6: Recognizing patterns from historical data."""
     print_section("Demo 6: Pattern Recognition")
-    
+
     print("Recognizing scoring patterns for Germany...")
-    
+
     patterns = memory_manager.recognize_patterns(
         pattern_type="scoring",
         country="Germany",
         agent="CountryStability"
     )
-    
+
     if patterns:
         print(f"\n✓ Found {len(patterns)} patterns:")
         for i, pattern in enumerate(patterns, 1):
             print(f"\n  {i}. Pattern: {pattern['pattern_type']}")
             print(f"     Confidence: {pattern['confidence']:.2f}")
             print(f"     Description: {pattern['description']}")
-            
+
             # Show pattern details
             if 'clusters' in pattern:
                 print(f"     Clusters: {len(pattern['clusters'])}")
@@ -241,15 +241,15 @@ def demo_6_pattern_recognition(memory_manager: MemoryManager):
 def demo_7_score_suggestions(memory_manager: MemoryManager):
     """Demo 7: Getting score suggestions from memory."""
     print_section("Demo 7: Score Suggestions from Memory")
-    
+
     print("Getting score suggestion for Germany...")
-    
+
     suggestion = memory_manager.suggest_score_adjustment(
         country="Germany",
         parameter="CountryStability",
         current_score=9.0
     )
-    
+
     if suggestion:
         print(f"\n✓ Memory-based suggestion:")
         print(f"  Current score: {suggestion['current_score']:.2f}")
@@ -265,47 +265,48 @@ def demo_7_score_suggestions(memory_manager: MemoryManager):
 def demo_8_agent_integration(memory_manager: MemoryManager):
     """Demo 8: Integrating memory with an agent."""
     print_section("Demo 8: Agent Integration with Memory")
-    
+
     # Create a memory-aware agent
     class DemoAgent(BaseParameterAgent, MemoryMixin):
         def __init__(self, mode, config, memory_manager):
             BaseParameterAgent.__init__(self, "Demo Agent", mode, config)
             MemoryMixin.init_memory(self, memory_manager, auto_record=True)
-        
+
         def _fetch_data(self, country: str, period: str) -> Dict[str, Any]:
             """Fetch data for analysis (mock implementation)."""
             return {"test_data": True}
-        
+
         def _calculate_score(self, data: Dict[str, Any]) -> float:
             """Calculate score (mock implementation)."""
             return 8.0
-        
+
         def _generate_justification(self, score: float, data: Dict[str, Any]) -> str:
             """Generate justification (mock implementation)."""
             return f"Mock justification for score {score}"
-        
+
         def analyze(self, country, period, data=None):
             """Simple analysis with memory integration."""
             # Simulate calculation
             base_score = 8.0
-            
+
             # Get memory context
             context = self.get_memory_context(country, data)
-            
+
             result = {
                 'score': base_score,
                 'justification': f"Base analysis for {country}",
                 'period': period
             }
-            
+
             # Get suggestion from memory
             if context.get('has_memory'):
                 suggestion = self.suggest_score_from_memory(country, base_score, data)
                 if suggestion and suggestion['confidence'] >= 0.3:
                     result['memory_suggestion'] = suggestion
                     result['score'] = suggestion['suggested_score']
-                    result['justification'] += f"\n\nMemory-adjusted score based on {len(context['cases'])} similar cases."
-            
+                    result[
+                        'justification'] += f"\n\nMemory-adjusted score based on {len(context['cases'])} similar cases."
+
             # Record analysis
             self.record_analysis(
                 country=country,
@@ -314,9 +315,9 @@ def demo_8_agent_integration(memory_manager: MemoryManager):
                 output_data=result,
                 execution_time_ms=100.0
             )
-            
+
             return result
-    
+
     # Create agent
     print("Creating memory-aware agent...")
     agent = DemoAgent(
@@ -325,17 +326,17 @@ def demo_8_agent_integration(memory_manager: MemoryManager):
         memory_manager=memory_manager
     )
     print("✓ Agent created with memory capabilities")
-    
+
     # Run analysis
     print(f"\nRunning analysis for Germany...")
     result = agent.analyze("Germany", "Q3 2024", {"test": True})
-    
+
     print(f"\n📊 Analysis Result:")
     print(f"  Score: {result['score']:.2f}")
     print(f"  Justification: {result['justification']}")
     if 'memory_suggestion' in result:
         print(f"  Memory adjustment: {result['memory_suggestion']['adjustment']:+.2f}")
-    
+
     # Check agent memory methods
     print(f"\n🔍 Agent Memory Methods:")
     print(f"  ✓ memory_enabled(): {agent.memory_enabled()}")
@@ -348,60 +349,60 @@ def demo_8_agent_integration(memory_manager: MemoryManager):
 def demo_9_statistics(memory_manager: MemoryManager):
     """Demo 9: Memory system statistics."""
     print_section("Demo 9: Memory System Statistics")
-    
+
     stats = memory_manager.get_memory_statistics()
-    
+
     print("📊 Overall Statistics:")
     print(f"  Enabled: {stats['enabled']}")
     print(f"  Total memories: {stats.get('total_memories', 0)}")
-    
+
     if stats.get('by_type'):
         print(f"\n  By memory type:")
         for mem_type, count in stats['by_type'].items():
             print(f"    - {mem_type}: {count}")
-    
+
     if stats.get('by_category'):
         print(f"\n  By category:")
         for category, count in stats['by_category'].items():
             print(f"    - {category}: {count}")
-    
+
     print(f"\n  Collections: {stats.get('collections', 0)}")
 
 
 def main():
     """Run all demonstrations."""
-    print("\n" + "="*70)
+    print("\n" + "=" * 70)
     print("  RENEWABLE ENERGY RANKINGS - MEMORY & LEARNING SYSTEM DEMO")
-    print("="*70)
-    
+    print("=" * 70)
+
     try:
         # Demo 1: Initialize
         memory_manager = demo_1_initialization()
-        
+
         # Demo 2: Episodic Memory
         demo_2_episodic_memory(memory_manager)
-        
+
         # Demo 3: Semantic Memory
         demo_3_semantic_memory(memory_manager)
-        
+
         # Demo 4: Similarity Search
         demo_4_similarity_search(memory_manager)
-        
+
         # Demo 5: Feedback Recording
         demo_5_feedback_recording(memory_manager)
-        
+
         # Demo 6: Pattern Recognition
         demo_6_pattern_recognition(memory_manager)
-        
+
         # Demo 7: Score Suggestions
         demo_7_score_suggestions(memory_manager)
-        
+
         # Demo 8: Agent Integration
         demo_8_agent_integration(memory_manager)
-        
+
         # Demo 9: Statistics
         demo_9_statistics(memory_manager)
-        
+
         # Summary
         print_section("Summary")
         print("✅ All demos completed successfully!")
@@ -413,13 +414,13 @@ def main():
         print("  4. Collect expert feedback to enable learning")
         print("  5. Monitor patterns and suggestions")
         print("\nSee docs/MEMORY_SYSTEM_GUIDE.md for detailed documentation.")
-        
+
     except Exception as e:
         print(f"\n❌ Error during demo: {e}")
         import traceback
         traceback.print_exc()
         return 1
-    
+
     return 0
 
 

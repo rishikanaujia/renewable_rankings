@@ -1,13 +1,13 @@
 """Memory mixin for adding memory capabilities to agents."""
 from typing import Dict, Any, Optional, List, Tuple
 from datetime import datetime
+from src.core.logger import get_logger
 
 from ..base.memory_entry import EpisodicMemoryEntry
 from ..base.memory_types import (
     FeedbackType, RetrievalStrategy, DEFAULT_TOP_K_RETRIEVAL
 )
 from .memory_manager import MemoryManager
-from ...core.logger import get_logger
 
 logger = get_logger(__name__)
 

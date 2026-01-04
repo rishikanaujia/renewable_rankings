@@ -4,17 +4,16 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 import chromadb
 from chromadb.config import Settings
+from src.core.logger import get_logger
 
-from src.base.memory_store import MemoryStore, MemoryStoreRegistry
-from src.base.memory_entry import (
+from memory_system.src.memory.base.memory_store import MemoryStore, MemoryStoreRegistry
+from memory_system.src.memory.base import (
     BaseMemoryEntry, MemoryQuery, EpisodicMemoryEntry,
     SemanticMemoryEntry, ProceduralMemoryEntry, FeedbackMemoryEntry
 )
-from ...base.memory_types import (
-    MemoryType, DEFAULT_SIMILARITY_THRESHOLD, 
-    DEFAULT_TOP_K_RETRIEVAL, DEFAULT_EMBEDDING_MODEL
+from memory_system.src.memory.base.memory_types import (
+    MemoryType, DEFAULT_EMBEDDING_MODEL
 )
-from ...core.logger import get_logger
 
 logger = get_logger(__name__)
 
@@ -155,7 +154,7 @@ class ChromaDBMemoryStore(MemoryStore):
                 confidence_score=content.get('confidence_score', 0.5)
             )
         elif memory_type == MemoryType.FEEDBACK:
-            from ...base.memory_types import FeedbackType
+            from memory_system.src.memory.base.memory_types import FeedbackType
             entry = FeedbackMemoryEntry(
                 feedback_type=FeedbackType(content['feedback_type']),
                 original_analysis_id=content['original_analysis_id'],
@@ -167,7 +166,7 @@ class ChromaDBMemoryStore(MemoryStore):
             )
         else:
             # Fallback to base entry
-            from ...base.memory_entry import BaseMemoryEntry as BaseEntry
+            from memory_system.src.memory.base import BaseMemoryEntry as BaseEntry
             entry = BaseEntry()
             entry.content = content
         

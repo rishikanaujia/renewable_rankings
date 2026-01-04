@@ -2,16 +2,16 @@
 from typing import List, Dict, Any, Optional, Tuple
 from datetime import datetime, timedelta
 from sentence_transformers import SentenceTransformer
+from src.core.logger import get_logger
 
-from ...base.memory_store import MemoryStore
-from ...base.memory_entry import (
+from ..base.memory_store import MemoryStore
+from ..base.memory_entry import (
     BaseMemoryEntry, MemoryQuery, EpisodicMemoryEntry
 )
-from ...base.memory_types import (
+from ..base.memory_types import (
     MemoryType, MemoryCategory, RetrievalStrategy,
     ConfidenceLevel, DEFAULT_EMBEDDING_MODEL
 )
-from ...core.logger import get_logger
 
 logger = get_logger(__name__)
 

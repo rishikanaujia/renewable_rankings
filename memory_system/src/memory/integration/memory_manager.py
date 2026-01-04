@@ -2,13 +2,15 @@
 from typing import Dict, Any, Optional, List, Tuple
 from datetime import datetime
 
-from src.base.memory_store import MemoryStore, MemoryStoreRegistry
-from src.base.memory_entry import (
+from src.core.logger import get_logger
+
+from ..base.memory_store import MemoryStore, MemoryStoreRegistry
+from ..base.memory_entry import (
     EpisodicMemoryEntry, SemanticMemoryEntry,
     ProceduralMemoryEntry, FeedbackMemoryEntry,
     MemoryQuery, MemoryMetadata
 )
-from src.base.memory_types import (
+from ..base.memory_types import (
     MemoryType, MemoryCategory, FeedbackType,
     RetrievalStrategy, LearningStrategy,
     DEFAULT_SIMILARITY_THRESHOLD, DEFAULT_TOP_K_RETRIEVAL
@@ -16,7 +18,6 @@ from src.base.memory_types import (
 from ..learning.similarity_engine import SimilarityEngine
 from ..learning.feedback_processor import FeedbackProcessor
 from ..learning.pattern_recognizer import PatternRecognizer
-from ...core.logger import get_logger
 
 logger = get_logger(__name__)
 

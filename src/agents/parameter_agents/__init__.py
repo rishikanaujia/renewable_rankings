@@ -1,6 +1,6 @@
 """Parameter agents package.
 
-This package contains all 21 parameter analyst agents.
+This package contains all 18 parameter analyst agents.
 Each agent is responsible for analyzing one specific parameter.
 
 Phase 1 Agents (Implemented):

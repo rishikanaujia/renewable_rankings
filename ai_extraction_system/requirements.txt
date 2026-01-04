@@ -1,0 +1,31 @@
+# ============================================================
+# AI Extraction System - Requirements (Python 3.11 / 3.12)
+# ============================================================
+
+# LangChain (new split architecture)
+langchain>=1.2.0
+langchain-community>=0.4.1
+langchain-core>=1.2.6
+
+# LLM Providers
+openai>=1.3.7
+anthropic>=0.28.0
+tiktoken>=0.6.0
+
+# Document processing
+pypdf>=4.0.1
+pdfplumber>=0.11.4
+beautifulsoup4>=4.12.3
+lxml>=5.2.1
+newspaper3k>=0.2.8
+
+# Data models
+pydantic>=2.7.0
+pydantic-settings>=2.2.1
+
+# Utilities
+python-dotenv>=1.0.1
+requests>=2.32.3
+
+# Optional
+redis>=5.0.4

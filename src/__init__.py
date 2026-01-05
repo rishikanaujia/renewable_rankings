@@ -19,10 +19,9 @@ Quick start:
             BaseAgent.__init__(self, ...)
             MemoryMixin.init_memory(self, memory_manager)
 """
-
-# Base components
-from .base import (
+from memory_system.src.memory.base import (
     MemoryType,
+
     MemoryCategory,
     FeedbackType,
     ConfidenceLevel,
@@ -45,14 +44,12 @@ from .base import (
 )
 
 # Store implementations
-from src.memory.stores import (
-    ChromaDBMemoryStore
-)
+
 
 # Learning components
 
 # Integration components
-from src.memory.integration import (
+from memory_system.src.memory.integration import (
     MemoryManager,
     MemoryMixin,
     MemoryAwareAnalysisMixin
@@ -68,14 +65,14 @@ __all__ = [
     'ConfidenceLevel',
     'RetrievalStrategy',
     'LearningStrategy',
-    
+
     # Constants
     'DEFAULT_SIMILARITY_THRESHOLD',
     'DEFAULT_TOP_K_RETRIEVAL',
     'DEFAULT_MEMORY_TTL_DAYS',
     'DEFAULT_EMBEDDING_MODEL',
     'MAX_CONTEXT_MEMORIES',
-    
+
     # Memory Entries
     'MemoryMetadata',
     'BaseMemoryEntry',
@@ -84,19 +81,23 @@ __all__ = [
     'ProceduralMemoryEntry',
     'FeedbackMemoryEntry',
     'MemoryQuery',
-    
+
     # Store
     'MemoryStore',
     'MemoryStoreRegistry',
     'ChromaDBMemoryStore',
-    
+
     # Learning
     'SimilarityEngine',
     'FeedbackProcessor',
     'PatternRecognizer',
-    
+
     # Integration
     'MemoryManager',
     'MemoryMixin',
     'MemoryAwareAnalysisMixin',
 ]
+
+from memory_system.src.memory.learning import SimilarityEngine, PatternRecognizer, FeedbackProcessor
+
+from memory_system.src.memory.stores import ChromaDBMemoryStore

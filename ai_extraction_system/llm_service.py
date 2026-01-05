@@ -154,11 +154,9 @@ class LLMService:
         if self.config.provider == LLMProvider.OPENAI:
             return ChatOpenAI(
                 **common_params,
-                model_kwargs={
-                    'top_p': self.config.top_p,
-                    'frequency_penalty': self.config.frequency_penalty,
-                    'presence_penalty': self.config.presence_penalty,
-                }
+                top_p=self.config.top_p,
+                frequency_penalty=self.config.frequency_penalty,
+                presence_penalty=self.config.presence_penalty,
             )
         
         elif self.config.provider == LLMProvider.AZURE_OPENAI:
@@ -167,11 +165,9 @@ class LLMService:
                 openai_api_base=self.config.api_base,
                 openai_api_version=self.config.api_version,
                 deployment_name=model,
-                model_kwargs={
-                    'top_p': self.config.top_p,
-                    'frequency_penalty': self.config.frequency_penalty,
-                    'presence_penalty': self.config.presence_penalty,
-                }
+                top_p=self.config.top_p,
+                frequency_penalty=self.config.frequency_penalty,
+                presence_penalty=self.config.presence_penalty,
             )
         
         elif self.config.provider == LLMProvider.ANTHROPIC:
@@ -216,7 +212,7 @@ class LLMService:
             # Invoke with tracking
             with get_openai_callback() as cb:
                 try:
-                    response = self.llm(messages)
+                    response = self.llm.invoke(messages)
                     response_text = response.content
                     
                     # Update stats
@@ -237,7 +233,7 @@ class LLMService:
                         logger.warning(
                             f"Primary model failed: {e}. Trying fallback model..."
                         )
-                        response = self.fallback_llm(messages)
+                        response = self.fallback_llm.invoke(messages)
                         response_text = response.content
                         
                         self._update_stats(cb, time.time() - start_time, success=True)

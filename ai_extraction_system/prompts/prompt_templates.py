@@ -82,7 +82,25 @@ Confidence: 0.95 (explicit targets with legal framework cited)
 **DOCUMENTS**:
 {documents}
 
-Respond with JSON containing: value (target %), confidence, justification, quotes, metadata."""
+**OUTPUT FORMAT** - Respond with ONLY this JSON structure (no extra keys or wrapping):
+```json
+{{
+    "value": 80,
+    "confidence": 0.95,
+    "justification": "Germany has a legally binding target of 80% renewable electricity by 2030...",
+    "quotes": ["80% renewable electricity by 2030", "100% by 2035"],
+    "metadata": {{
+        "target_year": "2030",
+        "target_type": "electricity",
+        "legal_status": "binding"
+    }}
+}}
+```
+
+IMPORTANT:
+- "value" must be a NUMBER (the percentage, e.g., 80 for 80%)
+- Do NOT wrap in country name or array
+- Return ONLY the JSON object shown above"""
 
     SUPPORT_SCHEME_TEMPLATE = """Extract information about renewable energy support schemes for {country}.
 

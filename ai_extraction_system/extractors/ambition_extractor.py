@@ -100,7 +100,7 @@ class AmbitionExtractor(BaseExtractor):
         try:
             # Extract JSON from response
             parsed = self._extract_json_from_response(llm_response)
-            
+
             # Validate required fields
             required_fields = ['value', 'confidence', 'justification']
             for field in required_fields:

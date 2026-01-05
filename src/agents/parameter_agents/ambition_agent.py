@@ -19,6 +19,7 @@ Scoring Rubric:
 MODES:
 - MOCK: Uses hardcoded test data (for testing)
 - RULE_BASED: Fetches real target data from data service (production)
+- AI_POWERED: Uses LLM to extract targets from policy documents (production)
 """
 from typing import Dict, Any, List, Optional
 from datetime import datetime
@@ -175,14 +176,19 @@ class AmbitionAgent(BaseParameterAgent):
             justification = self._generate_justification(data, score, country, period)
             
             # Step 5: Estimate confidence
-            # Rule-based data has higher confidence than mock data
-            if self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
+            # Different confidence levels based on data source
+            if data.get('source') == 'ai_powered':
+                # Use AI extraction confidence
+                data_quality = "high"
+                ai_confidence = data.get('ai_confidence', 0.8)
+                confidence = ai_confidence  # Use AI's confidence directly
+            elif self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
                 data_quality = "high"
                 confidence = 0.9  # High confidence for rule-based data
             else:
                 data_quality = "medium"
                 confidence = 0.7  # Lower confidence for mock data
-            
+
             confidence = self._estimate_confidence(data, data_quality)
             
             # Step 6: Identify data sources
@@ -299,9 +305,83 @@ class AmbitionAgent(BaseParameterAgent):
                 return self._fetch_data_mock_fallback(country)
         
         elif self.mode == AgentMode.AI_POWERED:
-            # TODO Phase 2+: Use LLM to extract from documents
-            # return self._llm_extract_targets(country, period)
-            raise NotImplementedError("AI_POWERED mode not yet implemented")
+            # Use AI Extraction System to extract targets from documents
+            try:
+                from ai_extraction_system import AIExtractionAdapter
+
+                logger.info(f"Using AI_POWERED mode for {country}")
+
+                # Initialize AI extraction adapter
+                adapter = AIExtractionAdapter(
+                    llm_config=self.config.get('llm_config') if self.config else None,
+                    cache_config=self.config.get('cache_config') if self.config else None
+                )
+
+                # Extract renewable targets using AI
+                extraction_result = adapter.extract_parameter(
+                    parameter_name='ambition',
+                    country=country,
+                    period=period,
+                    documents=kwargs.get('documents'),
+                    document_urls=kwargs.get('document_urls')
+                )
+
+                # Convert AI extraction result to agent data format
+                # AI extraction returns percentage or absolute target
+                # We need to convert to GW format for scoring
+                if extraction_result and extraction_result.get('value'):
+                    value = extraction_result['value']
+
+                    # If value is percentage (e.g., 80%), convert to estimated GW
+                    # For now, use a simplified conversion based on country context
+                    if isinstance(value, (int, float)):
+                        # Assume it's a percentage target (e.g., 80% renewable by 2030)
+                        # Convert to GW estimate based on typical country capacity
+                        # This is a simplification - ideally AI would extract GW directly
+                        total_gw = self._convert_percentage_to_gw(country, value)
+                    else:
+                        # Try to parse as numeric
+                        try:
+                            total_gw = float(value)
+                        except (ValueError, TypeError):
+                            logger.warning(f"Could not parse AI value: {value}, falling back")
+                            return self._fetch_data_mock_fallback(country)
+
+                    data = {
+                        'total_gw': total_gw,
+                        'solar': total_gw * 0.5,  # Rough breakdown
+                        'onshore_wind': total_gw * 0.4,
+                        'offshore_wind': total_gw * 0.1,
+                        'source': 'ai_powered',
+                        'period': period,
+                        'ai_confidence': extraction_result.get('confidence', 0.0),
+                        'ai_justification': extraction_result.get('justification', ''),
+                        'extraction_metadata': extraction_result.get('metadata', {})
+                    }
+
+                    logger.info(
+                        f"AI extraction successful for {country}: {total_gw:.1f} GW "
+                        f"(confidence: {extraction_result.get('confidence', 0.0):.2f})"
+                    )
+
+                    return data
+                else:
+                    logger.warning(f"AI extraction returned no value for {country}, falling back")
+                    return self._fetch_data_mock_fallback(country)
+
+            except ImportError as e:
+                logger.error(f"AI extraction system not available: {e}")
+                logger.info("Falling back to RULE_BASED mode")
+                # Try RULE_BASED as fallback
+                self.mode = AgentMode.RULE_BASED
+                return self._fetch_data(country, period, **kwargs)
+
+            except Exception as e:
+                logger.error(f"AI extraction failed for {country}: {e}")
+                logger.info("Falling back to RULE_BASED mode")
+                # Try RULE_BASED as fallback
+                self.mode = AgentMode.RULE_BASED
+                return self._fetch_data(country, period, **kwargs)
         
         else:
             raise AgentError(f"Unknown agent mode: {self.mode}")
@@ -362,7 +442,43 @@ class AmbitionAgent(BaseParameterAgent):
         )
         
         return estimated_gw
-    
+
+    def _convert_percentage_to_gw(self, country: str, percentage: float) -> float:
+        """Convert renewable percentage target to GW capacity estimate.
+
+        This is a simplified conversion. In production, you would:
+        1. Have actual GW targets extracted from documents
+        2. Use country-specific conversion factors
+        3. Consider total electricity capacity
+
+        Args:
+            country: Country name
+            percentage: Renewable percentage target (e.g., 80 for 80%)
+
+        Returns:
+            Estimated capacity in GW
+        """
+        # Use mock data as baseline for conversion if available
+        base_data = self.MOCK_DATA.get(country)
+        if base_data:
+            # Assume mock data represents 100% scenario
+            # Scale down based on percentage
+            reference_gw = base_data.get('total_gw', 50.0)
+            # If percentage is close to 100%, use reference value
+            # Otherwise scale proportionally
+            estimated_gw = reference_gw * (percentage / 100.0)
+        else:
+            # Default conversion: assume typical country capacity
+            # 80% renewable = ~40 GW for medium country
+            # This is very rough - replace with actual data
+            estimated_gw = (percentage / 80.0) * 40.0
+
+        logger.debug(
+            f"Converted {percentage}% target to {estimated_gw:.1f} GW for {country}"
+        )
+
+        return estimated_gw
+
     def _calculate_score(
         self,
         data: Dict[str, Any],
@@ -432,7 +548,21 @@ class AmbitionAgent(BaseParameterAgent):
                 break
         
         # Build justification based on source
-        if source == 'rule_based':
+        if source == 'ai_powered':
+            # Use AI-generated justification if available
+            ai_justification = data.get('ai_justification', '')
+            if ai_justification:
+                justification = (
+                    f"Based on AI-powered document analysis: {ai_justification} "
+                    f"Estimated capacity: {total_gw:.1f} GW targeted by 2030. "
+                    f"{description.capitalize()}."
+                )
+            else:
+                justification = (
+                    f"Based on AI-powered document analysis: {total_gw:.1f} GW of renewable capacity "
+                    f"targeted by 2030. {description.capitalize()}."
+                )
+        elif source == 'rule_based':
             proxy = data.get('proxy_used', '')
             if proxy:
                 justification = (
@@ -468,9 +598,16 @@ class AmbitionAgent(BaseParameterAgent):
             List of data source identifiers
         """
         sources = []
-        
-        # Check if we used rule-based or mock data
-        if data and data.get('source') == 'rule_based':
+
+        # Check data source type
+        if data and data.get('source') == 'ai_powered':
+            sources.append("AI-Powered Document Analysis")
+            sources.append(f"{country} Policy Documents & NDC Submissions")
+            # Add metadata about AI confidence if available
+            ai_confidence = data.get('ai_confidence')
+            if ai_confidence:
+                sources.append(f"AI Confidence: {ai_confidence:.1%}")
+        elif data and data.get('source') == 'rule_based':
             sources.append(f"{country} NDC 2024 - Rule-Based Data")
             sources.append("IRENA Renewable Capacity Statistics 2024")
             if data.get('proxy_used'):
@@ -478,9 +615,9 @@ class AmbitionAgent(BaseParameterAgent):
         else:
             sources.append(f"{country} NDC 2024 - Mock Data")
             sources.append("IRENA Renewable Capacity Statistics 2024 (Estimated)")
-        
+
         sources.append(f"{country} Ministry of Energy Official Targets")
-        
+
         return sources
     
     def _get_scoring_rubric(self) -> List[Dict[str, Any]]:

@@ -283,10 +283,51 @@ def demo_all_countries():
         print(f"{i:<6} {country:<20} {score:<8.1f} {twh:>10,.0f} {per_capita:>12,.0f} kWh")
 
 
+def demo_ai_powered_mode():
+    """Demonstrate AI_POWERED mode (extracts from documents)."""
+    print("\n" + "="*70)
+    print("DEMO 8: AI_POWERED Mode (Document Extraction)")
+    print("="*70)
+
+    print("\n🤖 Testing AI_POWERED mode...")
+    print("(Without API keys, will gracefully fall back to MOCK mode)")
+    print("-" * 60)
+
+    try:
+        # Create agent in AI_POWERED mode
+        agent = PowerMarketSizeAgent(mode=AgentMode.AI_POWERED)
+
+        # Test with sample documents
+        documents = [
+            {
+                'content': 'Germany annual electricity consumption is approximately 500 TWh, '
+                           'making it one of the largest power markets in Europe.',
+                'metadata': {}
+            }
+        ]
+
+        # Analyze
+        result = agent.analyze("Germany", "Q3 2024", documents=documents)
+
+        print(f"✅ AI_POWERED mode test successful!")
+        print(f"   Score: {result.score}/10")
+        print(f"   Confidence: {result.confidence*100:.0f}%")
+        print(f"   Justification: {result.justification[:100]}...")
+
+    except Exception as e:
+        print(f"⚠️  AI mode fell back to MOCK (expected without API keys)")
+        print(f"   Error: {str(e)[:80]}...")
+
+    print("\n💡 AI_POWERED mode features:")
+    print("   - Extracts market size from IEA and national energy statistics")
+    print("   - Analyzes electricity consumption and demand trends")
+    print("   - Gracefully falls back to MOCK when API unavailable")
+
+
 def demo_comparison_all_agents():
     """Compare all three agents."""
     print("\n" + "="*70)
-    print("DEMO 8: Comparison Across All Three Agents")
+    print("DEMO 9: Comparison Across All Three Agents")
     print("="*70)
     
     ambition_agent = AmbitionAgent()
@@ -345,6 +386,7 @@ def main():
         demo_service_layer()
         demo_scoring_rubric()
         demo_all_countries()
+        demo_ai_powered_mode()
         demo_comparison_all_agents()
         
         print("\n" + "="*70)

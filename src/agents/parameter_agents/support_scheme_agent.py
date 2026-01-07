@@ -364,13 +364,18 @@ class SupportSchemeAgent(BaseParameterAgent):
             justification = self._generate_justification(data, score, country, period)
             
             # Step 5: Estimate confidence
-            if self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
+            # AI-powered data uses AI's own confidence assessment
+            if data.get('source') == 'ai_powered':
+                data_quality = "high"
+                ai_confidence = data.get('ai_confidence', 0.8)
+                confidence = ai_confidence  # Use AI's confidence directly
+            elif self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
                 data_quality = "medium"
                 confidence = 0.70  # Moderate confidence for estimated data
             else:
                 data_quality = "high"
                 confidence = 0.85  # High confidence for assessed mock data
-            
+
             confidence = self._estimate_confidence(data, data_quality)
             
             # Step 6: Identify data sources
@@ -527,9 +532,51 @@ class SupportSchemeAgent(BaseParameterAgent):
                 return self._fetch_data_mock_fallback(country)
         
         elif self.mode == AgentMode.AI_POWERED:
-            # TODO Phase 2+: Use LLM to extract from policy documents
-            # return self._llm_extract_support_schemes(country, period)
-            raise NotImplementedError("AI_POWERED mode not yet implemented")
+            # Extract support scheme using AI extraction system
+            try:
+                from ai_extraction_system import AIExtractionAdapter
+
+                adapter = AIExtractionAdapter(
+                    llm_config=self.config.get('llm_config') if self.config else None,
+                    cache_config=self.config.get('cache_config') if self.config else None
+                )
+
+                extraction_result = adapter.extract_parameter(
+                    parameter_name='support_scheme',
+                    country=country,
+                    period=period,
+                    documents=kwargs.get('documents'),
+                    document_urls=kwargs.get('document_urls')
+                )
+
+                logger.info(f"Using AI_POWERED mode for {country}")
+
+                if extraction_result and extraction_result.get('value') is not None:
+                    score = float(extraction_result['value'])
+                    metadata = extraction_result.get('metadata', {})
+                    category = self._score_to_category(score)
+
+                    data = {
+                        'category': category,
+                        'source': 'ai_powered',
+                        'ai_confidence': extraction_result.get('confidence', 0.8),
+                        'ai_justification': extraction_result.get('justification', ''),
+                        'ai_score': score,
+                        'fit_availability': metadata.get('fit_availability', 'Unknown'),
+                        'auction_mechanism': metadata.get('auction_mechanism', 'Unknown'),
+                        'policy_stability': metadata.get('policy_stability', 'Unknown'),
+                        'period': period
+                    }
+
+                    logger.info(f"AI extraction successful for {country}: score={score}/10, confidence={data['ai_confidence']:.2f}")
+                    return data
+                else:
+                    logger.warning(f"AI extraction returned no value for {country}, falling back to MOCK")
+                    return self._fetch_data_mock_fallback(country)
+
+            except Exception as e:
+                logger.error(f"Error using AI extraction for {country}: {e}. Falling back to MOCK data")
+                return self._fetch_data_mock_fallback(country)
         
         else:
             raise AgentError(f"Unknown agent mode: {self.mode}")
@@ -672,7 +719,36 @@ class SupportSchemeAgent(BaseParameterAgent):
             return f"Developing support framework with {renewable_pct:.1f}% renewable share"
         else:
             return f"Limited support mechanisms, {renewable_pct:.1f}% renewable adoption"
-    
+
+    def _score_to_category(self, score: float) -> str:
+        """Convert numeric score (1-10) to category string.
+
+        Used when AI provides score directly.
+
+        Args:
+            score: Score value 1-10
+
+        Returns:
+            Category description string
+        """
+        score = round(score)
+        if score >= 10:
+            return "comprehensive"
+        elif score >= 9:
+            return "very_strong"
+        elif score >= 8:
+            return "strong"
+        elif score >= 7:
+            return "good"
+        elif score >= 6:
+            return "moderate"
+        elif score >= 5:
+            return "developing"
+        elif score >= 4:
+            return "weak"
+        else:
+            return "minimal"
+
     def _calculate_score(
         self,
         data: Dict[str, Any],
@@ -680,17 +756,23 @@ class SupportSchemeAgent(BaseParameterAgent):
         period: str
     ) -> float:
         """Calculate support scheme score.
-        
+
         DIRECT: Higher support quality = better framework = higher score
-        
+
         Args:
-            data: Support scheme data with support_score
+            data: Support scheme data with support_score (or ai_score for AI mode)
             country: Country name
             period: Time period
-            
+
         Returns:
             Score between 1-10
         """
+        # For AI-powered mode, use the score directly
+        if data.get('source') == 'ai_powered' and 'ai_score' in data:
+            score = float(data['ai_score'])
+            logger.debug(f"Using AI-provided score for {country}: {score}/10")
+            return score
+
         support_score = data.get("support_score", 5.0)
         
         logger.debug(f"Calculating score for {country}: {support_score:.1f} support quality")
@@ -720,16 +802,29 @@ class SupportSchemeAgent(BaseParameterAgent):
         period: str
     ) -> str:
         """Generate justification for the support scheme score.
-        
+
         Args:
             data: Support scheme data
             score: Calculated score
             country: Country name
             period: Time period
-            
+
         Returns:
             Human-readable justification string
         """
+        # For AI-powered mode, use AI justification directly
+        if data.get('source') == 'ai_powered':
+            ai_justification = data.get('ai_justification', '')
+            if ai_justification:
+                return ai_justification
+            # Fallback if AI didn't provide justification
+            else:
+                category = data.get('category', 'moderate')
+                return (
+                    f"AI-extracted support scheme score of {score}/10 indicates {category} policy framework. "
+                    f"Renewable energy support mechanisms are {'well-established' if score >= 8 else 'developing' if score >= 6 else 'limited'}."
+                )
+
         support_score = data.get("support_score", 5.0)
         category = data.get("category", "Unknown")
         fit_quality = data.get("fit_quality", "unknown")

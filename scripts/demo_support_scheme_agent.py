@@ -130,6 +130,33 @@ def demo_rule_based_mode(data_service):
     print("   - Higher renewable adoption + higher GDP = Better support")
 
 
+
+def demo_ai_powered_mode():
+    """Demonstrate AI_POWERED mode (using LLM extraction)."""
+    print("\n" + "="*70)
+    print("DEMO: AI_POWERED Mode (LLM-based Extraction)")
+    print("="*70)
+
+    sample_documents = [{
+        'content': """Germany Renewable Energy Policy Framework 2023
+        EEG 2023 provides stable 20-year revenue framework through competitive auctions.
+        Recent solar auction clearing: €52-58/MWh. Strong policy continuity.""",
+        'metadata': {'source': 'German Ministry', 'date': '2023'}
+    }]
+
+    print("\n🤖 Using AI-powered extraction from documents...")
+    try:
+        from src.agents.parameter_agents import SupportSchemeAgent
+        from src.agents.base_agent import AgentMode
+        
+        agent = SupportSchemeAgent(mode=AgentMode.AI_POWERED, config={'llm_config': {'provider': 'openai'}})
+        result = agent.analyze(country="Germany", period="Q3 2024", documents=sample_documents)
+        print(f"\n✅ AI Results: {result.score}/10, Confidence: {result.confidence*100:.0f}%")
+        print(f"Justification: {result.justification[:150]}...")
+    except Exception as e:
+        print(f"\n⚠️  Falls back to MOCK (expected without API key)")
+
+
 def demo_mock_vs_rule_based_comparison(data_service):
     """Compare MOCK vs RULE_BASED mode for same country."""
     print("\n" + "="*70)
@@ -426,6 +453,7 @@ def main():
         # Run demos
         demo_mock_mode()
         demo_rule_based_mode(data_service)
+        demo_ai_powered_mode()  # New AI-powered demo
         demo_mock_vs_rule_based_comparison(data_service)
         demo_convenience_function(data_service)
         demo_service_layer()

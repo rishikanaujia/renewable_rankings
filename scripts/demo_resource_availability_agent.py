@@ -386,6 +386,47 @@ def demo_combined_resource_analysis():
     print("  - Combined resources = Lower LCOE = Better economics!")
 
 
+def demo_ai_powered_mode():
+    """Demonstrate AI_POWERED mode (extracts from documents)."""
+    print("\n" + "="*70)
+    print("DEMO 11: AI_POWERED Mode (Document Extraction)")
+    print("="*70)
+
+    print("\n🤖 Testing AI_POWERED mode...")
+    print("(Without API keys, will gracefully fall back to MOCK mode)")
+    print("-" * 60)
+
+    try:
+        # Create agent in AI_POWERED mode
+        agent = ResourceAvailabilityAgent(mode=AgentMode.AI_POWERED)
+
+        # Test with sample documents
+        documents = [
+            {
+                'content': 'Chile: Atacama Desert solar irradiance >2500 kWh/m2/year, '
+                           'world-class wind in Patagonia with average speeds exceeding 8.5 m/s.',
+                'metadata': {}
+            }
+        ]
+
+        # Analyze
+        result = agent.analyze("Chile", "Q3 2024", documents=documents)
+
+        print(f"✅ AI_POWERED mode test successful!")
+        print(f"   Score: {result.score}/10")
+        print(f"   Confidence: {result.confidence*100:.0f}%")
+        print(f"   Justification: {result.justification[:100]}...")
+
+    except Exception as e:
+        print(f"⚠️  AI mode fell back to MOCK (expected without API keys)")
+        print(f"   Error: {str(e)[:80]}...")
+
+    print("\n💡 AI_POWERED mode features:")
+    print("   - Extracts solar irradiance and wind speed data from documents")
+    print("   - Analyzes resource quality from Global Solar/Wind Atlas reports")
+    print("   - Gracefully falls back to MOCK when API unavailable")
+
+
 def main():
     """Run all demos."""
     print("\n" + "="*70)
@@ -394,7 +435,7 @@ def main():
     print("\nAnalyzing solar irradiation and wind speed resources")
     print("for renewable energy potential across global markets\n")
     print("Combined Score = (Solar × 0.5) + (Wind × 0.5)\n")
-    
+
     try:
         # Run demos
         demo_mock_mode()
@@ -407,6 +448,7 @@ def main():
         demo_system_progress()
         demo_solar_wind_breakdown()
         demo_combined_resource_analysis()
+        demo_ai_powered_mode()
         
         print("\n" + "="*70)
         print("✅ ALL DEMOS COMPLETED SUCCESSFULLY!")

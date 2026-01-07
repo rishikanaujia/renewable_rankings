@@ -190,8 +190,13 @@ class CountryStabilityAgent(BaseParameterAgent):
             justification = self._generate_justification(data, score, country, period)
             
             # Step 5: Estimate confidence
-            # Rule-based data has higher confidence than mock data
-            if self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
+            # Different confidence levels based on data source
+            if data.get('source') == 'ai_powered':
+                # Use AI extraction confidence
+                data_quality = "high"
+                ai_confidence = data.get('ai_confidence', 0.8)
+                confidence = ai_confidence  # Use AI's confidence directly
+            elif self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
                 data_quality = "high"
                 confidence = 0.9  # High confidence for real ECR data
             else:
@@ -308,30 +313,99 @@ class CountryStabilityAgent(BaseParameterAgent):
             raise NotImplementedError("RULE_BASED mode not yet implemented")
         
         elif self.mode == AgentMode.AI_POWERED:
-            # TODO Phase 2+: Use LLM to extract from documents
-            # return self._llm_extract_risk(country, period)
-            raise NotImplementedError("AI_POWERED mode not yet implemented")
+            # Use AI Extraction System to extract country stability from documents
+            try:
+                from ai_extraction_system import AIExtractionAdapter
+
+                logger.info(f"Using AI_POWERED mode for {country}")
+
+                # Initialize AI extraction adapter
+                adapter = AIExtractionAdapter(
+                    llm_config=self.config.get('llm_config') if self.config else None,
+                    cache_config=self.config.get('cache_config') if self.config else None
+                )
+
+                # Extract country stability using AI
+                extraction_result = adapter.extract_parameter(
+                    parameter_name='country_stability',
+                    country=country,
+                    period=period,
+                    documents=kwargs.get('documents'),
+                    document_urls=kwargs.get('document_urls')
+                )
+
+                # Convert AI extraction result to agent data format
+                if extraction_result and extraction_result.get('value'):
+                    # AI returns stability score (1-10, higher is more stable)
+                    # Convert to ECR rating (lower is more stable)
+                    stability_score = float(extraction_result['value'])
+                    ecr_rating = self._score_to_ecr(stability_score)
+
+                    # Determine risk category from ECR
+                    risk_category = self._determine_risk_category(ecr_rating)
+
+                    data = {
+                        'ecr_rating': ecr_rating,
+                        'risk_category': risk_category,
+                        'source': 'ai_powered',
+                        'period': period,
+                        'ai_confidence': extraction_result.get('confidence', 0.8),
+                        'ai_justification': extraction_result.get('justification', ''),
+                        'ai_stability_score': stability_score  # Store original score for reference
+                    }
+
+                    logger.info(
+                        f"Extracted AI_POWERED data for {country}: "
+                        f"stability_score={stability_score:.1f}, ecr={ecr_rating:.1f}, "
+                        f"category={risk_category}, confidence={extraction_result.get('confidence', 0):.2f}"
+                    )
+
+                    return data
+                else:
+                    logger.warning(f"AI extraction returned no value for {country}, falling back")
+                    return self._fetch_data_mock_fallback(country)
+
+            except Exception as e:
+                logger.error(
+                    f"Error using AI extraction for {country}: {e}. "
+                    f"Falling back to MOCK data"
+                )
+                return self._fetch_data_mock_fallback(country)
         
         else:
             raise AgentError(f"Unknown agent mode: {self.mode}")
     
     def _fetch_data_mock_fallback(self, country: str) -> Dict[str, Any]:
         """Fallback to mock data when rule-based data is unavailable.
-        
+
         Args:
             country: Country name
-            
+
         Returns:
             Mock data dictionary
         """
         data = self.MOCK_DATA.get(country, {
-            "ecr_rating": 5.0, 
+            "ecr_rating": 5.0,
             "risk_category": "Moderate Instability"
         })
         data['source'] = 'mock_fallback'
-        
+
         logger.debug(f"Using mock fallback data for {country}")
         return data
+
+    def _score_to_ecr(self, score: float) -> float:
+        """Convert stability score (1-10) to ECR rating.
+
+        Higher score (more stable) = Lower ECR rating (less risk)
+        Inverse relationship: ECR = 11 - score
+
+        Args:
+            score: Stability score (1-10)
+
+        Returns:
+            ECR rating (1-10, where lower is more stable)
+        """
+        return 11.0 - score
     
     def _determine_risk_category(self, ecr_rating: float) -> str:
         """Determine risk category from ECR rating.

@@ -305,15 +305,20 @@ class OwnershipHurdlesAgent(BaseParameterAgent):
             
             # Step 4: Generate justification
             justification = self._generate_justification(data, score, country, period)
-            
+
             # Step 5: Estimate confidence
-            if self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
+            if data.get('source') == 'ai_powered':
+                # Use AI-provided confidence
+                confidence = data.get('ai_confidence', 0.75)
+                data_quality = "high"
+                logger.debug(f"Using AI-provided confidence: {confidence:.2f}")
+            elif self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
                 data_quality = "medium"
                 confidence = 0.65  # Lower confidence for estimated data
             else:
                 data_quality = "high"
                 confidence = 0.85  # High confidence for known regulations
-            
+
             confidence = self._estimate_confidence(data, data_quality)
             
             # Step 6: Identify data sources
@@ -456,9 +461,53 @@ class OwnershipHurdlesAgent(BaseParameterAgent):
                 return self._fetch_data_mock_fallback(country)
         
         elif self.mode == AgentMode.AI_POWERED:
-            # TODO Phase 2+: Use LLM to extract from investment laws
-            # return self._llm_extract_ownership_rules(country, period)
-            raise NotImplementedError("AI_POWERED mode not yet implemented")
+            # AI-powered extraction using OwnershipHurdlesExtractor
+            try:
+                from ai_extraction_system import AIExtractionAdapter
+
+                # Get documents from kwargs
+                documents = kwargs.get('documents', [])
+                if not documents:
+                    logger.warning(f"No documents provided for AI extraction, falling back to MOCK mode")
+                    return self._fetch_data_mock_fallback(country)
+
+                # Use AI extraction adapter
+                adapter = AIExtractionAdapter()
+                result = adapter.extract_parameter(
+                    parameter_name='ownership_hurdles',
+                    country=country,
+                    period=period,
+                    documents=documents
+                )
+
+                if result['success']:
+                    # Extract AI data
+                    ai_data = result['data']
+
+                    # Return in expected format
+                    return {
+                        'ai_score': ai_data['value'],
+                        'ai_confidence': ai_data['confidence'],
+                        'ai_justification': ai_data['justification'],
+                        'ai_metadata': ai_data.get('metadata', {}),
+                        'ai_quotes': ai_data.get('quotes', []),
+                        'source': 'ai_powered',
+                        'period': period,
+                        'score': ai_data['value'],  # Use AI score directly
+                        'foreign_ownership_pct': ai_data.get('metadata', {}).get('foreign_ownership_pct', 100),
+                        'category': self._determine_category_from_pct(ai_data.get('metadata', {}).get('foreign_ownership_pct', 100)),
+                        'approval_complexity': ai_data.get('metadata', {}).get('approval_complexity', 'Standard'),
+                        'local_content_requirements': ai_data.get('metadata', {}).get('local_content_req', 'Minimal'),
+                        'investment_screening': ai_data.get('metadata', {}).get('investment_screening', 'Limited'),
+                        'status': ai_data.get('metadata', {}).get('status', 'Foreign ownership analysis'),
+                    }
+                else:
+                    logger.error(f"AI extraction failed: {result['error']}, falling back to MOCK")
+                    return self._fetch_data_mock_fallback(country)
+
+            except Exception as e:
+                logger.error(f"AI_POWERED mode error: {e}, falling back to MOCK mode")
+                return self._fetch_data_mock_fallback(country)
         
         else:
             raise AgentError(f"Unknown agent mode: {self.mode}")
@@ -684,31 +733,36 @@ class OwnershipHurdlesAgent(BaseParameterAgent):
         period: str
     ) -> str:
         """Generate justification for the ownership hurdles score.
-        
+
         Args:
             data: Ownership data
             score: Calculated score
             country: Country name
             period: Time period
-            
+
         Returns:
             Human-readable justification string
         """
+        source = data.get("source", "unknown")
+
+        # If AI_POWERED mode, use AI-generated justification
+        if source == 'ai_powered':
+            return data.get('ai_justification', 'AI analysis of foreign ownership restrictions.')
+
         foreign_pct = data.get("foreign_ownership_pct", 0)
         category = data.get("category", "moderate_barriers")
         approval = data.get("approval_complexity", "moderate")
         local_content = data.get("local_content_requirements", "some")
         screening = data.get("investment_screening", "moderate")
         status = data.get("status", "moderate barriers")
-        source = data.get("source", "unknown")
-        
+
         # Find description from rubric
         description = "moderate barriers"
         for level in self.scoring_rubric:
             if level["score"] == int(score):
                 description = level["description"].lower()
                 break
-        
+
         # Build justification based on source
         if source == 'rule_based':
             fdi = data.get('raw_fdi_inflows_pct', 0)
@@ -736,27 +790,39 @@ class OwnershipHurdlesAgent(BaseParameterAgent):
     
     def _get_data_sources(self, country: str, data: Dict[str, Any] = None) -> List[str]:
         """Get data sources used for this analysis.
-        
+
         Args:
             country: Country name
             data: Data dictionary with source info
-            
+
         Returns:
             List of data source identifiers
         """
         sources = []
-        
+
+        # Check if we used AI extraction
+        if data and data.get('source') == 'ai_powered':
+            sources.append("AI-Powered Document Extraction")
+            sources.append("OECD FDI Index (Extracted from documents)")
+            sources.append("World Bank Doing Business reports (Extracted from documents)")
+            sources.append(f"{country} National energy laws")
+            sources.append("Investment treaties and bilateral agreements")
+            # Add document sources if available
+            ai_metadata = data.get('ai_metadata', {})
+            doc_sources = ai_metadata.get('document_sources', [])
+            sources.extend(doc_sources)
         # Check if we used rule-based or mock data
-        if data and data.get('source') == 'rule_based':
+        elif data and data.get('source') == 'rule_based':
             sources.append("World Bank FDI Net Inflows - Rule-Based Estimation")
             sources.append("OECD FDI Index (Reference)")
+            sources.append(f"{country} National energy laws")
+            sources.append("Investment treaties and bilateral agreements")
         else:
             sources.append("OECD FDI Regulatory Restrictiveness Index - Mock Data")
             sources.append("World Bank Doing Business reports")
-        
-        sources.append(f"{country} National energy laws")
-        sources.append("Investment treaties and bilateral agreements")
-        
+            sources.append(f"{country} National energy laws")
+            sources.append("Investment treaties and bilateral agreements")
+
         return sources
     
     def _get_scoring_rubric(self) -> List[Dict[str, Any]]:

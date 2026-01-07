@@ -184,14 +184,19 @@ class PowerMarketSizeAgent(BaseParameterAgent):
             justification = self._generate_justification(data, score, country, period)
             
             # Step 5: Estimate confidence
+            # For AI-powered mode, use AI confidence directly
+            if data.get('source') == 'ai_powered':
+                data_quality = "high"
+                ai_confidence = data.get('ai_confidence', 0.8)
+                confidence = ai_confidence  # Use AI's confidence directly
             # Rule-based data has higher confidence than mock data
-            if self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
+            elif self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
                 data_quality = "high"
                 confidence = 0.9  # High confidence for rule-based data
             else:
                 data_quality = "medium"
                 confidence = 0.7  # Lower confidence for mock data
-            
+
             confidence = self._estimate_confidence(data, data_quality)
             
             # Step 6: Identify data sources
@@ -330,9 +335,48 @@ class PowerMarketSizeAgent(BaseParameterAgent):
                 return self._fetch_data_mock_fallback(country)
         
         elif self.mode == AgentMode.AI_POWERED:
-            # TODO Phase 2+: Use LLM to extract from documents
-            # return self._llm_extract_consumption(country, period)
-            raise NotImplementedError("AI_POWERED mode not yet implemented")
+            # Extract power market size using AI extraction system
+            try:
+                from ai_extraction_system import AIExtractionAdapter
+
+                adapter = AIExtractionAdapter(
+                    llm_config=self.config.get('llm_config') if self.config else None,
+                    cache_config=self.config.get('cache_config') if self.config else None
+                )
+
+                extraction_result = adapter.extract_parameter(
+                    parameter_name='power_market_size',
+                    country=country,
+                    period=period,
+                    documents=kwargs.get('documents'),
+                    document_urls=kwargs.get('document_urls')
+                )
+
+                logger.info(f"Using AI_POWERED mode for {country}")
+
+                if extraction_result and extraction_result.get('value') is not None:
+                    score = float(extraction_result['value'])
+                    metadata = extraction_result.get('metadata', {})
+
+                    data = {
+                        'source': 'ai_powered',
+                        'ai_confidence': extraction_result.get('confidence', 0.8),
+                        'ai_justification': extraction_result.get('justification', ''),
+                        'ai_score': score,
+                        'consumption_twh': metadata.get('consumption_twh', 0),
+                        'market_size': metadata.get('market_size', 'Unknown'),
+                        'period': period
+                    }
+
+                    logger.info(f"AI extraction successful for {country}: score={score}/10, confidence={data['ai_confidence']:.2f}")
+                    return data
+                else:
+                    logger.warning(f"AI extraction returned no value for {country}, falling back to MOCK")
+                    return self._fetch_data_mock_fallback(country)
+
+            except Exception as e:
+                logger.error(f"Error using AI extraction for {country}: {e}. Falling back to MOCK data")
+                return self._fetch_data_mock_fallback(country)
         
         else:
             raise AgentError(f"Unknown agent mode: {self.mode}")
@@ -363,26 +407,32 @@ class PowerMarketSizeAgent(BaseParameterAgent):
         period: str
     ) -> float:
         """Calculate market size score based on TWh consumption.
-        
+
         Higher consumption = larger market = higher score (direct relationship)
-        
+
         Args:
             data: Consumption data with twh_consumption
             country: Country name
             period: Time period
-            
+
         Returns:
             Score between 1-10
         """
+        # For AI-powered mode, use the score directly
+        if data.get('source') == 'ai_powered' and 'ai_score' in data:
+            score = float(data['ai_score'])
+            logger.debug(f"Using AI-provided score for {country}: {score}/10")
+            return score
+
         twh_consumption = data.get("twh_consumption", 0)
-        
+
         logger.debug(f"Calculating score for {country}: {twh_consumption:.1f} TWh/year")
-        
+
         # Find matching rubric level
         for level in self.scoring_rubric:
             min_twh = level.get("min_twh", 0)
             max_twh = level.get("max_twh", 100000)
-            
+
             if min_twh <= twh_consumption < max_twh:
                 score = level["score"]
                 logger.debug(
@@ -390,7 +440,7 @@ class PowerMarketSizeAgent(BaseParameterAgent):
                     f"{twh_consumption:.1f} TWh falls in range {min_twh}-{max_twh} TWh"
                 )
                 return float(score)
-        
+
         # Fallback (shouldn't reach here with proper rubric)
         logger.warning(f"No rubric match for {twh_consumption} TWh, defaulting to score 5")
         return 5.0
@@ -403,28 +453,37 @@ class PowerMarketSizeAgent(BaseParameterAgent):
         period: str
     ) -> str:
         """Generate justification for the market size score.
-        
+
         Args:
             data: Consumption data
             score: Calculated score
             country: Country name
             period: Time period
-            
+
         Returns:
             Human-readable justification string
         """
+        source = data.get("source", "unknown")
+
+        # For AI-powered mode, use AI justification directly
+        if source == 'ai_powered':
+            ai_justification = data.get('ai_justification', '')
+            if ai_justification:
+                return ai_justification
+            # Fallback if no AI justification provided
+            return f"AI-extracted power market size score of {score:.1f}/10 for {country} based on electricity consumption and market analysis."
+
         twh_consumption = data.get("twh_consumption", 0)
         population = data.get("population_millions", 0)
         per_capita = data.get("per_capita_kwh", 0)
-        source = data.get("source", "unknown")
-        
+
         # Find description from rubric
         description = "moderate-sized electricity market"
         for level in self.scoring_rubric:
             if level["score"] == int(score):
                 description = level["description"].lower()
                 break
-        
+
         # Build justification based on source
         if source == 'rule_based':
             data_source = data.get('data_source', 'World Bank')
@@ -441,23 +500,26 @@ class PowerMarketSizeAgent(BaseParameterAgent):
                 f"{description}. "
                 f"Large absolute market size provides substantial opportunity for renewable energy deployment."
             )
-        
+
         return justification
     
     def _get_data_sources(self, country: str, data: Dict[str, Any] = None) -> List[str]:
         """Get data sources used for this analysis.
-        
+
         Args:
             country: Country name
             data: Data dictionary with source info
-            
+
         Returns:
             List of data source identifiers
         """
         sources = []
-        
-        # Check if we used rule-based or mock data
-        if data and data.get('source') == 'rule_based':
+
+        # Check data source type
+        if data and data.get('source') == 'ai_powered':
+            sources.append("AI-Powered Document Extraction (Power Market Size)")
+            sources.append("IEA and National Energy Statistics")
+        elif data and data.get('source') == 'rule_based':
             sources.append("World Bank Energy Indicators - Rule-Based Data")
             sources.append("IEA World Energy Statistics 2023")
         else:

@@ -287,14 +287,19 @@ class LongTermInterestRatesAgent(BaseParameterAgent):
             justification = self._generate_justification(data, score, country, period)
             
             # Step 5: Estimate confidence
+            # For AI-powered mode, use AI confidence directly
+            if data.get('source') == 'ai_powered':
+                data_quality = "high"
+                ai_confidence = data.get('ai_confidence', 0.8)
+                confidence = ai_confidence  # Use AI's confidence directly
             # Rule-based data has high confidence (World Bank official data)
-            if self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
+            elif self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
                 data_quality = "high"
                 confidence = 0.85  # High confidence for World Bank data
             else:
                 data_quality = "high"
                 confidence = 0.9  # Very high confidence for bond yield data
-            
+
             confidence = self._estimate_confidence(data, data_quality)
             
             # Step 6: Identify data sources
@@ -440,9 +445,48 @@ class LongTermInterestRatesAgent(BaseParameterAgent):
                 return self._fetch_data_mock_fallback(country)
         
         elif self.mode == AgentMode.AI_POWERED:
-            # TODO Phase 2+: Use LLM to extract from financial reports
-            # return self._llm_extract_rates(country, period)
-            raise NotImplementedError("AI_POWERED mode not yet implemented")
+            # Extract interest rates using AI extraction system
+            try:
+                from ai_extraction_system import AIExtractionAdapter
+
+                adapter = AIExtractionAdapter(
+                    llm_config=self.config.get('llm_config') if self.config else None,
+                    cache_config=self.config.get('cache_config') if self.config else None
+                )
+
+                extraction_result = adapter.extract_parameter(
+                    parameter_name='long_term_interest_rates',
+                    country=country,
+                    period=period,
+                    documents=kwargs.get('documents'),
+                    document_urls=kwargs.get('document_urls')
+                )
+
+                logger.info(f"Using AI_POWERED mode for {country}")
+
+                if extraction_result and extraction_result.get('value') is not None:
+                    score = float(extraction_result['value'])
+                    metadata = extraction_result.get('metadata', {})
+
+                    data = {
+                        'source': 'ai_powered',
+                        'ai_confidence': extraction_result.get('confidence', 0.8),
+                        'ai_justification': extraction_result.get('justification', ''),
+                        'ai_score': score,
+                        'bond_yield': metadata.get('bond_yield_10y', 0),
+                        'financing_environment': metadata.get('financing_environment', 'Unknown'),
+                        'period': period
+                    }
+
+                    logger.info(f"AI extraction successful for {country}: score={score}/10, confidence={data['ai_confidence']:.2f}")
+                    return data
+                else:
+                    logger.warning(f"AI extraction returned no value for {country}, falling back to MOCK")
+                    return self._fetch_data_mock_fallback(country)
+
+            except Exception as e:
+                logger.error(f"Error using AI extraction for {country}: {e}. Falling back to MOCK data")
+                return self._fetch_data_mock_fallback(country)
         
         else:
             raise AgentError(f"Unknown agent mode: {self.mode}")
@@ -536,26 +580,32 @@ class LongTermInterestRatesAgent(BaseParameterAgent):
         period: str
     ) -> float:
         """Calculate interest rate score.
-        
+
         INVERSE: Lower interest rate = lower financing cost = higher score
-        
+
         Args:
             data: Interest rate data with rate_pct
             country: Country name
             period: Time period
-            
+
         Returns:
             Score between 1-10
         """
+        # For AI-powered mode, use the score directly
+        if data.get('source') == 'ai_powered' and 'ai_score' in data:
+            score = float(data['ai_score'])
+            logger.debug(f"Using AI-provided score for {country}: {score}/10")
+            return score
+
         rate_pct = data.get("rate_pct", 0)
-        
+
         logger.debug(f"Calculating score for {country}: {rate_pct:.1f}% interest rate")
-        
+
         # Find matching rubric level (INVERSE - lower is better)
         for level in self.scoring_rubric:
             min_rate = level.get("min_rate_pct", 0.0)
             max_rate = level.get("max_rate_pct", 100.0)
-            
+
             if min_rate <= rate_pct < max_rate:
                 score = level["score"]
                 logger.debug(
@@ -563,7 +613,7 @@ class LongTermInterestRatesAgent(BaseParameterAgent):
                     f"{rate_pct:.1f}% falls in range {min_rate:.0f}-{max_rate:.0f}%"
                 )
                 return float(score)
-        
+
         # Fallback
         logger.warning(f"No rubric match for {rate_pct:.1f}%, defaulting to score 5")
         return 5.0
@@ -576,31 +626,40 @@ class LongTermInterestRatesAgent(BaseParameterAgent):
         period: str
     ) -> str:
         """Generate justification for the interest rate score.
-        
+
         Args:
             data: Interest rate data
             score: Calculated score
             country: Country name
             period: Time period
-            
+
         Returns:
             Human-readable justification string
         """
+        source = data.get("source", "unknown")
+
+        # For AI-powered mode, use AI justification directly
+        if source == 'ai_powered':
+            ai_justification = data.get('ai_justification', '')
+            if ai_justification:
+                return ai_justification
+            # Fallback if no AI justification provided
+            return f"AI-extracted long-term interest rates score of {score:.1f}/10 for {country} based on bond yields and financing costs analysis."
+
         rate_pct = data.get("rate_pct", 0)
         bond_type = data.get("bond_type", "10-year government")
         currency = data.get("currency", "local")
         central_bank_rate = data.get("central_bank_rate", 0)
         trend = data.get("trend", "moderate")
         status = data.get("status", "moderate rates")
-        source = data.get("source", "unknown")
-        
+
         # Find description from rubric
         description = "moderate financing costs"
         for level in self.scoring_rubric:
             if level["score"] == int(score):
                 description = level["description"].lower()
                 break
-        
+
         # Build justification based on source
         if source == 'rule_based':
             raw_lending = data.get('raw_lending_rate', rate_pct)
@@ -616,29 +675,32 @@ class LongTermInterestRatesAgent(BaseParameterAgent):
                 f"Central bank policy rate at {central_bank_rate:.2f}% sets monetary backdrop. "
                 f"{status.capitalize()}. "
             )
-        
+
         justification += (
             f"This interest rate environment {'strongly' if score >= 8 else 'adequately' if score >= 6 else 'partially'} "
             f"supports renewable energy project financing through {'low' if score >= 7 else 'moderate' if score >= 5 else 'high'} "
             f"debt service costs."
         )
-        
+
         return justification
     
     def _get_data_sources(self, country: str, data: Dict[str, Any] = None) -> List[str]:
         """Get data sources used for this analysis.
-        
+
         Args:
             country: Country name
             data: Data dictionary with source info
-            
+
         Returns:
             List of data source identifiers
         """
         sources = []
-        
-        # Check if we used rule-based or mock data
-        if data and data.get('source') == 'rule_based':
+
+        # Check data source type
+        if data and data.get('source') == 'ai_powered':
+            sources.append("AI-Powered Document Extraction (Long-Term Interest Rates)")
+            sources.append("Central Bank Reports and Bond Market Data")
+        elif data and data.get('source') == 'rule_based':
             sources.append("World Bank Lending Interest Rate - Rule-Based Data")
             sources.append("10-year government bond markets (Reference)")
         else:

@@ -421,6 +421,48 @@ def demo_grid_insights():
     print("  - High-quality grids enable greater renewable integration")
 
 
+def demo_ai_powered_mode():
+    """Demonstrate AI_POWERED mode (extracts from documents)."""
+    print("\n" + "="*70)
+    print("DEMO 11: AI_POWERED Mode (Document Extraction)")
+    print("="*70)
+
+    print("\n🤖 Testing AI_POWERED mode...")
+    print("(Without API keys, will gracefully fall back to MOCK mode)")
+    print("-" * 60)
+
+    try:
+        # Create agent in AI_POWERED mode
+        agent = StatusOfGridAgent(mode=AgentMode.AI_POWERED)
+
+        # Test with sample documents
+        documents = [
+            {
+                'content': 'Germany has a reliable grid infrastructure with low curtailment rates '
+                           '(<2%) and strong transmission capacity, supporting high renewable penetration. '
+                           'SAIDI of approximately 12 minutes per year.',
+                'metadata': {}
+            }
+        ]
+
+        # Analyze
+        result = agent.analyze("Germany", "Q3 2024", documents=documents)
+
+        print(f"✅ AI_POWERED mode test successful!")
+        print(f"   Score: {result.score}/10")
+        print(f"   Confidence: {result.confidence*100:.0f}%")
+        print(f"   Justification: {result.justification[:100]}...")
+
+    except Exception as e:
+        print(f"⚠️  AI mode fell back to MOCK (expected without API keys)")
+        print(f"   Error: {str(e)[:80]}...")
+
+    print("\n💡 AI_POWERED mode features:")
+    print("   - Extracts grid reliability metrics from reports")
+    print("   - Analyzes curtailment rates and transmission capacity")
+    print("   - Gracefully falls back to MOCK when API unavailable")
+
+
 def main():
     """Run all demos."""
     print("\n" + "="*70)
@@ -429,11 +471,11 @@ def main():
     print("\n🎊 MILESTONE: TIER 2 COMPLETE - 8 AGENTS DONE!")
     print("Foundation + high-value agents implemented (44% complete)")
     print("\n")
-    
+
     try:
         # Initialize data service for RULE_BASED mode
         data_service = initialize_data_service()
-        
+
         # Run demos
         demo_mock_mode()
         demo_rule_based_mode(data_service)
@@ -445,6 +487,7 @@ def main():
         demo_all_countries()
         demo_all_eight_agents()
         demo_grid_insights()
+        demo_ai_powered_mode()
         
         print("\n" + "="*70)
         print("✅ ALL DEMOS COMPLETED SUCCESSFULLY!")

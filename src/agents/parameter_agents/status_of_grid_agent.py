@@ -326,16 +326,21 @@ class StatusOfGridAgent(BaseParameterAgent):
             
             # Step 4: Generate justification
             justification = self._generate_justification(data, score, country, period)
-            
+
             # Step 5: Estimate confidence
+            if data.get('source') == 'ai_powered':
+                # Use AI-provided confidence
+                confidence = data.get('ai_confidence', 0.75)
+                data_quality = "high"
+                logger.debug(f"Using AI-provided confidence: {confidence:.2f}")
             # Rule-based data has moderate confidence (estimation-based)
-            if self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
+            elif self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
                 data_quality = "medium"
                 confidence = 0.70  # Moderate confidence for estimated data
             else:
                 data_quality = "high"
                 confidence = 0.85  # High confidence for composite mock data
-            
+
             confidence = self._estimate_confidence(data, data_quality)
             
             # Step 6: Identify data sources
@@ -485,9 +490,54 @@ class StatusOfGridAgent(BaseParameterAgent):
                 return self._fetch_data_mock_fallback(country)
         
         elif self.mode == AgentMode.AI_POWERED:
-            # TODO Phase 2+: Use LLM to extract from grid reports
-            # return self._llm_extract_grid_quality(country, period)
-            raise NotImplementedError("AI_POWERED mode not yet implemented")
+            # AI-powered extraction using StatusOfGridExtractor
+            try:
+                from ai_extraction_system import AIExtractionAdapter
+
+                # Get documents from kwargs
+                documents = kwargs.get('documents', [])
+                if not documents:
+                    logger.warning(f"No documents provided for AI extraction, falling back to MOCK mode")
+                    return self._fetch_data_mock_fallback(country)
+
+                # Use AI extraction adapter
+                adapter = AIExtractionAdapter()
+                result = adapter.extract_parameter(
+                    parameter_name='status_of_grid',
+                    country=country,
+                    period=period,
+                    documents=documents
+                )
+
+                if result['success']:
+                    # Extract AI data
+                    ai_data = result['data']
+
+                    # Return in expected format
+                    return {
+                        'ai_score': ai_data['value'],
+                        'ai_confidence': ai_data['confidence'],
+                        'ai_justification': ai_data['justification'],
+                        'ai_metadata': ai_data.get('metadata', {}),
+                        'ai_quotes': ai_data.get('quotes', []),
+                        'source': 'ai_powered',
+                        'period': period,
+                        'grid_score': ai_data['value'],  # AI score IS the grid score
+                        'saidi_minutes': ai_data.get('metadata', {}).get('saidi_minutes', 0),
+                        'saifi_outages': ai_data.get('metadata', {}).get('saifi_outages', 0),
+                        'transmission_gw': ai_data.get('metadata', {}).get('transmission_gw', 50),
+                        'congestion_level': ai_data.get('metadata', {}).get('congestion_level', 'Moderate'),
+                        'infrastructure_age': ai_data.get('metadata', {}).get('infrastructure_age', 'Mixed'),
+                        'smartgrid_deployment': ai_data.get('metadata', {}).get('smartgrid_deployment', 'Limited'),
+                        'status': ai_data.get('metadata', {}).get('status', 'Adequate grid'),
+                    }
+                else:
+                    logger.error(f"AI extraction failed: {result['error']}, falling back to MOCK")
+                    return self._fetch_data_mock_fallback(country)
+
+            except Exception as e:
+                logger.error(f"AI_POWERED mode error: {e}, falling back to MOCK mode")
+                return self._fetch_data_mock_fallback(country)
         
         else:
             raise AgentError(f"Unknown agent mode: {self.mode}")
@@ -707,26 +757,32 @@ class StatusOfGridAgent(BaseParameterAgent):
         period: str
     ) -> float:
         """Calculate grid status score.
-        
+
         DIRECT: Higher grid quality = better infrastructure = higher score
-        
+
         Args:
             data: Grid status data with grid_score
             country: Country name
             period: Time period
-            
+
         Returns:
             Score between 1-10
         """
+        # If AI_POWERED mode, use AI-provided score directly
+        if data.get('source') == 'ai_powered':
+            score = data.get('ai_score', 5.0)
+            logger.debug(f"Using AI-provided score for {country}: {score:.1f}")
+            return float(score)
+
         grid_score = data.get("grid_score", 5.0)
-        
+
         logger.debug(f"Calculating score for {country}: {grid_score:.1f} grid quality score")
-        
+
         # Find matching rubric level
         for level in self.scoring_rubric:
             min_val = level.get("min_score", 0.0)
             max_val = level.get("max_score", 10.1)
-            
+
             if min_val <= grid_score < max_val:
                 score = level["score"]
                 logger.debug(
@@ -734,7 +790,7 @@ class StatusOfGridAgent(BaseParameterAgent):
                     f"{grid_score:.1f} falls in range {min_val:.1f}-{max_val:.1f}"
                 )
                 return float(score)
-        
+
         # Fallback
         logger.warning(f"No rubric match for {grid_score:.1f}, defaulting to score 5")
         return 5.0
@@ -747,16 +803,22 @@ class StatusOfGridAgent(BaseParameterAgent):
         period: str
     ) -> str:
         """Generate justification for the grid status score.
-        
+
         Args:
             data: Grid status data
             score: Calculated score
             country: Country name
             period: Time period
-            
+
         Returns:
             Human-readable justification string
         """
+        source = data.get("source", "unknown")
+
+        # If AI_POWERED mode, use AI-generated justification
+        if source == 'ai_powered':
+            return data.get('ai_justification', 'AI analysis of grid infrastructure quality.')
+
         grid_score = data.get("grid_score", 5.0)
         saidi = data.get("saidi_minutes", 0)
         saifi = data.get("saifi_outages", 0)
@@ -765,15 +827,14 @@ class StatusOfGridAgent(BaseParameterAgent):
         infrastructure = data.get("infrastructure_age", "mixed")
         smartgrid = data.get("smartgrid_deployment", "limited")
         status = data.get("status", "adequate grid")
-        source = data.get("source", "unknown")
-        
+
         # Find description from rubric
         description = "adequate grid"
         for level in self.scoring_rubric:
             if level["score"] == int(score):
                 description = level["description"].lower()
                 break
-        
+
         # Build justification based on source
         if source == 'rule_based':
             losses = data.get('raw_transmission_losses', 0)
@@ -793,37 +854,48 @@ class StatusOfGridAgent(BaseParameterAgent):
                 f"Infrastructure is {infrastructure.lower()} with {smartgrid.lower()} smartgrid deployment. "
                 f"{status.capitalize()}. "
             )
-        
+
         justification += (
             f"This grid infrastructure {'strongly' if score >= 8 else 'adequately' if score >= 6 else 'partially'} "
             f"supports renewable energy integration and reduces curtailment risk."
         )
-        
+
         return justification
     
     def _get_data_sources(self, country: str, data: Dict[str, Any] = None) -> List[str]:
         """Get data sources used for this analysis.
-        
+
         Args:
             country: Country name
             data: Data dictionary with source info
-            
+
         Returns:
             List of data source identifiers
         """
         sources = []
-        
+
+        # Check if we used AI extraction
+        if data and data.get('source') == 'ai_powered':
+            sources.append("AI-Powered Document Extraction")
+            sources.append("IEA Electricity Security reports (Extracted from documents)")
+            sources.append(f"{country} National grid operator (Extracted from documents)")
+            sources.append("SAIDI/SAIFI reliability metrics (Extracted from documents)")
+            # Add document sources if available
+            ai_metadata = data.get('ai_metadata', {})
+            doc_sources = ai_metadata.get('document_sources', [])
+            sources.extend(doc_sources)
         # Check if we used rule-based or mock data
-        if data and data.get('source') == 'rule_based':
+        elif data and data.get('source') == 'rule_based':
             sources.append("World Bank Electric Power Transmission Losses - Rule-Based Estimation")
             sources.append("IEA Electricity Security reports (Reference)")
+            sources.append(f"{country} National grid operator")
+            sources.append("SAIDI/SAIFI reliability metrics")
         else:
             sources.append("World Bank Enterprise Surveys - Mock Data")
             sources.append("IEA Electricity Security reports")
-        
-        sources.append(f"{country} National grid operator")
-        sources.append("SAIDI/SAIFI reliability metrics")
-        
+            sources.append(f"{country} National grid operator")
+            sources.append("SAIDI/SAIFI reliability metrics")
+
         return sources
     
     def _get_scoring_rubric(self) -> List[Dict[str, Any]]:

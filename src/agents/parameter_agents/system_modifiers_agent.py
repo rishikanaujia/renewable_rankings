@@ -361,15 +361,20 @@ class SystemModifiersAgent(BaseParameterAgent):
             
             # Step 4: Generate justification
             justification = self._generate_justification(data, score, country, period)
-            
+
             # Step 5: Estimate confidence
-            if self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
+            if data.get('source') == 'ai_powered':
+                # Use AI-provided confidence
+                confidence = data.get('ai_confidence', 0.75)
+                data_quality = "high"
+                logger.debug(f"Using AI-provided confidence: {confidence:.2f}")
+            elif self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
                 data_quality = "medium"
                 confidence = 0.55  # Lower confidence for estimated systemic risks
             else:
                 data_quality = "high"
                 confidence = 0.80  # High confidence for composite risk indices
-            
+
             confidence = self._estimate_confidence(data, data_quality)
             
             # Step 6: Identify data sources
@@ -530,9 +535,56 @@ class SystemModifiersAgent(BaseParameterAgent):
                 return self._fetch_data_mock_fallback(country)
         
         elif self.mode == AgentMode.AI_POWERED:
-            # TODO Phase 2+: Use LLM to assess geopolitical and systemic risks
-            # return self._llm_assess_systemic_risks(country, period)
-            raise NotImplementedError("AI_POWERED mode not yet implemented")
+            # AI-powered extraction using SystemModifiersExtractor
+            try:
+                from ai_extraction_system import AIExtractionAdapter
+
+                # Get documents from kwargs
+                documents = kwargs.get('documents', [])
+                if not documents:
+                    logger.warning(f"No documents provided for AI extraction, falling back to MOCK mode")
+                    return self._fetch_data_mock_fallback(country)
+
+                # Use AI extraction adapter
+                adapter = AIExtractionAdapter()
+                result = adapter.extract_parameter(
+                    parameter_name='system_modifiers',
+                    country=country,
+                    period=period,
+                    documents=documents
+                )
+
+                if result['success']:
+                    # Extract AI data
+                    ai_data = result['data']
+
+                    # Return in expected format
+                    return {
+                        'ai_score': ai_data['value'],
+                        'ai_confidence': ai_data['confidence'],
+                        'ai_justification': ai_data['justification'],
+                        'ai_metadata': ai_data.get('metadata', {}),
+                        'ai_quotes': ai_data.get('quotes', []),
+                        'source': 'ai_powered',
+                        'period': period,
+                        'score': ai_data['value'],  # Use AI score directly
+                        'category': self._determine_category_from_score(ai_data['value']),
+                        'currency_risk': ai_data.get('metadata', {}).get('currency_risk', 'Moderate'),
+                        'currency_volatility_annual': ai_data.get('metadata', {}).get('currency_volatility', 10.0),
+                        'geopolitical_risk': ai_data.get('metadata', {}).get('geopolitical_risk', 'Moderate'),
+                        'market_anomalies': ai_data.get('metadata', {}).get('market_anomalies', 'None significant'),
+                        'sanctions_status': ai_data.get('metadata', {}).get('sanctions', 'None'),
+                        'convertibility': ai_data.get('metadata', {}).get('convertibility', 'Full'),
+                        'composite_assessment': ai_data.get('metadata', {}).get('composite_assessment', 'Systemic risk analysis'),
+                        'status': ai_data.get('metadata', {}).get('status', 'Systemic factors analysis'),
+                    }
+                else:
+                    logger.error(f"AI extraction failed: {result['error']}, falling back to MOCK")
+                    return self._fetch_data_mock_fallback(country)
+
+            except Exception as e:
+                logger.error(f"AI_POWERED mode error: {e}, falling back to MOCK mode")
+                return self._fetch_data_mock_fallback(country)
         
         else:
             raise AgentError(f"Unknown agent mode: {self.mode}")
@@ -855,16 +907,22 @@ class SystemModifiersAgent(BaseParameterAgent):
         period: str
     ) -> str:
         """Generate justification for the system modifiers score.
-        
+
         Args:
             data: System modifiers data
             score: Calculated score
             country: Country name
             period: Time period
-            
+
         Returns:
             Human-readable justification string
         """
+        source = data.get("source", "unknown")
+
+        # If AI_POWERED mode, use AI-generated justification
+        if source == 'ai_powered':
+            return data.get('ai_justification', 'AI analysis of systemic risk factors.')
+
         category = data.get("category", "moderate_factors")
         currency = data.get("currency_risk", "moderate")
         volatility = data.get("currency_volatility_annual", 10.0)
@@ -874,15 +932,14 @@ class SystemModifiersAgent(BaseParameterAgent):
         convertibility = data.get("convertibility", "full")
         assessment = data.get("composite_assessment", "")
         status = data.get("status", "")
-        source = data.get("source", "unknown")
-        
+
         # Find description from rubric
         description = "moderate factors"
         for level in self.scoring_rubric:
             if level["score"] == int(score):
                 description = level.get("range", level["description"]).lower()
                 break
-        
+
         # Build justification based on source
         if source == 'rule_based':
             inflation = data.get('raw_inflation', 0)
@@ -919,28 +976,42 @@ class SystemModifiersAgent(BaseParameterAgent):
     
     def _get_data_sources(self, country: str, data: Dict[str, Any] = None) -> List[str]:
         """Get data sources used for this analysis.
-        
+
         Args:
             country: Country name
             data: Data dictionary with source info
-            
+
         Returns:
             List of data source identifiers
         """
         sources = []
-        
+
+        # Check if we used AI extraction
+        if data and data.get('source') == 'ai_powered':
+            sources.append("AI-Powered Document Extraction")
+            sources.append("Geopolitical risk indices (Extracted from documents)")
+            sources.append("Currency volatility data (Extracted from documents)")
+            sources.append("IMF and World Bank macroeconomic indicators")
+            sources.append(f"{country} central bank and economic data")
+            sources.append("Market anomaly detection and special circumstances analysis")
+            # Add document sources if available
+            ai_metadata = data.get('ai_metadata', {})
+            doc_sources = ai_metadata.get('document_sources', [])
+            sources.extend(doc_sources)
         # Check if we used rule-based or mock data
-        if data and data.get('source') == 'rule_based':
+        elif data and data.get('source') == 'rule_based':
             sources.append("World Bank Economic Indicators - Rule-Based Estimation")
             sources.append("Geopolitical risk indices (Reference)")
+            sources.append("IMF and World Bank macroeconomic indicators")
+            sources.append(f"{country} central bank and economic data")
+            sources.append("Market anomaly detection and special circumstances analysis")
         else:
             sources.append("Currency volatility and exchange rate data - Mock")
             sources.append("Geopolitical risk indices (WEF, Marsh)")
-        
-        sources.append("IMF and World Bank macroeconomic indicators")
-        sources.append(f"{country} central bank and economic data")
-        sources.append("Market anomaly detection and special circumstances analysis")
-        
+            sources.append("IMF and World Bank macroeconomic indicators")
+            sources.append(f"{country} central bank and economic data")
+            sources.append("Market anomaly detection and special circumstances analysis")
+
         return sources
     
     def _get_scoring_rubric(self) -> List[Dict[str, Any]]:

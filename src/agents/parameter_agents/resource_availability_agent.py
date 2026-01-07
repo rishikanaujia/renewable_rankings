@@ -329,27 +329,37 @@ class ResourceAvailabilityAgent(BaseParameterAgent):
             
             # Step 1: Fetch resource data
             data = self._fetch_data(country, period, **kwargs)
-            
-            # Step 2: Calculate combined resource score
-            combined_score = self._calculate_combined_resource_score(data, country)
-            
+
+            # Step 2: Calculate combined resource score or use AI score
+            if data.get('source') == 'ai_powered':
+                # Use AI-provided score directly
+                combined_score = data.get('ai_score', 5.0)
+            else:
+                # Calculate from solar/wind data
+                combined_score = self._calculate_combined_resource_score(data, country)
+
             # Step 3: Map to 1-10 rating
-            score = self._calculate_score(combined_score, country, period)
+            score = self._calculate_score(combined_score, country, period, data)
             
             # Step 4: Validate score
             score = self._validate_score(score)
             
             # Step 5: Generate justification
             justification = self._generate_justification(data, combined_score, score, country, period)
-            
+
             # Step 6: Estimate confidence
-            if self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
+            if data.get('source') == 'ai_powered':
+                # Use AI-provided confidence
+                confidence = data.get('ai_confidence', 0.75)
+                data_quality = "high"
+                logger.debug(f"Using AI-provided confidence: {confidence:.2f}")
+            elif self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
                 data_quality = "medium"
                 confidence = 0.65  # Medium confidence for geographic estimates
             else:
                 data_quality = "high"
                 confidence = 0.90  # High confidence for atlas data
-            
+
             confidence = self._estimate_confidence(data, data_quality)
             
             # Step 7: Identify data sources
@@ -468,9 +478,50 @@ class ResourceAvailabilityAgent(BaseParameterAgent):
                 return self._fetch_data_mock_fallback(country)
         
         elif self.mode == AgentMode.AI_POWERED:
-            # TODO Phase 2+: Use LLM to extract from atlas documents
-            # return self._llm_extract_resources(country, period)
-            raise NotImplementedError("AI_POWERED mode not yet implemented")
+            # AI-powered extraction using ResourceAvailabilityExtractor
+            try:
+                from ai_extraction_system import AIExtractionAdapter
+
+                # Get documents from kwargs
+                documents = kwargs.get('documents', [])
+                if not documents:
+                    logger.warning(f"No documents provided for AI extraction, falling back to MOCK mode")
+                    return self._fetch_data_mock_fallback(country)
+
+                # Use AI extraction adapter
+                adapter = AIExtractionAdapter()
+                result = adapter.extract_parameter(
+                    parameter_name='resource_availability',
+                    country=country,
+                    period=period,
+                    documents=documents
+                )
+
+                if result['success']:
+                    # Extract AI data
+                    ai_data = result['data']
+
+                    # Return in expected format
+                    return {
+                        'ai_score': ai_data['value'],
+                        'ai_confidence': ai_data['confidence'],
+                        'ai_justification': ai_data['justification'],
+                        'ai_metadata': ai_data.get('metadata', {}),
+                        'ai_quotes': ai_data.get('quotes', []),
+                        'source': 'ai_powered',
+                        'period': period,
+                        'solar_kwh_m2_day': ai_data.get('metadata', {}).get('solar_irradiance', 5.0),
+                        'wind_m_s': ai_data.get('metadata', {}).get('wind_speed', 6.0),
+                        'solar_quality': ai_data.get('metadata', {}).get('solar_quality', 'moderate'),
+                        'wind_quality': ai_data.get('metadata', {}).get('wind_quality', 'moderate'),
+                    }
+                else:
+                    logger.error(f"AI extraction failed: {result['error']}, falling back to MOCK")
+                    return self._fetch_data_mock_fallback(country)
+
+            except Exception as e:
+                logger.error(f"AI_POWERED mode error: {e}, falling back to MOCK mode")
+                return self._fetch_data_mock_fallback(country)
         
         else:
             raise AgentError(f"Unknown agent mode: {self.mode}")
@@ -572,25 +623,33 @@ class ResourceAvailabilityAgent(BaseParameterAgent):
         self,
         combined_score: float,
         country: str,
-        period: str
+        period: str,
+        data: Dict[str, Any] = None
     ) -> float:
         """Map combined resource score to 1-10 rating.
-        
+
         Args:
-            combined_score: Combined resource score
+            combined_score: Combined resource score (or AI score in AI_POWERED mode)
             country: Country name
             period: Time period
-            
+            data: Optional data dict (used to check for AI mode)
+
         Returns:
             Score between 1-10
         """
+        # If AI_POWERED mode, combined_score is already the AI-provided score (1-10)
+        if data and data.get('source') == 'ai_powered':
+            score = combined_score
+            logger.debug(f"Using AI-provided score for {country}: {score:.1f}")
+            return float(score)
+
         logger.debug(f"Calculating rating for {country}: combined score {combined_score:.1f}")
-        
+
         # Find matching rubric level
         for level in self.scoring_rubric:
             min_combined = level.get("min_combined", 0.0)
             max_combined = level.get("max_combined", 100.0)
-            
+
             if min_combined <= combined_score < max_combined:
                 score = level["score"]
                 logger.debug(
@@ -598,12 +657,12 @@ class ResourceAvailabilityAgent(BaseParameterAgent):
                     f"Combined {combined_score:.1f} falls in range {min_combined}-{max_combined}"
                 )
                 return float(score)
-        
+
         # Handle scores >= 10 (world-class)
         if combined_score >= 10.0:
             logger.debug(f"Score 10 assigned: combined {combined_score:.1f} >= 10.0")
             return 10.0
-        
+
         # Fallback (shouldn't reach here with proper rubric)
         logger.warning(f"No rubric match for combined score {combined_score:.1f}, defaulting to 5")
         return 5.0
@@ -617,30 +676,35 @@ class ResourceAvailabilityAgent(BaseParameterAgent):
         period: str
     ) -> str:
         """Generate justification for the resource availability score.
-        
+
         Args:
             data: Resource data
             combined_score: Combined resource score
             score: Final 1-10 score
             country: Country name
             period: Time period
-            
+
         Returns:
             Human-readable justification string
         """
+        source = data.get("source", "unknown")
+
+        # If AI_POWERED mode, use AI-generated justification
+        if source == 'ai_powered':
+            return data.get('ai_justification', 'AI analysis of renewable energy resources.')
+
         solar_kwh = data.get("solar_kwh_m2_day", 0)
         wind_ms = data.get("wind_m_s", 0)
         solar_quality = data.get("solar_quality", "moderate")
         wind_quality = data.get("wind_quality", "moderate")
-        source = data.get("source", "unknown")
-        
+
         # Find description from rubric
         description = "average renewable energy resources"
         for level in self.scoring_rubric:
             if level["score"] == int(score):
                 description = level["description"].lower()
                 break
-        
+
         # Build justification based on source
         if source == 'rule_based':
             estimation_basis = data.get('estimation_basis', 'geographic characteristics')
@@ -656,38 +720,49 @@ class ResourceAvailabilityAgent(BaseParameterAgent):
                 f"and wind speeds of {wind_ms:.1f} m/s ({wind_quality.lower()}) "
                 f"indicate {description}. "
             )
-        
+
         justification += (
             f"Combined resource score of {combined_score:.1f} enables "
             f"{'highly' if score >= 8 else 'moderately' if score >= 6 else 'reasonably'} "
             f"cost-effective renewable energy deployment. "
         )
-        
+
         return justification
     
     def _get_data_sources(self, country: str, data: Dict[str, Any] = None) -> List[str]:
         """Get data sources used for this analysis.
-        
+
         Args:
             country: Country name
             data: Data dictionary with source info
-            
+
         Returns:
             List of data source identifiers
         """
         sources = []
-        
+
+        # Check if we used AI extraction
+        if data and data.get('source') == 'ai_powered':
+            sources.append("AI-Powered Document Extraction")
+            sources.append("Global Solar Atlas (Extracted from documents)")
+            sources.append("Global Wind Atlas (Extracted from documents)")
+            sources.append(f"{country} Renewable Energy Resource Assessment")
+            # Add document sources if available
+            ai_metadata = data.get('ai_metadata', {})
+            doc_sources = ai_metadata.get('document_sources', [])
+            sources.extend(doc_sources)
         # Check if we used rule-based or mock data
-        if data and data.get('source') == 'rule_based':
+        elif data and data.get('source') == 'rule_based':
             sources.append("Geographic resource database - Rule-Based Estimation")
             sources.append("Global Solar Atlas (Reference)")
             sources.append("Global Wind Atlas (Reference)")
         else:
             sources.append("Global Solar Atlas (World Bank) 2024 - Mock Data")
             sources.append("Global Wind Atlas (DTU) 2024")
-        
-        sources.append(f"{country} Renewable Energy Resource Assessment")
-        
+
+        if not (data and data.get('source') == 'ai_powered'):
+            sources.append(f"{country} Renewable Energy Resource Assessment")
+
         return sources
     
     def _get_scoring_rubric(self) -> List[Dict[str, Any]]:

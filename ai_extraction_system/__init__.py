@@ -41,6 +41,23 @@ from .processors.document_processor import DocumentProcessor
 
 # Extractors
 from .extractors.ambition_extractor import AmbitionExtractor
+from .extractors.competitive_landscape_extractor import CompetitiveLandscapeExtractor
+from .extractors.contract_terms_extractor import ContractTermsExtractor
+from .extractors.country_stability_extractor import CountryStabilityExtractor
+from .extractors.energy_dependence_extractor import EnergyDependenceExtractor
+from .extractors.expected_return_extractor import ExpectedReturnExtractor
+from .extractors.support_scheme_extractor import SupportSchemeExtractor
+from .extractors.track_record_extractor import TrackRecordExtractor
+from .extractors.offtaker_status_extractor import OfftakerStatusExtractor
+from .extractors.long_term_interest_rates_extractor import LongTermInterestRatesExtractor
+from .extractors.power_market_size_extractor import PowerMarketSizeExtractor
+from .extractors.renewables_penetration_extractor import RenewablesPenetrationExtractor
+from .extractors.resource_availability_extractor import ResourceAvailabilityExtractor
+from .extractors.revenue_stream_stability_extractor import RevenueStreamStabilityExtractor
+from .extractors.status_of_grid_extractor import StatusOfGridExtractor
+from .extractors.ownership_consolidation_extractor import OwnershipConsolidationExtractor
+from .extractors.ownership_hurdles_extractor import OwnershipHurdlesExtractor
+from .extractors.system_modifiers_extractor import SystemModifiersExtractor
 
 __all__ = [
     # Core classes
@@ -58,7 +75,24 @@ __all__ = [
     
     # Extractors
     'AmbitionExtractor',
-    
+    'CompetitiveLandscapeExtractor',
+    'ContractTermsExtractor',
+    'CountryStabilityExtractor',
+    'EnergyDependenceExtractor',
+    'ExpectedReturnExtractor',
+    'SupportSchemeExtractor',
+    'TrackRecordExtractor',
+    'OfftakerStatusExtractor',
+    'LongTermInterestRatesExtractor',
+    'PowerMarketSizeExtractor',
+    'RenewablesPenetrationExtractor',
+    'ResourceAvailabilityExtractor',
+    'RevenueStreamStabilityExtractor',
+    'StatusOfGridExtractor',
+    'OwnershipConsolidationExtractor',
+    'OwnershipHurdlesExtractor',
+    'SystemModifiersExtractor',
+
     # Convenience functions
     'extract_with_ai',
 ]

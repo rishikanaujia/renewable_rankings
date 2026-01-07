@@ -269,15 +269,20 @@ class RevenueStreamStabilityAgent(BaseParameterAgent):
             
             # Step 4: Generate justification
             justification = self._generate_justification(data, score, country, period)
-            
+
             # Step 5: Estimate confidence
-            if self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
+            if data.get('source') == 'ai_powered':
+                # Use AI-provided confidence
+                confidence = data.get('ai_confidence', 0.75)
+                data_quality = "high"
+                logger.debug(f"Using AI-provided confidence: {confidence:.2f}")
+            elif self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
                 data_quality = "medium"
                 confidence = 0.60  # Lower confidence for estimated PPA terms
             else:
                 data_quality = "medium"
                 confidence = 0.75  # Medium-high confidence for market benchmarks
-            
+
             confidence = self._estimate_confidence(data, data_quality)
             
             # Step 6: Identify data sources
@@ -419,9 +424,51 @@ class RevenueStreamStabilityAgent(BaseParameterAgent):
                 return self._fetch_data_mock_fallback(country)
         
         elif self.mode == AgentMode.AI_POWERED:
-            # TODO Phase 2+: Use LLM to extract from PPA databases
-            # return self._llm_extract_ppa_terms(country, period)
-            raise NotImplementedError("AI_POWERED mode not yet implemented")
+            # AI-powered extraction using RevenueStreamStabilityExtractor
+            try:
+                from ai_extraction_system import AIExtractionAdapter
+
+                # Get documents from kwargs
+                documents = kwargs.get('documents', [])
+                if not documents:
+                    logger.warning(f"No documents provided for AI extraction, falling back to MOCK mode")
+                    return self._fetch_data_mock_fallback(country)
+
+                # Use AI extraction adapter
+                adapter = AIExtractionAdapter()
+                result = adapter.extract_parameter(
+                    parameter_name='revenue_stream_stability',
+                    country=country,
+                    period=period,
+                    documents=documents
+                )
+
+                if result['success']:
+                    # Extract AI data
+                    ai_data = result['data']
+
+                    # Return in expected format
+                    return {
+                        'ai_score': ai_data['value'],
+                        'ai_confidence': ai_data['confidence'],
+                        'ai_justification': ai_data['justification'],
+                        'ai_metadata': ai_data.get('metadata', {}),
+                        'ai_quotes': ai_data.get('quotes', []),
+                        'source': 'ai_powered',
+                        'period': period,
+                        'ppa_term_years': ai_data.get('metadata', {}).get('ppa_term_years', 12),
+                        'price_structure': ai_data.get('metadata', {}).get('price_structure', 'Fixed'),
+                        'offtaker_type': ai_data.get('metadata', {}).get('offtaker_type', 'Utility'),
+                        'merchant_exposure_pct': ai_data.get('metadata', {}).get('merchant_exposure_pct', 0),
+                        'status': ai_data.get('metadata', {}).get('status', 'moderate stability'),
+                    }
+                else:
+                    logger.error(f"AI extraction failed: {result['error']}, falling back to MOCK")
+                    return self._fetch_data_mock_fallback(country)
+
+            except Exception as e:
+                logger.error(f"AI_POWERED mode error: {e}, falling back to MOCK mode")
+                return self._fetch_data_mock_fallback(country)
         
         else:
             raise AgentError(f"Unknown agent mode: {self.mode}")
@@ -594,25 +641,31 @@ class RevenueStreamStabilityAgent(BaseParameterAgent):
         period: str
     ) -> float:
         """Calculate revenue stream stability score based on PPA term.
-        
+
         DIRECT: Longer PPA term = better stability = higher score
-        
+
         Args:
             data: Revenue stream stability data
             country: Country name
             period: Time period
-            
+
         Returns:
             Score between 1-10
         """
+        # If AI_POWERED mode, use AI-provided score directly
+        if data.get('source') == 'ai_powered':
+            score = data.get('ai_score', 5.0)
+            logger.debug(f"Using AI-provided score for {country}: {score:.1f}")
+            return float(score)
+
         ppa_term = data.get("ppa_term_years", 0)
-        
+
         logger.debug(f"Calculating score for {country}: {ppa_term} year PPA term")
-        
+
         for level in self.scoring_rubric:
             min_term = level.get("min_term_years", 0)
             max_term = level.get("max_term_years", 100)
-            
+
             if min_term <= ppa_term < max_term:
                 score = level["score"]
                 logger.debug(
@@ -620,12 +673,12 @@ class RevenueStreamStabilityAgent(BaseParameterAgent):
                     f"{ppa_term}y falls in range {min_term}-{max_term}y"
                 )
                 return float(score)
-        
+
         # Handle PPA >= 25 years (score 10)
         if ppa_term >= 25:
             logger.debug(f"Score 10 assigned: {ppa_term}y >= 25y")
             return 10.0
-        
+
         logger.warning(f"No rubric match for {ppa_term}y, defaulting to score 5")
         return 5.0
     
@@ -637,30 +690,35 @@ class RevenueStreamStabilityAgent(BaseParameterAgent):
         period: str
     ) -> str:
         """Generate justification for the revenue stream stability score.
-        
+
         Args:
             data: Revenue stream stability data
             score: Calculated score
             country: Country name
             period: Time period
-            
+
         Returns:
             Human-readable justification string
         """
+        source = data.get("source", "unknown")
+
+        # If AI_POWERED mode, use AI-generated justification
+        if source == 'ai_powered':
+            return data.get('ai_justification', 'AI analysis of revenue stream stability.')
+
         ppa_term = data.get("ppa_term_years", 0)
         price_structure = data.get("price_structure", "fixed")
         offtaker_type = data.get("offtaker_type", "utility")
         merchant_exposure = data.get("merchant_exposure_pct", 0)
         status = data.get("status", "moderate stability")
-        source = data.get("source", "unknown")
-        
+
         # Find description from rubric
         description = "moderate stability"
         for level in self.scoring_rubric:
             if level["score"] == int(score):
                 description = level["description"].lower()
                 break
-        
+
         # Build justification based on source
         if source == 'rule_based':
             gdp = data.get('raw_gdp_per_capita', 0)
@@ -674,45 +732,57 @@ class RevenueStreamStabilityAgent(BaseParameterAgent):
             justification = (
                 f"PPA term of {ppa_term:.0f} years indicates {description}. "
             )
-        
+
         justification += (
             f"Contract structure with {price_structure.lower()} prices backed by {offtaker_type.lower()} "
             f"provides {'strong' if score >= 8 else 'adequate' if score >= 6 else 'limited'} revenue certainty. "
         )
-        
+
         if merchant_exposure > 0:
             justification += f"{merchant_exposure}% merchant exposure introduces price risk. "
-        
+
         justification += (
             f"{status.capitalize()} {'strongly' if score >= 8 else 'adequately' if score >= 6 else 'partially'} "
             f"supports project bankability and financing. "
         )
-        
+
         return justification
     
     def _get_data_sources(self, country: str, data: Dict[str, Any] = None) -> List[str]:
         """Get data sources used for this analysis.
-        
+
         Args:
             country: Country name
             data: Data dictionary with source info
-            
+
         Returns:
             List of data source identifiers
         """
         sources = []
-        
+
+        # Check if we used AI extraction
+        if data and data.get('source') == 'ai_powered':
+            sources.append("AI-Powered Document Extraction")
+            sources.append("PPA databases and registries (Extracted from documents)")
+            sources.append("Project finance documentation (Extracted from documents)")
+            sources.append(f"{country} Market PPA term benchmarks")
+            sources.append("Offtaker contract databases")
+            # Add document sources if available
+            ai_metadata = data.get('ai_metadata', {})
+            doc_sources = ai_metadata.get('document_sources', [])
+            sources.extend(doc_sources)
         # Check if we used rule-based or mock data
-        if data and data.get('source') == 'rule_based':
+        elif data and data.get('source') == 'rule_based':
             sources.append("World Bank Economic Indicators - Rule-Based Estimation")
             sources.append("PPA databases and registries (Reference)")
+            sources.append(f"{country} Market PPA term benchmarks")
+            sources.append("Offtaker contract databases")
         else:
             sources.append("PPA databases and registries - Mock Data")
             sources.append("Project finance documentation")
-        
-        sources.append(f"{country} Market PPA term benchmarks")
-        sources.append("Offtaker contract databases")
-        
+            sources.append(f"{country} Market PPA term benchmarks")
+            sources.append("Offtaker contract databases")
+
         return sources
     
     def _get_scoring_rubric(self) -> List[Dict[str, Any]]:

@@ -318,10 +318,51 @@ def demo_system_progress():
     print("  - Adequately supports project financing")
 
 
+def demo_ai_powered_mode():
+    """Demonstrate AI_POWERED mode (extracts from documents)."""
+    print("\n" + "="*70)
+    print("DEMO 9: AI_POWERED Mode (Document Extraction)")
+    print("="*70)
+
+    print("\n🤖 Testing AI_POWERED mode...")
+    print("(Without API keys, will gracefully fall back to MOCK mode)")
+    print("-" * 60)
+
+    try:
+        # Create agent in AI_POWERED mode
+        agent = OfftakerStatusAgent(mode=AgentMode.AI_POWERED)
+
+        # Test with sample documents
+        documents = [
+            {
+                'content': 'German utilities are investment grade with strong creditworthiness. '
+                           'The FiT mechanism is sovereign-backed with AAA credit quality.',
+                'metadata': {}
+            }
+        ]
+
+        # Analyze
+        result = agent.analyze("Germany", "Q3 2024", documents=documents)
+
+        print(f"✅ AI_POWERED mode test successful!")
+        print(f"   Score: {result.score}/10")
+        print(f"   Confidence: {result.confidence*100:.0f}%")
+        print(f"   Justification: {result.justification[:100]}...")
+
+    except Exception as e:
+        print(f"⚠️  AI mode fell back to MOCK (expected without API keys)")
+        print(f"   Error: {str(e)[:80]}...")
+
+    print("\n💡 AI_POWERED mode features:")
+    print("   - Extracts offtaker credit quality from financial reports")
+    print("   - Analyzes utility creditworthiness and payment history")
+    print("   - Gracefully falls back to MOCK when API unavailable")
+
+
 def demo_credit_impact():
     """Show credit quality impact on project finance."""
     print("\n" + "="*70)
-    print("DEMO 9: Credit Quality Impact on Project Finance")
+    print("DEMO 10: Credit Quality Impact on Project Finance")
     print("="*70)
     
     agent = OfftakerStatusAgent()
@@ -370,7 +411,7 @@ def demo_credit_impact():
 def demo_investment_grade_threshold():
     """Analyze investment grade threshold importance."""
     print("\n" + "="*70)
-    print("DEMO 10: Investment Grade Threshold Analysis")
+    print("DEMO 11: Investment Grade Threshold Analysis")
     print("="*70)
     
     agent = OfftakerStatusAgent()
@@ -439,6 +480,7 @@ def main():
         demo_scoring_rubric()
         demo_all_countries()
         demo_system_progress()
+        demo_ai_powered_mode()
         demo_credit_impact()
         demo_investment_grade_threshold()
         

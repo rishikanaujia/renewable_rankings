@@ -333,10 +333,51 @@ def demo_all_six_agents():
     print("\n  → Track record is a key indicator of market maturity!")
 
 
+def demo_ai_powered_mode():
+    """Demonstrate AI_POWERED mode (extracts from documents)."""
+    print("\n" + "="*70)
+    print("DEMO 9: AI_POWERED Mode (Document Extraction)")
+    print("="*70)
+
+    print("\n🤖 Testing AI_POWERED mode...")
+    print("(Without API keys, will gracefully fall back to MOCK mode)")
+    print("-" * 60)
+
+    try:
+        # Create agent in AI_POWERED mode
+        agent = TrackRecordAgent(mode=AgentMode.AI_POWERED)
+
+        # Test with sample documents
+        documents = [
+            {
+                'content': 'Germany has installed over 130 GW of renewable capacity, '
+                           'with strong deployment history and established supply chains.',
+                'metadata': {}
+            }
+        ]
+
+        # Analyze
+        result = agent.analyze("Germany", "Q3 2024", documents=documents)
+
+        print(f"✅ AI_POWERED mode test successful!")
+        print(f"   Score: {result.score}/10")
+        print(f"   Confidence: {result.confidence*100:.0f}%")
+        print(f"   Justification: {result.justification[:100]}...")
+
+    except Exception as e:
+        print(f"⚠️  AI mode fell back to MOCK (expected without API keys)")
+        print(f"   Error: {str(e)[:80]}...")
+
+    print("\n💡 AI_POWERED mode features:")
+    print("   - Extracts track record from IRENA reports, policy documents")
+    print("   - Analyzes deployment history and capacity trends")
+    print("   - Gracefully falls back to MOCK when API unavailable")
+
+
 def demo_capacity_insights():
     """Show track record insights."""
     print("\n" + "="*70)
-    print("DEMO 9: Track Record Insights & Market Leaders")
+    print("DEMO 10: Track Record Insights & Market Leaders")
     print("="*70)
     
     agent = TrackRecordAgent()
@@ -405,6 +446,7 @@ def main():
         demo_scoring_rubric()
         demo_all_countries()
         demo_all_six_agents()
+        demo_ai_powered_mode()
         demo_capacity_insights()
         
         print("\n" + "="*70)

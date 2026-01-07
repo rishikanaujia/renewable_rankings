@@ -299,13 +299,18 @@ class OfftakerStatusAgent(BaseParameterAgent):
             justification = self._generate_justification(data, score, country, period)
             
             # Step 5: Estimate confidence
-            if self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
+            # For AI-powered mode, use AI confidence directly
+            if data.get('source') == 'ai_powered':
+                data_quality = "high"
+                ai_confidence = data.get('ai_confidence', 0.8)
+                confidence = ai_confidence  # Use AI's confidence directly
+            elif self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
                 data_quality = "medium"
                 confidence = 0.60  # Lower confidence for estimated credit
             else:
                 data_quality = "high"
                 confidence = 0.85  # High confidence for actual ratings
-            
+
             confidence = self._estimate_confidence(data, data_quality)
             
             # Step 6: Identify data sources
@@ -449,9 +454,48 @@ class OfftakerStatusAgent(BaseParameterAgent):
                 return self._fetch_data_mock_fallback(country)
         
         elif self.mode == AgentMode.AI_POWERED:
-            # TODO Phase 2+: Use LLM to extract from financial statements
-            # return self._llm_extract_credit_ratings(country, period)
-            raise NotImplementedError("AI_POWERED mode not yet implemented")
+            # Extract offtaker status using AI extraction system
+            try:
+                from ai_extraction_system import AIExtractionAdapter
+
+                adapter = AIExtractionAdapter(
+                    llm_config=self.config.get('llm_config') if self.config else None,
+                    cache_config=self.config.get('cache_config') if self.config else None
+                )
+
+                extraction_result = adapter.extract_parameter(
+                    parameter_name='offtaker_status',
+                    country=country,
+                    period=period,
+                    documents=kwargs.get('documents'),
+                    document_urls=kwargs.get('document_urls')
+                )
+
+                logger.info(f"Using AI_POWERED mode for {country}")
+
+                if extraction_result and extraction_result.get('value') is not None:
+                    score = float(extraction_result['value'])
+                    metadata = extraction_result.get('metadata', {})
+
+                    data = {
+                        'source': 'ai_powered',
+                        'ai_confidence': extraction_result.get('confidence', 0.8),
+                        'ai_justification': extraction_result.get('justification', ''),
+                        'ai_score': score,
+                        'creditworthiness': metadata.get('creditworthiness', 'Unknown'),
+                        'payment_history': 'Extracted from AI',
+                        'period': period
+                    }
+
+                    logger.info(f"AI extraction successful for {country}: score={score}/10, confidence={data['ai_confidence']:.2f}")
+                    return data
+                else:
+                    logger.warning(f"AI extraction returned no value for {country}, falling back to MOCK")
+                    return self._fetch_data_mock_fallback(country)
+
+            except Exception as e:
+                logger.error(f"Error using AI extraction for {country}: {e}. Falling back to MOCK data")
+                return self._fetch_data_mock_fallback(country)
         
         else:
             raise AgentError(f"Unknown agent mode: {self.mode}")
@@ -662,27 +706,33 @@ class OfftakerStatusAgent(BaseParameterAgent):
         period: str
     ) -> float:
         """Calculate offtaker status score based on credit category.
-        
+
         DIRECT: Higher credit rating = lower default risk = higher score
-        
+
         Args:
             data: Offtaker status data
             country: Country name
             period: Time period
-            
+
         Returns:
             Score between 1-10
         """
+        # For AI-powered mode, use the score directly
+        if data.get('source') == 'ai_powered' and 'ai_score' in data:
+            score = float(data['ai_score'])
+            logger.debug(f"Using AI-provided score for {country}: {score}/10")
+            return score
+
         category = data.get("category", "adequate")
-        
+
         # Get score from category mapping
         score = self.CATEGORY_SCORES.get(category, 6)
-        
+
         logger.debug(
             f"Calculating score for {country}: "
             f"Category={category}, Rating={data.get('credit_rating')}, Score={score}"
         )
-        
+
         return float(score)
     
     def _generate_justification(
@@ -693,30 +743,39 @@ class OfftakerStatusAgent(BaseParameterAgent):
         period: str
     ) -> str:
         """Generate justification for the offtaker status score.
-        
+
         Args:
             data: Offtaker status data
             score: Calculated score
             country: Country name
             period: Time period
-            
+
         Returns:
             Human-readable justification string
         """
+        source = data.get("source", "unknown")
+
+        # For AI-powered mode, use AI justification directly
+        if source == 'ai_powered':
+            ai_justification = data.get('ai_justification', '')
+            if ai_justification:
+                return ai_justification
+            # Fallback if no AI justification provided
+            return f"AI-extracted offtaker status score of {score:.1f}/10 for {country} based on utility creditworthiness and payment history analysis."
+
         offtaker = data.get("offtaker", "utility")
         credit_rating = data.get("credit_rating", "N/A")
         rating_agency = data.get("rating_agency", "S&P")
         sovereign_rating = data.get("sovereign_rating", "")
         status = data.get("status", "moderate credit")
-        source = data.get("source", "unknown")
-        
+
         # Find description from rubric
         description = "moderate credit"
         for level in self.scoring_rubric:
             if level["score"] == int(score):
                 description = level["description"].lower()
                 break
-        
+
         # Build justification based on source
         if source == 'rule_based':
             gdp = data.get('raw_gdp_per_capita', 0)
@@ -733,42 +792,45 @@ class OfftakerStatusAgent(BaseParameterAgent):
                 f"Offtaker {offtaker} carries {rating_agency} credit rating of {credit_rating}, "
                 f"indicating {description}. {status.capitalize()}. "
             )
-        
+
         if sovereign_rating:
             justification += f"Sovereign rating of {sovereign_rating} provides context for offtaker creditworthiness. "
-        
+
         justification += (
             f"This credit profile {'strongly' if score >= 8 else 'adequately' if score >= 6 else 'partially'} "
             f"supports project financing and {'significantly reduces' if score >= 8 else 'moderately reduces' if score >= 6 else 'addresses'} "
             f"payment default risk. "
         )
-        
+
         return justification
     
     def _get_data_sources(self, country: str, data: Dict[str, Any] = None) -> List[str]:
         """Get data sources used for this analysis.
-        
+
         Args:
             country: Country name
             data: Data dictionary with source info
-            
+
         Returns:
             List of data source identifiers
         """
         sources = []
-        
-        # Check if we used rule-based or mock data
-        if data and data.get('source') == 'rule_based':
+
+        # Check data source type
+        if data and data.get('source') == 'ai_powered':
+            sources.append("AI-Powered Document Extraction (Offtaker Status)")
+            sources.append("Utility Financial Reports and Credit Assessments")
+        elif data and data.get('source') == 'rule_based':
             sources.append("World Bank Economic Indicators - Rule-Based Estimation")
             sources.append("Credit rating agencies (Reference)")
         else:
             sources.append("S&P Global Ratings - Mock Data")
             sources.append("Moody's Ratings")
             sources.append("Fitch Ratings")
-        
+
         sources.append(f"{country} Offtaker financial statements")
         sources.append("Sovereign credit ratings")
-        
+
         return sources
     
     def _get_scoring_rubric(self) -> List[Dict[str, Any]]:

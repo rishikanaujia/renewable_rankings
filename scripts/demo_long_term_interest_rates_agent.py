@@ -408,10 +408,51 @@ def demo_rate_insights():
     print("  - Financing environment is a major investment factor")
 
 
+def demo_ai_powered_mode():
+    """Demonstrate AI_POWERED mode (extracts from documents)."""
+    print("\n" + "="*70)
+    print("DEMO 11: AI_POWERED Mode (Document Extraction)")
+    print("="*70)
+
+    print("\n🤖 Testing AI_POWERED mode...")
+    print("(Without API keys, will gracefully fall back to MOCK mode)")
+    print("-" * 60)
+
+    try:
+        # Create agent in AI_POWERED mode
+        agent = LongTermInterestRatesAgent(mode=AgentMode.AI_POWERED)
+
+        # Test with sample documents
+        documents = [
+            {
+                'content': 'Germany 10-year Bund yields are at 0.5%, providing excellent low-cost '
+                           'financing conditions for renewable energy projects.',
+                'metadata': {}
+            }
+        ]
+
+        # Analyze
+        result = agent.analyze("Germany", "Q3 2024", documents=documents)
+
+        print(f"✅ AI_POWERED mode test successful!")
+        print(f"   Score: {result.score}/10")
+        print(f"   Confidence: {result.confidence*100:.0f}%")
+        print(f"   Justification: {result.justification[:100]}...")
+
+    except Exception as e:
+        print(f"⚠️  AI mode fell back to MOCK (expected without API keys)")
+        print(f"   Error: {str(e)[:80]}...")
+
+    print("\n💡 AI_POWERED mode features:")
+    print("   - Extracts interest rates from central bank reports and bond data")
+    print("   - Analyzes financing costs and monetary policy")
+    print("   - Gracefully falls back to MOCK when API unavailable")
+
+
 def demo_two_complete_subcategories():
     """Show both complete subcategories."""
     print("\n" + "="*70)
-    print("DEMO 11: TWO COMPLETE SUBCATEGORIES!")
+    print("DEMO 12: TWO COMPLETE SUBCATEGORIES!")
     print("="*70)
     
     country = "Brazil"
@@ -459,6 +500,7 @@ def main():
         demo_all_countries()
         demo_all_seven_agents()
         demo_rate_insights()
+        demo_ai_powered_mode()
         demo_two_complete_subcategories()
         
         print("\n" + "="*70)

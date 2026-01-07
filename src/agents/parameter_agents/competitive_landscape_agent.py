@@ -358,7 +358,12 @@ class CompetitiveLandscapeAgent(BaseParameterAgent):
             justification = self._generate_justification(data, score, country, period)
             
             # Step 5: Estimate confidence
-            if self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
+            if data.get('source') == 'ai_powered':
+                # Use AI extraction confidence
+                data_quality = "high"
+                ai_confidence = data.get('ai_confidence', 0.8)
+                confidence = ai_confidence  # Use AI's confidence directly
+            elif self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
                 data_quality = "medium"
                 confidence = 0.65  # Lower confidence for estimated data
             else:
@@ -523,19 +528,79 @@ class CompetitiveLandscapeAgent(BaseParameterAgent):
                 return self._fetch_data_mock_fallback(country)
         
         elif self.mode == AgentMode.AI_POWERED:
-            # TODO Phase 2+: Use LLM to extract from market reports
-            # return self._llm_extract_competitive_landscape(country, period)
-            raise NotImplementedError("AI_POWERED mode not yet implemented")
+            # Use AI Extraction System to extract competitive landscape from documents
+            try:
+                from ai_extraction_system import AIExtractionAdapter
+
+                logger.info(f"Using AI_POWERED mode for {country}")
+
+                # Initialize AI extraction adapter
+                adapter = AIExtractionAdapter(
+                    llm_config=self.config.get('llm_config') if self.config else None,
+                    cache_config=self.config.get('cache_config') if self.config else None
+                )
+
+                # Extract competitive landscape using AI
+                extraction_result = adapter.extract_parameter(
+                    parameter_name='competitive_landscape',
+                    country=country,
+                    period=period,
+                    documents=kwargs.get('documents'),
+                    document_urls=kwargs.get('document_urls')
+                )
+
+                # Convert AI extraction result to agent data format
+                if extraction_result and extraction_result.get('value'):
+                    score = float(extraction_result['value'])
+
+                    # Determine category from score
+                    category = self._score_to_category(score)
+
+                    # Extract metadata
+                    metadata = extraction_result.get('metadata', {})
+
+                    data = {
+                        'score': score,
+                        'category': category,
+                        'licensing_complexity': metadata.get('licensing_complexity', 'Unknown'),
+                        'permitting_timeline_months': metadata.get('permitting_timeline_months', 12),
+                        'grid_connection_ease': metadata.get('grid_connection_ease', 'Unknown'),
+                        'market_openness': metadata.get('market_openness', 'Unknown'),
+                        'competitive_intensity': metadata.get('competitive_intensity', 'Unknown'),
+                        'entry_examples': metadata.get('entry_examples', ''),
+                        'status': extraction_result.get('justification', ''),
+                        'source': 'ai_powered',
+                        'period': period,
+                        'ai_confidence': extraction_result.get('confidence', 0.8),
+                        'ai_justification': extraction_result.get('justification', '')
+                    }
+
+                    logger.info(
+                        f"Extracted AI_POWERED data for {country}: score={score:.1f} ({category}), "
+                        f"confidence={extraction_result.get('confidence', 0):.2f}"
+                    )
+
+                    return data
+                else:
+                    logger.warning(f"AI extraction returned no value for {country}, falling back")
+                    return self._fetch_data_mock_fallback(country)
+
+            except Exception as e:
+                logger.error(
+                    f"Error using AI extraction for {country}: {e}. "
+                    f"Falling back to MOCK data"
+                )
+                return self._fetch_data_mock_fallback(country)
         
         else:
             raise AgentError(f"Unknown agent mode: {self.mode}")
     
     def _fetch_data_mock_fallback(self, country: str) -> Dict[str, Any]:
         """Fallback to mock data when rule-based data is unavailable.
-        
+
         Args:
             country: Country name
-            
+
         Returns:
             Mock data dictionary
         """
@@ -551,9 +616,41 @@ class CompetitiveLandscapeAgent(BaseParameterAgent):
             "status": "Moderate barriers to entry"
         })
         data['source'] = 'mock_fallback'
-        
+
         logger.debug(f"Using mock fallback data for {country}")
         return data
+
+    def _score_to_category(self, score: float) -> str:
+        """Convert numeric score to category string.
+
+        Args:
+            score: Numeric score (1-10)
+
+        Returns:
+            Category string
+        """
+        score = round(score)
+
+        if score >= 10:
+            return "no_barriers"
+        elif score >= 9:
+            return "minimal_barriers"
+        elif score >= 8:
+            return "very_low_barriers"
+        elif score >= 7:
+            return "low_barriers"
+        elif score >= 6:
+            return "below_moderate_barriers"
+        elif score >= 5:
+            return "moderate_barriers"
+        elif score >= 4:
+            return "above_moderate_barriers"
+        elif score >= 3:
+            return "high_barriers"
+        elif score >= 2:
+            return "very_high_barriers"
+        else:
+            return "extreme_barriers"
     
     def _estimate_competitive_landscape(
         self,

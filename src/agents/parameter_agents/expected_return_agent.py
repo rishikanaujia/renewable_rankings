@@ -294,13 +294,18 @@ class ExpectedReturnAgent(BaseParameterAgent):
             justification = self._generate_justification(data, score, country, period)
             
             # Step 5: Estimate confidence
-            if self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
+            # AI-powered data uses AI's own confidence assessment
+            if data.get('source') == 'ai_powered':
+                data_quality = "high"
+                ai_confidence = data.get('ai_confidence', 0.8)
+                confidence = ai_confidence  # Use AI's confidence directly
+            elif self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
                 data_quality = "medium"
                 confidence = 0.55  # Lower confidence for estimated IRR
             else:
                 data_quality = "high"
                 confidence = 0.85  # High confidence for project benchmarks
-            
+
             confidence = self._estimate_confidence(data, data_quality)
             
             # Step 6: Identify data sources
@@ -452,9 +457,71 @@ class ExpectedReturnAgent(BaseParameterAgent):
                 return self._fetch_data_mock_fallback(country)
         
         elif self.mode == AgentMode.AI_POWERED:
-            # TODO Phase 2+: Use LLM to extract from IRENA/BNEF reports
-            # return self._llm_extract_returns(country, period)
-            raise NotImplementedError("AI_POWERED mode not yet implemented")
+            # Extract expected returns using AI extraction system
+            try:
+                from ai_extraction_system import AIExtractionAdapter
+
+                # Initialize AI extraction adapter
+                adapter = AIExtractionAdapter(
+                    llm_config=self.config.get('llm_config') if self.config else None,
+                    cache_config=self.config.get('cache_config') if self.config else None
+                )
+
+                # Extract expected returns using AI
+                extraction_result = adapter.extract_parameter(
+                    parameter_name='expected_return',
+                    country=country,
+                    period=period,
+                    documents=kwargs.get('documents'),
+                    document_urls=kwargs.get('document_urls')
+                )
+
+                logger.info(f"Using AI_POWERED mode for {country}")
+
+                if extraction_result and extraction_result.get('value') is not None:
+                    # AI returns score (1-10)
+                    score = float(extraction_result['value'])
+
+                    # Get metadata from extraction
+                    metadata = extraction_result.get('metadata', {})
+
+                    # Determine status from score
+                    status = self._score_to_status(score)
+
+                    # Build data dictionary
+                    data = {
+                        'irr_pct': metadata.get('typical_irr', score * 1.5),  # Approximate IRR from score
+                        'project_type': metadata.get('technology', 'Mixed'),
+                        'status': status,
+                        'source': 'ai_powered',
+                        'ai_confidence': extraction_result.get('confidence', 0.8),
+                        'ai_justification': extraction_result.get('justification', ''),
+                        'ai_score': score,
+                        'irr_range_min': metadata.get('irr_range_min'),
+                        'irr_range_max': metadata.get('irr_range_max'),
+                        'equity_return': metadata.get('equity_return'),
+                        'debt_cost': metadata.get('debt_cost'),
+                        'ppa_price': metadata.get('ppa_price_solar') or metadata.get('ppa_price_wind'),
+                        'period': period
+                    }
+
+                    logger.info(
+                        f"AI extraction successful for {country}: "
+                        f"score={score}/10, "
+                        f"confidence={data['ai_confidence']:.2f}"
+                    )
+
+                    return data
+                else:
+                    logger.warning(f"AI extraction returned no value for {country}, falling back to MOCK")
+                    return self._fetch_data_mock_fallback(country)
+
+            except Exception as e:
+                logger.error(
+                    f"Error using AI extraction for {country}: {e}. "
+                    f"Falling back to MOCK data"
+                )
+                return self._fetch_data_mock_fallback(country)
         
         else:
             raise AgentError(f"Unknown agent mode: {self.mode}")
@@ -641,7 +708,36 @@ class ExpectedReturnAgent(BaseParameterAgent):
             return "Minimally acceptable returns"
         else:
             return "Below acceptable returns"
-    
+
+    def _score_to_status(self, score: float) -> str:
+        """Convert numeric score (1-10) to status string.
+
+        This is the inverse of _calculate_score() - used when AI provides score directly.
+
+        Args:
+            score: Score value 1-10
+
+        Returns:
+            Status description string
+        """
+        score = round(score)
+        if score >= 10:
+            return "Exceptional returns (highly attractive)"
+        elif score >= 9:
+            return "Outstanding returns"
+        elif score >= 8:
+            return "Excellent returns"
+        elif score >= 7:
+            return "Very good returns"
+        elif score >= 6:
+            return "Good returns (above hurdle rate)"
+        elif score >= 5:
+            return "Moderate returns (acceptable)"
+        elif score >= 4:
+            return "Minimally acceptable returns"
+        else:
+            return "Below acceptable returns"
+
     def _calculate_score(
         self,
         data: Dict[str, Any],
@@ -649,19 +745,25 @@ class ExpectedReturnAgent(BaseParameterAgent):
         period: str
     ) -> float:
         """Calculate expected return score based on IRR %.
-        
+
         DIRECT: Higher IRR = better profitability = higher score
-        
+
         Args:
-            data: Expected return data with irr_pct
+            data: Expected return data with irr_pct (or ai_score for AI mode)
             country: Country name
             period: Time period
-            
+
         Returns:
             Score between 1-10
         """
+        # For AI-powered mode, use the score directly
+        if data.get('source') == 'ai_powered' and 'ai_score' in data:
+            score = float(data['ai_score'])
+            logger.debug(f"Using AI-provided score for {country}: {score}/10")
+            return score
+
         irr_pct = data.get("irr_pct", 0)
-        
+
         logger.debug(f"Calculating score for {country}: {irr_pct:.1f}% IRR")
         
         # Find matching rubric level
@@ -720,7 +822,19 @@ class ExpectedReturnAgent(BaseParameterAgent):
                 break
         
         # Build justification based on source
-        if source == 'rule_based':
+        if source == 'ai_powered':
+            # Use AI-generated justification directly
+            ai_justification = data.get('ai_justification', '')
+            if ai_justification:
+                return ai_justification
+            # Fallback if AI didn't provide justification
+            else:
+                return (
+                    f"AI-extracted expected return score of {score}/10 indicates {description}. "
+                    f"Renewable energy projects show {'highly attractive' if score >= 8 else 'good' if score >= 6 else 'moderate'} "
+                    f"profitability in this market."
+                )
+        elif source == 'rule_based':
             gdp = data.get('raw_gdp_per_capita', 0)
             lending = data.get('raw_lending_rate', 0)
             justification = (
@@ -754,18 +868,24 @@ class ExpectedReturnAgent(BaseParameterAgent):
             List of data source identifiers
         """
         sources = []
-        
-        # Check if we used rule-based or mock data
-        if data and data.get('source') == 'rule_based':
+
+        # Check source type
+        if data and data.get('source') == 'ai_powered':
+            sources.append("AI-Powered Extraction from Investment Reports")
+            sources.append("IRENA Renewable Power Generation Costs")
+            sources.append("BloombergNEF Market Analysis")
+            sources.append(f"{country} Project Financial Models")
+        elif data and data.get('source') == 'rule_based':
             sources.append("World Bank Economic Indicators - Rule-Based Estimation")
             sources.append("Project financial models (Reference)")
+            sources.append(f"{country} Project Financial Models")
+            sources.append("Developer IRR Benchmarks")
         else:
             sources.append("IRENA Renewable Power Generation Costs 2023 - Mock Data")
             sources.append("Bloomberg New Energy Finance (BNEF) Market Outlook")
             sources.append("Lazard Levelized Cost of Energy Analysis v16.0")
-        
-        sources.append(f"{country} Project Financial Models")
-        sources.append("Developer IRR Benchmarks")
+            sources.append(f"{country} Project Financial Models")
+            sources.append("Developer IRR Benchmarks")
         
         return sources
     

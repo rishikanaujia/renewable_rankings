@@ -260,14 +260,18 @@ class EnergyDependenceAgent(BaseParameterAgent):
             justification = self._generate_justification(data, score, country, period)
             
             # Step 5: Estimate confidence
-            # Rule-based data has higher confidence than mock data
-            if self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
+            # AI-powered data uses AI's own confidence assessment
+            if data.get('source') == 'ai_powered':
+                data_quality = "high"
+                ai_confidence = data.get('ai_confidence', 0.8)
+                confidence = ai_confidence  # Use AI's confidence directly
+            elif self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
                 data_quality = "medium"  # Estimation based, not direct measurement
                 confidence = 0.75  # Moderate-high confidence for estimated data
             else:
                 data_quality = "medium"
                 confidence = 0.7  # Lower confidence for mock data
-            
+
             confidence = self._estimate_confidence(data, data_quality)
             
             # Step 6: Identify data sources
@@ -415,9 +419,69 @@ class EnergyDependenceAgent(BaseParameterAgent):
                 return self._fetch_data_mock_fallback(country)
         
         elif self.mode == AgentMode.AI_POWERED:
-            # TODO Phase 2+: Use LLM to extract from IEA reports
-            # return self._llm_extract_dependence(country, period)
-            raise NotImplementedError("AI_POWERED mode not yet implemented")
+            # Extract energy dependence using AI extraction system
+            try:
+                from ai_extraction_system import AIExtractionAdapter
+
+                # Initialize AI extraction adapter
+                adapter = AIExtractionAdapter(
+                    llm_config=self.config.get('llm_config') if self.config else None,
+                    cache_config=self.config.get('cache_config') if self.config else None
+                )
+
+                # Extract energy dependence using AI
+                extraction_result = adapter.extract_parameter(
+                    parameter_name='energy_dependence',
+                    country=country,
+                    period=period,
+                    documents=kwargs.get('documents'),
+                    document_urls=kwargs.get('document_urls')
+                )
+
+                logger.info(f"Using AI_POWERED mode for {country}")
+
+                if extraction_result and extraction_result.get('value') is not None:
+                    # AI returns import dependency percentage (0-100)
+                    import_pct = float(extraction_result['value'])
+
+                    # Get metadata from extraction
+                    metadata = extraction_result.get('metadata', {})
+
+                    # Determine status from import percentage
+                    status = self._determine_dependency_status(import_pct)
+
+                    # Build data dictionary
+                    data = {
+                        'import_pct': import_pct,
+                        'status': status,
+                        'production_mtoe': metadata.get('production_mtoe', 0),
+                        'consumption_mtoe': metadata.get('consumption_mtoe', 0),
+                        'source': 'ai_powered',
+                        'ai_confidence': extraction_result.get('confidence', 0.8),
+                        'ai_justification': extraction_result.get('justification', ''),
+                        'fossil_fuel_share': metadata.get('fossil_fuel_share'),
+                        'primary_import_sources': metadata.get('primary_import_sources'),
+                        'energy_security_risk': metadata.get('energy_security_risk'),
+                        'period': period
+                    }
+
+                    logger.info(
+                        f"AI extraction successful for {country}: "
+                        f"{import_pct:.1f}% import dependency, "
+                        f"confidence={data['ai_confidence']:.2f}"
+                    )
+
+                    return data
+                else:
+                    logger.warning(f"AI extraction returned no value for {country}, falling back to MOCK")
+                    return self._fetch_data_mock_fallback(country)
+
+            except Exception as e:
+                logger.error(
+                    f"Error using AI extraction for {country}: {e}. "
+                    f"Falling back to MOCK data"
+                )
+                return self._fetch_data_mock_fallback(country)
         
         else:
             raise AgentError(f"Unknown agent mode: {self.mode}")
@@ -632,7 +696,18 @@ class EnergyDependenceAgent(BaseParameterAgent):
                 break
         
         # Build justification based on source and dependency level
-        if source == 'rule_based':
+        if source == 'ai_powered':
+            # Use AI-generated justification directly
+            ai_justification = data.get('ai_justification', '')
+            if ai_justification:
+                return ai_justification
+            # Fallback if AI didn't provide justification
+            else:
+                return (
+                    f"AI-extracted import dependency of {import_pct:.1f}% indicates {description}. "
+                    f"Renewable energy development can improve energy security and reduce import reliance."
+                )
+        elif source == 'rule_based':
             method = data.get('estimation_method', 'economic indicators')
             if import_pct < 0:
                 # Net exporter
@@ -687,26 +762,32 @@ class EnergyDependenceAgent(BaseParameterAgent):
     
     def _get_data_sources(self, country: str, data: Dict[str, Any] = None) -> List[str]:
         """Get data sources used for this analysis.
-        
+
         Args:
             country: Country name
             data: Data dictionary with source info
-            
+
         Returns:
             List of data source identifiers
         """
         sources = []
-        
-        # Check if we used rule-based or mock data
-        if data and data.get('source') == 'rule_based':
+
+        # Check source type
+        if data and data.get('source') == 'ai_powered':
+            sources.append("AI-Powered Extraction from Energy Reports")
+            sources.append("IEA World Energy Balances")
+            sources.append("BP Statistical Review of World Energy")
+        elif data and data.get('source') == 'rule_based':
             sources.append("World Bank Energy Indicators - Rule-Based Estimation")
             sources.append("IEA World Energy Balances 2023 (Reference)")
         else:
             sources.append("IEA World Energy Balances 2023 - Mock Data")
-        
-        sources.append("BP Statistical Review of World Energy 2023")
+
+        if data and data.get('source') != 'ai_powered':
+            sources.append("BP Statistical Review of World Energy 2023")
+
         sources.append(f"{country} National Energy Statistics")
-        
+
         return sources
     
     def _get_scoring_rubric(self) -> List[Dict[str, Any]]:

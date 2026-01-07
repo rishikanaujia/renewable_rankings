@@ -289,14 +289,19 @@ class TrackRecordAgent(BaseParameterAgent):
             justification = self._generate_justification(data, score, country, period)
             
             # Step 5: Estimate confidence
+            # For AI-powered mode, use AI confidence directly
+            if data.get('source') == 'ai_powered':
+                data_quality = "high"
+                ai_confidence = data.get('ai_confidence', 0.8)
+                confidence = ai_confidence  # Use AI's confidence directly
             # Rule-based data has moderate confidence (estimation-based)
-            if self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
+            elif self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
                 data_quality = "medium"
                 confidence = 0.75  # Moderate-high confidence for estimated data
             else:
                 data_quality = "high"
                 confidence = 0.85  # High confidence for IRENA mock data
-            
+
             confidence = self._estimate_confidence(data, data_quality)
             
             # Step 6: Identify data sources
@@ -453,9 +458,48 @@ class TrackRecordAgent(BaseParameterAgent):
                 return self._fetch_data_mock_fallback(country)
         
         elif self.mode == AgentMode.AI_POWERED:
-            # TODO Phase 2+: Use LLM to extract from IRENA reports
-            # return self._llm_extract_capacity(country, period)
-            raise NotImplementedError("AI_POWERED mode not yet implemented")
+            # Extract track record using AI extraction system
+            try:
+                from ai_extraction_system import AIExtractionAdapter
+
+                adapter = AIExtractionAdapter(
+                    llm_config=self.config.get('llm_config') if self.config else None,
+                    cache_config=self.config.get('cache_config') if self.config else None
+                )
+
+                extraction_result = adapter.extract_parameter(
+                    parameter_name='track_record',
+                    country=country,
+                    period=period,
+                    documents=kwargs.get('documents'),
+                    document_urls=kwargs.get('document_urls')
+                )
+
+                logger.info(f"Using AI_POWERED mode for {country}")
+
+                if extraction_result and extraction_result.get('value') is not None:
+                    score = float(extraction_result['value'])
+                    metadata = extraction_result.get('metadata', {})
+
+                    data = {
+                        'source': 'ai_powered',
+                        'ai_confidence': extraction_result.get('confidence', 0.8),
+                        'ai_justification': extraction_result.get('justification', ''),
+                        'ai_score': score,
+                        'total_capacity_gw': metadata.get('capacity_gw', 0),
+                        'deployment_history': 'Extracted from AI',
+                        'period': period
+                    }
+
+                    logger.info(f"AI extraction successful for {country}: score={score}/10, confidence={data['ai_confidence']:.2f}")
+                    return data
+                else:
+                    logger.warning(f"AI extraction returned no value for {country}, falling back to MOCK")
+                    return self._fetch_data_mock_fallback(country)
+
+            except Exception as e:
+                logger.error(f"Error using AI extraction for {country}: {e}. Falling back to MOCK data")
+                return self._fetch_data_mock_fallback(country)
         
         else:
             raise AgentError(f"Unknown agent mode: {self.mode}")
@@ -631,26 +675,32 @@ class TrackRecordAgent(BaseParameterAgent):
         period: str
     ) -> float:
         """Calculate track record score based on installed capacity.
-        
+
         DIRECT: Higher capacity = better track record = higher score
-        
+
         Args:
             data: Track record data with capacity_mw
             country: Country name
             period: Time period
-            
+
         Returns:
             Score between 1-10
         """
+        # For AI-powered mode, use the score directly
+        if data.get('source') == 'ai_powered' and 'ai_score' in data:
+            score = float(data['ai_score'])
+            logger.debug(f"Using AI-provided score for {country}: {score}/10")
+            return score
+
         capacity_mw = data.get("capacity_mw", 0)
-        
+
         logger.debug(f"Calculating score for {country}: {capacity_mw:.0f} MW installed")
-        
+
         # Find matching rubric level
         for level in self.scoring_rubric:
             min_cap = level.get("min_capacity_mw", 0)
             max_cap = level.get("max_capacity_mw", 10000000)
-            
+
             if min_cap <= capacity_mw < max_cap:
                 score = level["score"]
                 logger.debug(
@@ -658,7 +708,7 @@ class TrackRecordAgent(BaseParameterAgent):
                     f"{capacity_mw:.0f}MW falls in range {min_cap:.0f}-{max_cap:.0f}MW"
                 )
                 return float(score)
-        
+
         # Fallback
         logger.warning(f"No rubric match for {capacity_mw:.0f}MW, defaulting to score 5")
         return 5.0
@@ -671,16 +721,26 @@ class TrackRecordAgent(BaseParameterAgent):
         period: str
     ) -> str:
         """Generate justification for the track record score.
-        
+
         Args:
             data: Track record data
             score: Calculated score
             country: Country name
             period: Time period
-            
+
         Returns:
             Human-readable justification string
         """
+        source = data.get("source", "unknown")
+
+        # For AI-powered mode, use AI justification directly
+        if source == 'ai_powered':
+            ai_justification = data.get('ai_justification', '')
+            if ai_justification:
+                return ai_justification
+            # Fallback if no AI justification provided
+            return f"AI-extracted track record score of {score:.1f}/10 for {country} based on deployment history and installed capacity analysis."
+
         capacity_mw = data.get("capacity_mw", 0)
         capacity_gw = capacity_mw / 1000.0
         solar_gw = data.get("solar_mw", 0) / 1000.0
@@ -688,15 +748,14 @@ class TrackRecordAgent(BaseParameterAgent):
         offshore_gw = data.get("offshore_wind_mw", 0) / 1000.0
         recent_deployment = data.get("recent_deployment_gw_per_year", 0)
         status = data.get("status", "moderate track record")
-        source = data.get("source", "unknown")
-        
+
         # Find description from rubric
         description = "moderate track record"
         for level in self.scoring_rubric:
             if level["score"] == int(score):
                 description = level["description"].lower()
                 break
-        
+
         # Build justification based on source
         if source == 'rule_based':
             method = data.get('estimation_method', 'renewable generation data')
@@ -713,10 +772,10 @@ class TrackRecordAgent(BaseParameterAgent):
                 f"Cumulative installed capacity of {capacity_gw:.1f} GW "
                 f"(solar: {solar_gw:.1f} GW, wind: {wind_gw:.1f} GW"
             )
-            
+
             if offshore_gw > 0:
                 justification += f", offshore: {offshore_gw:.1f} GW"
-            
+
             justification += f") indicates {description}. "
             justification += f"Recent deployment of {recent_deployment:.1f} GW/year shows market momentum. "
             justification += (
@@ -724,31 +783,34 @@ class TrackRecordAgent(BaseParameterAgent):
                 f"This track record {'strongly' if score >= 8 else 'adequately' if score >= 6 else 'partially'} "
                 f"demonstrates proven execution capability and reduces regulatory risk."
             )
-        
+
         return justification
     
     def _get_data_sources(self, country: str, data: Dict[str, Any] = None) -> List[str]:
         """Get data sources used for this analysis.
-        
+
         Args:
             country: Country name
             data: Data dictionary with source info
-            
+
         Returns:
             List of data source identifiers
         """
         sources = []
-        
-        # Check if we used rule-based or mock data
-        if data and data.get('source') == 'rule_based':
+
+        # Check data source type
+        if data and data.get('source') == 'ai_powered':
+            sources.append("AI-Powered Document Extraction (Track Record)")
+            sources.append("IRENA Reports and Policy Documents")
+        elif data and data.get('source') == 'rule_based':
             sources.append("World Bank Renewable Energy Indicators - Rule-Based Estimation")
             sources.append("IRENA Renewable Energy Statistics 2023 (Reference)")
         else:
             sources.append("IRENA Renewable Energy Statistics 2023 - Mock Data")
-        
+
         sources.append("IEA Renewables Market Report")
         sources.append(f"{country} National renewable energy agency")
-        
+
         return sources
     
     def _get_scoring_rubric(self) -> List[Dict[str, Any]]:

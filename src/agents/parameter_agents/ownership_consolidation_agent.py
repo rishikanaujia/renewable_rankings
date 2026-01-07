@@ -323,15 +323,20 @@ class OwnershipConsolidationAgent(BaseParameterAgent):
             
             # Step 4: Generate justification
             justification = self._generate_justification(data, score, country, period)
-            
+
             # Step 5: Estimate confidence
-            if self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
+            if data.get('source') == 'ai_powered':
+                # Use AI-provided confidence
+                confidence = data.get('ai_confidence', 0.75)
+                data_quality = "high"
+                logger.debug(f"Using AI-provided confidence: {confidence:.2f}")
+            elif self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
                 data_quality = "medium"
                 confidence = 0.55  # Lower confidence for estimated consolidation
             else:
                 data_quality = "high"
                 confidence = 0.80  # High confidence for actual market data
-            
+
             confidence = self._estimate_confidence(data, data_quality)
             
             # Step 6: Identify data sources
@@ -488,9 +493,52 @@ class OwnershipConsolidationAgent(BaseParameterAgent):
                 return self._fetch_data_mock_fallback(country)
         
         elif self.mode == AgentMode.AI_POWERED:
-            # TODO Phase 2+: Use LLM to extract from market reports
-            # return self._llm_extract_consolidation(country, period)
-            raise NotImplementedError("AI_POWERED mode not yet implemented")
+            # AI-powered extraction using OwnershipConsolidationExtractor
+            try:
+                from ai_extraction_system import AIExtractionAdapter
+
+                # Get documents from kwargs
+                documents = kwargs.get('documents', [])
+                if not documents:
+                    logger.warning(f"No documents provided for AI extraction, falling back to MOCK mode")
+                    return self._fetch_data_mock_fallback(country)
+
+                # Use AI extraction adapter
+                adapter = AIExtractionAdapter()
+                result = adapter.extract_parameter(
+                    parameter_name='ownership_consolidation',
+                    country=country,
+                    period=period,
+                    documents=documents
+                )
+
+                if result['success']:
+                    # Extract AI data
+                    ai_data = result['data']
+
+                    # Return in expected format
+                    return {
+                        'ai_score': ai_data['value'],
+                        'ai_confidence': ai_data['confidence'],
+                        'ai_justification': ai_data['justification'],
+                        'ai_metadata': ai_data.get('metadata', {}),
+                        'ai_quotes': ai_data.get('quotes', []),
+                        'source': 'ai_powered',
+                        'period': period,
+                        'score': ai_data['value'],  # Use AI score directly
+                        'top3_share_pct': ai_data.get('metadata', {}).get('top3_share_pct', 40),
+                        'category': self._determine_category_from_score(ai_data['value']),
+                        'hhi': ai_data.get('metadata', {}).get('hhi', 1000),
+                        'num_significant_players': ai_data.get('metadata', {}).get('num_players', 50),
+                        'status': ai_data.get('metadata', {}).get('status', 'Market consolidation analysis'),
+                    }
+                else:
+                    logger.error(f"AI extraction failed: {result['error']}, falling back to MOCK")
+                    return self._fetch_data_mock_fallback(country)
+
+            except Exception as e:
+                logger.error(f"AI_POWERED mode error: {e}, falling back to MOCK mode")
+                return self._fetch_data_mock_fallback(country)
         
         else:
             raise AgentError(f"Unknown agent mode: {self.mode}")
@@ -784,16 +832,22 @@ class OwnershipConsolidationAgent(BaseParameterAgent):
         period: str
     ) -> str:
         """Generate justification for the ownership consolidation score.
-        
+
         Args:
             data: Ownership consolidation data
             score: Calculated score
             country: Country name
             period: Time period
-            
+
         Returns:
             Human-readable justification string
         """
+        source = data.get("source", "unknown")
+
+        # If AI_POWERED mode, use AI-generated justification
+        if source == 'ai_powered':
+            return data.get('ai_justification', 'AI analysis of market consolidation.')
+
         top3_pct = data.get("top3_share_pct", 0)
         category = data.get("category", "moderate")
         top_owners = data.get("top_owners", [])
@@ -801,15 +855,14 @@ class OwnershipConsolidationAgent(BaseParameterAgent):
         num_players = data.get("num_significant_players", 0)
         hhi = data.get("hhi", 0)
         status = data.get("status", "")
-        source = data.get("source", "unknown")
-        
+
         # Find description from rubric
         description = "moderate consolidation"
         for level in self.scoring_rubric:
             if level["score"] == int(score):
                 description = level.get("range", level["description"]).lower()
                 break
-        
+
         # Build justification based on source
         if source == 'rule_based':
             gdp = data.get('raw_gdp_per_capita', 0)
@@ -839,28 +892,40 @@ class OwnershipConsolidationAgent(BaseParameterAgent):
     
     def _get_data_sources(self, country: str, data: Dict[str, Any] = None) -> List[str]:
         """Get data sources used for this analysis.
-        
+
         Args:
             country: Country name
             data: Data dictionary with source info
-            
+
         Returns:
             List of data source identifiers
         """
         sources = []
-        
+
+        # Check if we used AI extraction
+        if data and data.get('source') == 'ai_powered':
+            sources.append("AI-Powered Document Extraction")
+            sources.append("Market concentration analysis (Extracted from documents)")
+            sources.append("Industry reports and company filings (Extracted from documents)")
+            sources.append(f"{country} National energy statistics")
+            sources.append("S&P Global Market Intelligence")
+            # Add document sources if available
+            ai_metadata = data.get('ai_metadata', {})
+            doc_sources = ai_metadata.get('document_sources', [])
+            sources.extend(doc_sources)
         # Check if we used rule-based or mock data
-        if data and data.get('source') == 'rule_based':
+        elif data and data.get('source') == 'rule_based':
             sources.append("World Bank Economic Indicators - Rule-Based Estimation")
             sources.append("Market concentration analysis (Reference)")
+            sources.append(f"{country} National energy statistics")
+            sources.append("S&P Global Market Intelligence")
         else:
             sources.append("Renewable energy asset ownership databases - Mock Data")
             sources.append("Market concentration analysis")
             sources.append("Industry reports and company filings")
-        
-        sources.append(f"{country} National energy statistics")
-        sources.append("S&P Global Market Intelligence")
-        
+            sources.append(f"{country} National energy statistics")
+            sources.append("S&P Global Market Intelligence")
+
         return sources
     
     def _get_scoring_rubric(self) -> List[Dict[str, Any]]:

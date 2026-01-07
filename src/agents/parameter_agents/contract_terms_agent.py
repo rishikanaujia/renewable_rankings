@@ -373,7 +373,12 @@ class ContractTermsAgent(BaseParameterAgent):
             justification = self._generate_justification(data, score, country, period)
             
             # Step 5: Estimate confidence
-            if self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
+            if data.get('source') == 'ai_powered':
+                # Use AI extraction confidence
+                data_quality = "high"
+                ai_confidence = data.get('ai_confidence', 0.8)
+                confidence = ai_confidence  # Use AI's confidence directly
+            elif self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
                 data_quality = "medium"
                 confidence = 0.60  # Lower confidence for estimated legal quality
             else:
@@ -530,19 +535,80 @@ class ContractTermsAgent(BaseParameterAgent):
                 return self._fetch_data_mock_fallback(country)
         
         elif self.mode == AgentMode.AI_POWERED:
-            # TODO Phase 2+: Use LLM to extract from PPA documents
-            # return self._llm_extract_contract_terms(country, period)
-            raise NotImplementedError("AI_POWERED mode not yet implemented")
+            # Use AI Extraction System to extract contract terms from documents
+            try:
+                from ai_extraction_system import AIExtractionAdapter
+
+                logger.info(f"Using AI_POWERED mode for {country}")
+
+                # Initialize AI extraction adapter
+                adapter = AIExtractionAdapter(
+                    llm_config=self.config.get('llm_config') if self.config else None,
+                    cache_config=self.config.get('cache_config') if self.config else None
+                )
+
+                # Extract contract terms using AI
+                extraction_result = adapter.extract_parameter(
+                    parameter_name='contract_terms',
+                    country=country,
+                    period=period,
+                    documents=kwargs.get('documents'),
+                    document_urls=kwargs.get('document_urls')
+                )
+
+                # Convert AI extraction result to agent data format
+                if extraction_result and extraction_result.get('value'):
+                    score = float(extraction_result['value'])
+
+                    # Determine category from score
+                    category = self._score_to_category(score)
+
+                    # Extract metadata
+                    metadata = extraction_result.get('metadata', {})
+
+                    data = {
+                        'score': score,
+                        'category': category,
+                        'ppa_framework': metadata.get('ppa_framework', 'Unknown'),
+                        'standardization': metadata.get('standardization', 'Unknown'),
+                        'risk_allocation': metadata.get('risk_allocation', 'Unknown'),
+                        'enforceability': metadata.get('enforceability', 'Unknown'),
+                        'currency_risk': metadata.get('currency_risk', 'Unknown'),
+                        'termination_protections': metadata.get('termination_protections', 'Unknown'),
+                        'bankability': metadata.get('bankability', 'Unknown'),
+                        'status': extraction_result.get('justification', ''),
+                        'source': 'ai_powered',
+                        'period': period,
+                        'ai_confidence': extraction_result.get('confidence', 0.8),
+                        'ai_justification': extraction_result.get('justification', '')
+                    }
+
+                    logger.info(
+                        f"Extracted AI_POWERED data for {country}: score={score:.1f} ({category}), "
+                        f"confidence={extraction_result.get('confidence', 0):.2f}"
+                    )
+
+                    return data
+                else:
+                    logger.warning(f"AI extraction returned no value for {country}, falling back")
+                    return self._fetch_data_mock_fallback(country)
+
+            except Exception as e:
+                logger.error(
+                    f"Error using AI extraction for {country}: {e}. "
+                    f"Falling back to MOCK data"
+                )
+                return self._fetch_data_mock_fallback(country)
         
         else:
             raise AgentError(f"Unknown agent mode: {self.mode}")
     
     def _fetch_data_mock_fallback(self, country: str) -> Dict[str, Any]:
         """Fallback to mock data when rule-based data is unavailable.
-        
+
         Args:
             country: Country name
-            
+
         Returns:
             Mock data dictionary
         """
@@ -559,9 +625,41 @@ class ContractTermsAgent(BaseParameterAgent):
             "status": "Reasonable contract framework with room for improvement"
         })
         data['source'] = 'mock_fallback'
-        
+
         logger.debug(f"Using mock fallback data for {country}")
         return data
+
+    def _score_to_category(self, score: float) -> str:
+        """Convert numeric score to category string.
+
+        Args:
+            score: Numeric score (1-10)
+
+        Returns:
+            Category string
+        """
+        score = round(score)
+
+        if score >= 10:
+            return "best_in_class"
+        elif score >= 9:
+            return "excellent"
+        elif score >= 8:
+            return "very_good"
+        elif score >= 7:
+            return "good"
+        elif score >= 6:
+            return "above_adequate"
+        elif score >= 5:
+            return "adequate"
+        elif score >= 4:
+            return "below_adequate"
+        elif score >= 3:
+            return "poor"
+        elif score >= 2:
+            return "very_poor"
+        else:
+            return "non_bankable"
     
     def _estimate_contract_quality(
         self,

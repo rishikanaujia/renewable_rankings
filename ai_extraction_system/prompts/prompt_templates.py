@@ -265,8 +265,31 @@ Respond with JSON containing: value (resource metrics and 1-10 score), confidenc
 
 Respond with JSON containing: value (1-10 score), confidence, justification, quotes, metadata."""
 
+    # Risk assessment templates
+
+    ENERGY_DEPENDENCE_TEMPLATE = """Assess energy import dependency and energy security for {country}.
+
+**KEY METRICS**:
+- Energy import dependency percentage (% of total energy consumption from imports)
+- Fossil fuel share in energy mix
+- Primary import sources and diversification
+- Energy security risk level
+- Domestic energy production capacity
+- Strategic energy policies and reserves
+
+**ASSESSMENT CRITERIA**:
+- High dependency (>60%): Significant energy security motivation for renewables
+- Moderate dependency (30-60%): Balanced import-domestic mix
+- Low dependency (<30%): Strong domestic energy resources
+- Consider: Diversification of sources, strategic reserves, renewable energy policies
+
+**DOCUMENTS**:
+{documents}
+
+Respond with JSON containing: value (import dependency percentage 0-100), confidence, justification, quotes, metadata with keys like fossil_fuel_share, primary_import_sources, energy_security_risk, diversification_level, renewable_share."""
+
     # Competition templates
-    
+
     COMPETITIVE_LANDSCAPE_TEMPLATE = """Analyze competitive landscape for renewable energy market in {country}.
 
 **KEY FACTORS**:
@@ -290,6 +313,29 @@ Respond with JSON containing: value (1-10 score), confidence, justification, quo
 
 Respond with JSON containing: value (1-10 score), confidence, justification, quotes, metadata."""
 
+    CONTRACT_TERMS_TEMPLATE = """Analyze Power Purchase Agreement (PPA) and contract quality for renewable energy in {country}.
+
+**KEY FACTORS**:
+- PPA framework standardization
+- Risk allocation between parties (developer, off-taker, government)
+- Contract enforceability and legal framework strength
+- Termination protections and penalties
+- Currency and political risk provisions
+- Payment security mechanisms
+- Bankability for project finance
+
+**CONTRACT QUALITY ASSESSMENT**:
+- Score 9-10: Best-in-class, gold standard contracts (Germany, Denmark)
+- Score 7-8: Very good, highly bankable contracts
+- Score 5-6: Adequate, bankable with some enhancements
+- Score 3-4: Below adequate, difficult to finance
+- Score 1-2: Non-bankable, severe contract risks
+
+**DOCUMENTS**:
+{documents}
+
+Respond with JSON containing: value (1-10 score), confidence, justification, quotes, metadata with keys like ppa_framework, standardization, risk_allocation, enforceability, bankability."""
+
     @staticmethod
     def get_template(parameter_name: str) -> str:
         """Get template for a specific parameter.
@@ -310,6 +356,8 @@ Respond with JSON containing: value (1-10 score), confidence, justification, quo
             'resource_availability': PromptTemplates.RESOURCE_AVAILABILITY_TEMPLATE,
             'status_of_grid': PromptTemplates.GRID_STATUS_TEMPLATE,
             'competitive_landscape': PromptTemplates.COMPETITIVE_LANDSCAPE_TEMPLATE,
+            'contract_terms': PromptTemplates.CONTRACT_TERMS_TEMPLATE,
+            'energy_dependence': PromptTemplates.ENERGY_DEPENDENCE_TEMPLATE,
         }
         
         return templates.get(parameter_name, PromptTemplates.BASE_EXTRACTION_TEMPLATE)

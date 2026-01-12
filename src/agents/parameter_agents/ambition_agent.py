@@ -32,7 +32,20 @@ from ...core.exceptions import AgentError
 logger = get_logger(__name__)
 
 
-class AmbitionAgent(BaseParameterAgent):
+# Import MemoryMixin for learning capabilities
+try:
+    from memory_system.src.memory.integration.memory_mixin import MemoryMixin
+    MEMORY_AVAILABLE = True
+except ImportError:
+    logger.warning("MemoryMixin not available - agent will run without memory capabilities")
+    MEMORY_AVAILABLE = False
+    # Create dummy MemoryMixin if not available
+    class MemoryMixin:
+        def init_memory(self, *args, **kwargs):
+            pass
+
+
+class AmbitionAgent(BaseParameterAgent, MemoryMixin):
     """Agent for analyzing government renewable energy ambition."""
     
     # Mock data for Phase 1 testing (will be replaced with real data fetching)
@@ -50,37 +63,54 @@ class AmbitionAgent(BaseParameterAgent):
     }
     
     def __init__(
-        self, 
-        mode: AgentMode = AgentMode.MOCK, 
+        self,
+        mode: AgentMode = AgentMode.MOCK,
         config: Dict[str, Any] = None,
-        data_service = None  # DataService instance for RULE_BASED mode
+        data_service = None,  # DataService instance for RULE_BASED mode
+        memory_manager = None  # MemoryManager instance for learning
     ):
         """Initialize Ambition Agent.
-        
+
         Args:
-            mode: Agent operation mode (MOCK or RULE_BASED)
-            config: Configuration dictionary
+            mode: Agent operation mode (MOCK, RULE_BASED, or AI_POWERED)
+            config: Configuration dictionary (if None, loads from config_loader)
             data_service: DataService instance (required for RULE_BASED mode)
+            memory_manager: MemoryManager instance (optional, for learning)
         """
         super().__init__(
             parameter_name="Ambition",
             mode=mode,
             config=config
         )
-        
+
+        # Load LLM config if not provided (for AI_POWERED mode)
+        if self.config is None and self.mode == AgentMode.AI_POWERED:
+            from ...core.config_loader import config_loader
+            llm_config_full = config_loader.get_llm_config()
+            self.config = {
+                'llm_config': llm_config_full.get('llm', {}),
+                'cache_config': llm_config_full.get('cache', {})
+            }
+            logger.debug("Loaded LLM config from config_loader")
+
         # Store data service for RULE_BASED mode
         self.data_service = data_service
-        
+
         # Validate data service if in RULE_BASED mode
         if self.mode == AgentMode.RULE_BASED and self.data_service is None:
             logger.warning(
                 "RULE_BASED mode enabled but no data_service provided. "
                 "Agent will fall back to MOCK data."
             )
-        
+
+        # Initialize memory capabilities
+        if MEMORY_AVAILABLE:
+            self.init_memory(memory_manager=memory_manager, auto_record=True)
+            logger.debug("Memory capabilities initialized for AmbitionAgent")
+
         # Load scoring rubric from config
         self.scoring_rubric = self._load_scoring_rubric()
-        
+
         logger.debug(
             f"Initialized AmbitionAgent in {mode.value} mode "
             f"with {len(self.scoring_rubric)} scoring levels"
@@ -151,31 +181,66 @@ class AmbitionAgent(BaseParameterAgent):
         **kwargs
     ) -> ParameterScore:
         """Analyze ambition for a country.
-        
+
         Args:
             country: Country name
             period: Time period (e.g., "Q3 2024")
             **kwargs: Additional context
-            
+
         Returns:
             ParameterScore with score, justification, confidence
         """
         try:
+            start_time = datetime.now()
             logger.info(f"Analyzing Ambition for {country} ({period}) in {self.mode.value} mode")
-            
+
+            # Step 0: Get memory context (if available)
+            memory_context = {}
+            if MEMORY_AVAILABLE and hasattr(self, 'get_memory_context'):
+                memory_context = self.get_memory_context(country, max_memories=3)
+                if memory_context.get('has_memory'):
+                    logger.debug(
+                        f"Found {memory_context['similar_cases_count']} similar past analyses "
+                        f"for {country}"
+                    )
+
             # Step 1: Fetch data
             data = self._fetch_data(country, period, **kwargs)
-            
+
             # Step 2: Calculate score
             score = self._calculate_score(data, country, period)
-            
+
             # Step 3: Validate score
             score = self._validate_score(score)
-            
-            # Step 4: Generate justification
+
+            # Step 4: Check memory for score suggestions
+            original_score = score
+            if MEMORY_AVAILABLE and hasattr(self, 'suggest_score_from_memory'):
+                suggestion = self.suggest_score_from_memory(
+                    country=country,
+                    current_score=score,
+                    context={'data': data, 'period': period}
+                )
+                if suggestion and suggestion.get('confidence', 0) >= 0.7:
+                    logger.debug(
+                        f"Memory suggests score adjustment: {score} → {suggestion['suggested_score']} "
+                        f"(confidence: {suggestion['confidence']:.2f})"
+                    )
+                    # Apply suggestion if confidence is high
+                    score = suggestion['suggested_score']
+
+            # Step 5: Generate justification
             justification = self._generate_justification(data, score, country, period)
+
+            # Step 6: Enhance justification with memory context
+            if MEMORY_AVAILABLE and hasattr(self, 'enhance_justification_with_memory'):
+                justification = self.enhance_justification_with_memory(
+                    base_justification=justification,
+                    country=country,
+                    current_score=score
+                )
             
-            # Step 5: Estimate confidence
+            # Step 7: Estimate confidence
             # Different confidence levels based on data source
             if data.get('source') == 'ai_powered':
                 # Use AI extraction confidence
@@ -190,10 +255,10 @@ class AmbitionAgent(BaseParameterAgent):
                 confidence = 0.7  # Lower confidence for mock data
 
             confidence = self._estimate_confidence(data, data_quality)
-            
-            # Step 6: Identify data sources
+
+            # Step 8: Identify data sources
             data_sources = self._get_data_sources(country, data)
-            
+
             # Create result
             result = ParameterScore(
                 parameter_name=self.parameter_name,
@@ -203,12 +268,32 @@ class AmbitionAgent(BaseParameterAgent):
                 confidence=confidence,
                 timestamp=datetime.now()
             )
-            
+
+            # Step 9: Record analysis in memory (for learning)
+            execution_time_ms = (datetime.now() - start_time).total_seconds() * 1000
+            if MEMORY_AVAILABLE and hasattr(self, 'record_analysis'):
+                memory_id = self.record_analysis(
+                    country=country,
+                    period=period,
+                    input_data={'mode': self.mode.value, **data},
+                    output_data={
+                        'score': score,
+                        'original_score': original_score,
+                        'justification': justification,
+                        'confidence': confidence,
+                        'data_sources': data_sources
+                    },
+                    execution_time_ms=execution_time_ms,
+                    success=True
+                )
+                if memory_id:
+                    logger.debug(f"Analysis recorded in memory with ID: {memory_id}")
+
             logger.info(
                 f"Ambition analysis complete for {country}: "
                 f"Score={score:.1f}, Confidence={confidence:.2f}, Mode={self.mode.value}"
             )
-            
+
             return result
             
         except Exception as e:

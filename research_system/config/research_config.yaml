@@ -1,0 +1,113 @@
+# Research System Configuration
+# Generates comprehensive research documents for parameter-country combinations
+
+# LLM Configuration for Research
+llm:
+  provider: openai  # openai, anthropic
+  model_name: gpt-4-turbo-preview  # Main research model
+  temperature: 0.3  # Slightly creative for diverse research
+  max_tokens: 4000  # Max completion tokens (gpt-4-turbo-preview limit: 4096)
+
+  # Fallback model (cheaper, faster)
+  fallback_model: gpt-3.5-turbo
+
+  # Rate limiting
+  max_requests_per_minute: 20
+  max_retries: 3
+  retry_delay: 2.0
+
+# Research Configuration
+research:
+  # Research depth levels
+  depth: comprehensive  # quick, standard, comprehensive, exhaustive
+
+  # Sources to include
+  sources:
+    - web_search  # Google/web search
+    - policy_databases  # Energy policy databases
+    - government_sites  # Official government sources
+    - news_articles  # Recent news
+    - academic_papers  # Research papers (if available)
+
+  # Time range for research
+  time_range:
+    years_back: 3  # Look back 3 years for data
+    include_projections: true  # Include future projections
+
+  # Research sections to generate
+  sections:
+    - overview  # Country & parameter overview
+    - current_status  # Current state analysis
+    - historical_trends  # Historical data & trends
+    - policy_framework  # Policy & regulatory framework
+    - key_metrics  # Key numerical metrics
+    - challenges  # Challenges & barriers
+    - opportunities  # Opportunities & drivers
+    - future_outlook  # Projections & outlook
+    - sources  # All sources used
+
+# Document Storage
+storage:
+  base_path: ./research_system/data/research_documents
+
+  # Versioning strategy
+  versioning:
+    strategy: semantic  # semantic (1.0.0) or timestamp
+    auto_increment: true
+    keep_versions: 5  # Keep last 5 versions
+
+  # Document format
+  formats:
+    primary: json  # json, markdown, both
+    include_metadata: true
+    include_raw_output: true
+
+# Cache Configuration
+cache:
+  enabled: true
+  ttl: 604800  # 7 days in seconds
+  invalidate_on_new_version: true
+
+# Prompt Generation
+prompts:
+  # Template file
+  base_template: ./research_system/prompts/base_research_template.txt
+
+  # Generated prompts directory
+  generated_dir: ./research_system/prompts/generated
+
+  # Prompt customization
+  include_parameter_description: true
+  include_scoring_criteria: true
+  include_example_metrics: true
+
+# Langfuse Integration (Optional)
+langfuse:
+  enabled: false  # Set to true to enable
+  public_key: ${LANGFUSE_PUBLIC_KEY}
+  secret_key: ${LANGFUSE_SECRET_KEY}
+  host: https://cloud.langfuse.com  # or self-hosted URL
+
+  # Tracking configuration
+  track_prompts: true
+  track_generations: true
+  track_costs: true
+  session_id_format: "{parameter}_{country}_{version}"
+
+# Web Search Configuration (if using web search)
+web_search:
+  provider: serpapi  # serpapi, google, bing
+  api_key: ${SERPAPI_API_KEY}
+  results_per_query: 10
+  timeout: 30
+
+# Quality Control
+quality:
+  # Minimum requirements for research document
+  min_word_count: 500
+  min_sources: 3
+  require_numerical_data: true
+
+  # Validation rules
+  validate_schema: true
+  check_completeness: true

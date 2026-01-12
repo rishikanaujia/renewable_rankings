@@ -1,0 +1,141 @@
+You are an expert research analyst specializing in renewable energy investment parameters and country-level policy analysis.
+
+TASK: Conduct comprehensive research on the following parameter for the specified country.
+
+PARAMETER: Energy Dependence
+COUNTRY: {country}
+PERIOD: {period}
+
+PARAMETER DESCRIPTION:
+Degree of reliance on energy imports. Lower import dependency indicates greater energy security and more favorable conditions for domestic renewable energy development.
+
+Subcategory: Market_Size_Fundamentals
+Level: 2
+
+Typical Data Sources:
+  - IEA World Energy Balances
+  - BP Statistical Review of World Energy
+  - National energy statistics
+
+
+SCORING CRITERIA:
+SCORING RUBRIC (1-10 scale):
+
+Score 10: Energy independent (net exporter or minimal imports)
+           Range: < 10%
+
+Score 9: Very low dependence
+           Range: 10% – 19%
+
+Score 8: Low dependence
+           Range: 20% – 29%
+
+Score 7: Moderate-low dependence
+           Range: 30% – 39%
+
+Score 6: Moderate dependence
+           Range: 40% – 49%
+
+Score 5: Moderate-high dependence
+           Range: 50% – 59%
+
+Score 4: High dependence
+           Range: 60% – 69%
+
+Score 3: Very high dependence
+           Range: 70% – 79%
+
+Score 2: Extreme dependence
+           Range: 80% – 89%
+
+Score 1: Nearly total dependence (energy security risk)
+           Range: ≥ 90%
+
+
+
+RESEARCH INSTRUCTIONS:
+
+1. OVERVIEW (2-3 paragraphs):
+   - Provide a high-level overview of the parameter in the context of this country
+   - Explain why this parameter matters for renewable energy investment
+   - Current state as of {period}
+
+2. CURRENT STATUS (3-4 paragraphs):
+   - Detailed analysis of the current state
+   - Key numerical metrics and data points (WITH SPECIFIC VALUES)
+   - Recent developments and changes
+   - Comparison to regional averages or benchmarks
+
+3. HISTORICAL TRENDS (2-3 paragraphs):
+   - How this parameter has evolved over the past 3-5 years
+   - Key turning points or policy changes
+   - Growth rates, trends, patterns (WITH SPECIFIC DATA)
+
+4. POLICY FRAMEWORK (3-4 paragraphs):
+   - Relevant laws, regulations, and policies
+   - Government commitments and targets (WITH SPECIFIC NUMBERS AND DATES)
+   - Institutional framework
+   - Recent policy announcements
+
+5. KEY METRICS (Structured data):
+   - List ALL specific numerical values you find
+   - Include units, timeframes, and sources
+   - Format: "Metric: Value (Unit) - Source - Date"
+
+6. CHALLENGES & BARRIERS (2-3 paragraphs):
+   - Main obstacles or risks
+   - Regulatory hurdles
+   - Market constraints
+   - Infrastructure limitations
+
+7. OPPORTUNITIES & DRIVERS (2-3 paragraphs):
+   - Positive factors and enablers
+   - Market opportunities
+   - Supportive policies
+   - Growth potential
+
+8. FUTURE OUTLOOK (2-3 paragraphs):
+   - Projections for the next 2-5 years
+   - Expected policy changes
+   - Market forecasts (WITH SPECIFIC NUMBERS if available)
+   - Investment implications
+
+9. SOURCES:
+   - List ALL sources used with URLs where applicable
+   - Format: [Source Name] - URL - Access Date
+
+OUTPUT FORMAT:
+Return a comprehensive, well-structured research document in JSON format:
+
+{
+  "parameter": "Energy Dependence",
+  "country": "{country}",
+  "period": "{period}",
+  "research_date": "YYYY-MM-DD",
+  "overview": "...",
+  "current_status": "...",
+  "historical_trends": "...",
+  "policy_framework": "...",
+  "key_metrics": [
+    {"metric": "...", "value": "...", "unit": "...", "source": "...", "date": "..."},
+    ...
+  ],
+  "challenges": "...",
+  "opportunities": "...",
+  "future_outlook": "...",
+  "sources": [
+    {"name": "...", "url": "...", "access_date": "..."},
+    ...
+  ],
+  "confidence": 0.0-1.0,
+  "completeness_score": 0.0-1.0,
+  "data_quality_notes": "..."
+}
+
+IMPORTANT REQUIREMENTS:
+- Be specific: Include actual numbers, dates, and values whenever possible
+- Cite sources: Every claim should be traceable
+- Be current: Focus on recent data from the specified period
+- Be comprehensive: Cover all sections thoroughly
+- Be factual: Base analysis on verifiable data, not speculation
+- Use proper units: Always specify units for numerical values (GW, MW, %, USD, etc.)

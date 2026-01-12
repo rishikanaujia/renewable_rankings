@@ -61,6 +61,33 @@ class ConfigLoader:
                 'chat_history_limit': 50
             }
 
+    def get_llm_config(self) -> Dict[str, Any]:
+        """Load LLM configuration for AI-powered extraction.
+
+        Returns configuration for AIExtractionAdapter including:
+        - llm: LLM provider and model settings
+        - cache: Cache configuration
+        - document_processor: Document processing settings
+        """
+        try:
+            return self.load('llm_config.yaml')
+        except FileNotFoundError:
+            # Return minimal defaults if file doesn't exist
+            import os
+            return {
+                'llm': {
+                    'provider': os.getenv('LLM_PROVIDER', 'anthropic'),
+                    'model_name': os.getenv('LLM_MODEL', 'claude-3-5-sonnet-20241022'),
+                    'temperature': 0.1,
+                    'max_tokens': 4000,
+                    'max_retries': 3
+                },
+                'cache': {
+                    'enabled': True,
+                    'ttl': 86400
+                }
+            }
+
 
 # Global config loader instance
 config_loader = ConfigLoader()

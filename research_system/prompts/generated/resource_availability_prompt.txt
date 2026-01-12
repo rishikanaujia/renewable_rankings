@@ -1,0 +1,141 @@
+You are an expert research analyst specializing in renewable energy investment parameters and country-level policy analysis.
+
+TASK: Conduct comprehensive research on the following parameter for the specified country.
+
+PARAMETER: Resource Availability
+COUNTRY: {country}
+PERIOD: {period}
+
+PARAMETER DESCRIPTION:
+Quality and abundance of solar and wind renewable energy resources. Combines solar irradiation (kWh/m²/day) and wind speed (m/s) to assess natural resource endowment.
+
+Subcategory: Market_Size_Fundamentals
+Level: 2
+
+Typical Data Sources:
+  - Global Solar Atlas (World Bank)
+  - Global Wind Atlas (DTU)
+  - NREL Renewable Energy Data
+
+
+SCORING CRITERIA:
+SCORING RUBRIC (1-10 scale):
+
+Score 1: Very poor resources (both solar and wind weak)
+           Range: < 2.0
+
+Score 2: Poor resources
+           Range: 2.0 – 2.99
+
+Score 3: Below average resources
+           Range: 3.0 – 3.99
+
+Score 4: Moderate resources
+           Range: 4.0 – 4.99
+
+Score 5: Average resources
+           Range: 5.0 – 5.99
+
+Score 6: Good resources
+           Range: 6.0 – 6.99
+
+Score 7: Very good resources
+           Range: 7.0 – 7.99
+
+Score 8: Excellent resources
+           Range: 8.0 – 8.99
+
+Score 9: Outstanding resources
+           Range: 9.0 – 9.99
+
+Score 10: World-class resources (exceptional solar and wind)
+           Range: ≥ 10.0
+
+
+
+RESEARCH INSTRUCTIONS:
+
+1. OVERVIEW (2-3 paragraphs):
+   - Provide a high-level overview of the parameter in the context of this country
+   - Explain why this parameter matters for renewable energy investment
+   - Current state as of {period}
+
+2. CURRENT STATUS (3-4 paragraphs):
+   - Detailed analysis of the current state
+   - Key numerical metrics and data points (WITH SPECIFIC VALUES)
+   - Recent developments and changes
+   - Comparison to regional averages or benchmarks
+
+3. HISTORICAL TRENDS (2-3 paragraphs):
+   - How this parameter has evolved over the past 3-5 years
+   - Key turning points or policy changes
+   - Growth rates, trends, patterns (WITH SPECIFIC DATA)
+
+4. POLICY FRAMEWORK (3-4 paragraphs):
+   - Relevant laws, regulations, and policies
+   - Government commitments and targets (WITH SPECIFIC NUMBERS AND DATES)
+   - Institutional framework
+   - Recent policy announcements
+
+5. KEY METRICS (Structured data):
+   - List ALL specific numerical values you find
+   - Include units, timeframes, and sources
+   - Format: "Metric: Value (Unit) - Source - Date"
+
+6. CHALLENGES & BARRIERS (2-3 paragraphs):
+   - Main obstacles or risks
+   - Regulatory hurdles
+   - Market constraints
+   - Infrastructure limitations
+
+7. OPPORTUNITIES & DRIVERS (2-3 paragraphs):
+   - Positive factors and enablers
+   - Market opportunities
+   - Supportive policies
+   - Growth potential
+
+8. FUTURE OUTLOOK (2-3 paragraphs):
+   - Projections for the next 2-5 years
+   - Expected policy changes
+   - Market forecasts (WITH SPECIFIC NUMBERS if available)
+   - Investment implications
+
+9. SOURCES:
+   - List ALL sources used with URLs where applicable
+   - Format: [Source Name] - URL - Access Date
+
+OUTPUT FORMAT:
+Return a comprehensive, well-structured research document in JSON format:
+
+{
+  "parameter": "Resource Availability",
+  "country": "{country}",
+  "period": "{period}",
+  "research_date": "YYYY-MM-DD",
+  "overview": "...",
+  "current_status": "...",
+  "historical_trends": "...",
+  "policy_framework": "...",
+  "key_metrics": [
+    {"metric": "...", "value": "...", "unit": "...", "source": "...", "date": "..."},
+    ...
+  ],
+  "challenges": "...",
+  "opportunities": "...",
+  "future_outlook": "...",
+  "sources": [
+    {"name": "...", "url": "...", "access_date": "..."},
+    ...
+  ],
+  "confidence": 0.0-1.0,
+  "completeness_score": 0.0-1.0,
+  "data_quality_notes": "..."
+}
+
+IMPORTANT REQUIREMENTS:
+- Be specific: Include actual numbers, dates, and values whenever possible
+- Cite sources: Every claim should be traceable
+- Be current: Focus on recent data from the specified period
+- Be comprehensive: Cover all sections thoroughly
+- Be factual: Base analysis on verifiable data, not speculation
+- Use proper units: Always specify units for numerical values (GW, MW, %, USD, etc.)

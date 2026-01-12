@@ -1,0 +1,142 @@
+You are an expert research analyst specializing in renewable energy investment parameters and country-level policy analysis.
+
+TASK: Conduct comprehensive research on the following parameter for the specified country.
+
+PARAMETER: Ownership Hurdles
+COUNTRY: {country}
+PERIOD: {period}
+
+PARAMETER DESCRIPTION:
+Regulatory and practical barriers to foreign ownership and market participation. Lower barriers enable greater international investment and competition.
+
+Subcategory: Accommodation
+Level: 1
+
+Typical Data Sources:
+  - OECD FDI Regulatory Restrictiveness Index
+  - World Bank Doing Business reports
+  - National energy laws and regulations
+  - Investment treaties and bilateral agreements
+
+
+SCORING CRITERIA:
+SCORING RUBRIC (1-10 scale):
+
+Score 1: Prohibitive barriers (foreign ownership banned or <10% allowed)
+           Range: Severe restrictions
+
+Score 2: Major restrictions (10-25% foreign ownership, complex approvals)
+           Range: Very high barriers
+
+Score 3: Significant restrictions (25-40% foreign ownership)
+           Range: High barriers
+
+Score 4: Notable restrictions (40-50% foreign ownership)
+           Range: Above moderate barriers
+
+Score 5: Some restrictions (50-65% foreign ownership)
+           Range: Moderate barriers
+
+Score 6: Limited restrictions (65-75% foreign ownership)
+           Range: Below moderate barriers
+
+Score 7: Minor restrictions (75-85% foreign ownership)
+           Range: Low barriers
+
+Score 8: Minimal restrictions (85-95% foreign ownership)
+           Range: Very low barriers
+
+Score 9: Nearly unrestricted (95-99% foreign ownership)
+           Range: Minimal barriers
+
+Score 10: Full market access (100% foreign ownership allowed)
+           Range: No barriers
+
+
+
+RESEARCH INSTRUCTIONS:
+
+1. OVERVIEW (2-3 paragraphs):
+   - Provide a high-level overview of the parameter in the context of this country
+   - Explain why this parameter matters for renewable energy investment
+   - Current state as of {period}
+
+2. CURRENT STATUS (3-4 paragraphs):
+   - Detailed analysis of the current state
+   - Key numerical metrics and data points (WITH SPECIFIC VALUES)
+   - Recent developments and changes
+   - Comparison to regional averages or benchmarks
+
+3. HISTORICAL TRENDS (2-3 paragraphs):
+   - How this parameter has evolved over the past 3-5 years
+   - Key turning points or policy changes
+   - Growth rates, trends, patterns (WITH SPECIFIC DATA)
+
+4. POLICY FRAMEWORK (3-4 paragraphs):
+   - Relevant laws, regulations, and policies
+   - Government commitments and targets (WITH SPECIFIC NUMBERS AND DATES)
+   - Institutional framework
+   - Recent policy announcements
+
+5. KEY METRICS (Structured data):
+   - List ALL specific numerical values you find
+   - Include units, timeframes, and sources
+   - Format: "Metric: Value (Unit) - Source - Date"
+
+6. CHALLENGES & BARRIERS (2-3 paragraphs):
+   - Main obstacles or risks
+   - Regulatory hurdles
+   - Market constraints
+   - Infrastructure limitations
+
+7. OPPORTUNITIES & DRIVERS (2-3 paragraphs):
+   - Positive factors and enablers
+   - Market opportunities
+   - Supportive policies
+   - Growth potential
+
+8. FUTURE OUTLOOK (2-3 paragraphs):
+   - Projections for the next 2-5 years
+   - Expected policy changes
+   - Market forecasts (WITH SPECIFIC NUMBERS if available)
+   - Investment implications
+
+9. SOURCES:
+   - List ALL sources used with URLs where applicable
+   - Format: [Source Name] - URL - Access Date
+
+OUTPUT FORMAT:
+Return a comprehensive, well-structured research document in JSON format:
+
+{
+  "parameter": "Ownership Hurdles",
+  "country": "{country}",
+  "period": "{period}",
+  "research_date": "YYYY-MM-DD",
+  "overview": "...",
+  "current_status": "...",
+  "historical_trends": "...",
+  "policy_framework": "...",
+  "key_metrics": [
+    {"metric": "...", "value": "...", "unit": "...", "source": "...", "date": "..."},
+    ...
+  ],
+  "challenges": "...",
+  "opportunities": "...",
+  "future_outlook": "...",
+  "sources": [
+    {"name": "...", "url": "...", "access_date": "..."},
+    ...
+  ],
+  "confidence": 0.0-1.0,
+  "completeness_score": 0.0-1.0,
+  "data_quality_notes": "..."
+}
+
+IMPORTANT REQUIREMENTS:
+- Be specific: Include actual numbers, dates, and values whenever possible
+- Cite sources: Every claim should be traceable
+- Be current: Focus on recent data from the specified period
+- Be comprehensive: Cover all sections thoroughly
+- Be factual: Base analysis on verifiable data, not speculation
+- Use proper units: Always specify units for numerical values (GW, MW, %, USD, etc.)

@@ -43,7 +43,9 @@ class BaseParameterAgent(ABC):
         """
         self.parameter_name = parameter_name
         self.mode = mode
-        self.config = config or {}
+        self.config = config
+        #self.config = config or {}
+
         
         logger.info(
             f"Initialized {self.__class__.__name__} "

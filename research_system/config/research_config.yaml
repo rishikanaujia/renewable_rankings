@@ -4,9 +4,9 @@
 # LLM Configuration for Research
 llm:
   provider: openai  # openai, anthropic
-  model_name: gpt-4-turbo-preview  # Main research model
+  model_name: gpt-3.5-turbo #gpt-4-turbo-preview  # Main research model
   temperature: 0.3  # Slightly creative for diverse research
-  max_tokens: 4000  # Max completion tokens (gpt-4-turbo-preview limit: 4096)
+  max_tokens: 2500  # Max completion tokens (gpt-4-turbo-preview limit: 4096)
 
   # Fallback model (cheaper, faster)
   fallback_model: gpt-3.5-turbo

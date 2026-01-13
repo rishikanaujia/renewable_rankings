@@ -39,11 +39,36 @@ from ...models.parameter import ParameterScore
 from ...core.logger import get_logger
 from ...core.exceptions import AgentError
 
+# Import memory system
+try:
+    from memory_system.src.memory.integration.memory_mixin import MemoryMixin
+    MEMORY_AVAILABLE = True
+except ImportError:
+    logger.warning("Memory system not available")
+    MEMORY_AVAILABLE = False
+    class MemoryMixin:
+        pass
+
+# Import research integration mixin
+try:
+    from .ambition_agent_research_integration import ResearchIntegrationMixin
+    RESEARCH_INTEGRATION_AVAILABLE = True
+except ImportError:
+    logger.warning("Research integration not available")
+    RESEARCH_INTEGRATION_AVAILABLE = False
+    class ResearchIntegrationMixin:
+        pass
+
 logger = get_logger(__name__)
 
 
-class CountryStabilityAgent(BaseParameterAgent):
-    """Agent for analyzing country stability based on political/economic risk."""
+class CountryStabilityAgent(BaseParameterAgent, MemoryMixin, ResearchIntegrationMixin):
+    """Agent for analyzing country stability based on political/economic risk.
+
+    Now includes:
+    - Memory system integration for learning from past analyses
+    - Research system integration for using generated research documents
+    """
     
     # Mock data for Phase 1 testing (ECR ratings as of 2024)
     # Lower ECR = more stable = higher score
@@ -94,7 +119,12 @@ class CountryStabilityAgent(BaseParameterAgent):
         
         # Load scoring rubric from config (NO HARDCODING!)
         self.scoring_rubric = self._load_scoring_rubric()
-        
+
+        # Initialize memory system if available
+        if MEMORY_AVAILABLE:
+            self.init_memory()
+            logger.debug("Memory capabilities initialized for CountryStabilityAgent")
+
         logger.debug(
             f"Initialized CountryStabilityAgent in {mode.value} mode "
             f"with {len(self.scoring_rubric)} scoring levels"

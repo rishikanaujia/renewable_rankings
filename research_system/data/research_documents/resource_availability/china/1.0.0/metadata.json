@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T11:00:11.667846",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Resource Availability",
+  "country": "China",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/resource_availability/china/1.0.0/research.json",
+  "file_size": 7286,
+  "checksum": "ed8de407e99efbd025b5b920a5e0851d74b24825c865e2d2af324be7ab9089ca"
+}

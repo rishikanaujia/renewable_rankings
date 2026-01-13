@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:01:11.440419",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Country Stability",
+  "country": "Australia",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/country_stability/australia/1.0.0/research.json",
+  "file_size": 9029,
+  "checksum": "8cb47b9bf25abe7dde7bc0657e908b37a36de0066002acabbc651e827bf6eb4a"
+}

@@ -31,10 +31,36 @@ from ...models.parameter import ParameterScore
 from ...core.logger import get_logger
 from ...core.exceptions import AgentError
 
+
+# Memory system integration
+try:
+    from memory_system.src.memory.integration.memory_mixin import MemoryMixin
+    MEMORY_AVAILABLE = True
+except ImportError:
+    MEMORY_AVAILABLE = False
+    logger.warning("Memory system not available. Agent will run without memory capabilities.")
+
+# Research integration
+try:
+    from research_integration.mixins import ResearchIntegrationMixin
+    from research_integration.parsers import PowerMarketSizeParser
+    RESEARCH_INTEGRATION_AVAILABLE = True
+except ImportError:
+    RESEARCH_INTEGRATION_AVAILABLE = False
+    logger.warning("Research integration not available. Agent will use MOCK data fallback only.")
+
 logger = get_logger(__name__)
 
 
-class PowerMarketSizeAgent(BaseParameterAgent):
+# Build base classes dynamically based on availability
+_base_classes = [BaseParameterAgent]
+if MEMORY_AVAILABLE:
+    _base_classes.append(MemoryMixin)
+if RESEARCH_INTEGRATION_AVAILABLE:
+    _base_classes.append(ResearchIntegrationMixin)
+
+
+class PowerMarketSizeAgent(*_base_classes):
     """Agent for analyzing electricity market size based on total consumption."""
     
     # Mock data for Phase 1 testing (Annual electricity consumption in TWh)
@@ -86,6 +112,17 @@ class PowerMarketSizeAgent(BaseParameterAgent):
                 "Agent will fall back to MOCK data."
             )
         
+        
+        # Initialize memory capabilities if available
+        if MEMORY_AVAILABLE:
+            self.init_memory()
+            logger.debug("Memory capabilities initialized for PowerMarketSizeAgent")
+
+        # Configure research parser if available
+        if RESEARCH_INTEGRATION_AVAILABLE and PowerMarketSizeParser:
+            self.research_parser = PowerMarketSizeParser()
+            logger.debug("Research parser configured for PowerMarketSizeAgent")
+
         # Load scoring rubric from config (NO HARDCODING!)
         self.scoring_rubric = self._load_scoring_rubric()
         
@@ -258,7 +295,17 @@ class PowerMarketSizeAgent(BaseParameterAgent):
         elif self.mode == AgentMode.RULE_BASED:
             # Fetch rule-based data from data service
             if self.data_service is None:
-                logger.warning("No data_service available, falling back to MOCK data")
+                logger.warning("No data_service available, trying research system")
+
+                # Try research integration as fallback
+                if RESEARCH_INTEGRATION_AVAILABLE:
+                    research_data = self._fetch_data_from_research(country, period)
+                    if research_data:
+                        logger.info(f"Using research data for {country}")
+                        return research_data
+
+                # Final fallback to MOCK
+                logger.warning("Research not available, falling back to MOCK data")
                 return self._fetch_data_mock_fallback(country)
             
             try:
@@ -286,8 +333,17 @@ class PowerMarketSizeAgent(BaseParameterAgent):
                 
                 if electricity_kwh is None and gdp is None:
                     logger.warning(
-                        f"No rule-based data found for {country}, falling back to MOCK data"
+                        f"No rule-based data found for {country}, trying research system"
                     )
+                    # Try research integration as fallback
+                    if RESEARCH_INTEGRATION_AVAILABLE:
+                        research_data = self._fetch_data_from_research(country, period)
+                        if research_data:
+                            logger.info(f"Using research data for {country}")
+                            return research_data
+
+                    # Final fallback to MOCK
+                    logger.warning("Research not available, falling back to MOCK data")
                     return self._fetch_data_mock_fallback(country)
                 
                 # Calculate TWh consumption
@@ -330,8 +386,17 @@ class PowerMarketSizeAgent(BaseParameterAgent):
             except Exception as e:
                 logger.error(
                     f"Error fetching rule-based data for {country}: {e}. "
-                    f"Falling back to MOCK data"
+                    f"Trying research system"
                 )
+                # Try research integration as fallback
+                if RESEARCH_INTEGRATION_AVAILABLE:
+                    research_data = self._fetch_data_from_research(country, period)
+                    if research_data:
+                        logger.info(f"Using research data for {country}")
+                        return research_data
+
+                # Final fallback to MOCK
+                logger.warning("Research not available, falling back to MOCK data")
                 return self._fetch_data_mock_fallback(country)
         
         elif self.mode == AgentMode.AI_POWERED:
@@ -375,7 +440,16 @@ class PowerMarketSizeAgent(BaseParameterAgent):
                     return self._fetch_data_mock_fallback(country)
 
             except Exception as e:
-                logger.error(f"Error using AI extraction for {country}: {e}. Falling back to MOCK data")
+                logger.error(f"Error using AI extraction for {country}: {e}. Trying research system")
+                # Try research integration as fallback
+                if RESEARCH_INTEGRATION_AVAILABLE:
+                    research_data = self._fetch_data_from_research(country, period)
+                    if research_data:
+                        logger.info(f"Using research data for {country}")
+                        return research_data
+
+                # Final fallback to MOCK
+                logger.warning("Research not available, falling back to MOCK data")
                 return self._fetch_data_mock_fallback(country)
         
         else:

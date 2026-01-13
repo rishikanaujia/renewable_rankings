@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:17:39.402419",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Renewables Penetration",
+  "country": "Chile",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/renewables_penetration/chile/1.0.0/research.json",
+  "file_size": 8466,
+  "checksum": "c4843b811a1d8372b4830a3e7f927a2033348abab3221dafc2e5d2840a36fbbc"
+}

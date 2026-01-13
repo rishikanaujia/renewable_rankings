@@ -42,10 +42,34 @@ from ...models.parameter import ParameterScore
 from ...core.logger import get_logger
 from ...core.exceptions import AgentError
 
+# Memory system integration
+try:
+    from memory_system.src.memory.integration.memory_mixin import MemoryMixin
+    MEMORY_AVAILABLE = True
+except ImportError:
+    MEMORY_AVAILABLE = False
+    logger.warning("Memory system not available. Agent will run without memory capabilities.")
+
+# Research integration
+try:
+    from research_integration.mixins import ResearchIntegrationMixin
+    from research_integration.parsers import ContractTermsParser
+    RESEARCH_INTEGRATION_AVAILABLE = True
+except ImportError:
+    RESEARCH_INTEGRATION_AVAILABLE = False
+    logger.warning("Research integration not available. Agent will use MOCK data fallback only.")
+
 logger = get_logger(__name__)
 
 
-class ContractTermsAgent(BaseParameterAgent):
+# Build base classes dynamically based on availability
+_base_classes = [BaseParameterAgent]
+if MEMORY_AVAILABLE:
+    _base_classes.append(MemoryMixin)
+if RESEARCH_INTEGRATION_AVAILABLE:
+    _base_classes.append(ResearchIntegrationMixin)
+
+class ContractTermsAgent(*_base_classes):
     """Agent for analyzing renewable energy contract terms."""
     
     # Mock data for Phase 1 testing
@@ -291,7 +315,17 @@ class ContractTermsAgent(BaseParameterAgent):
         
         # Load scoring rubric from config
         self.scoring_rubric = self._load_scoring_rubric()
-        
+
+        # Initialize memory capabilities if available
+        if MEMORY_AVAILABLE:
+            self.init_memory()
+            logger.debug("Memory capabilities initialized for ContractTermsAgent")
+
+        # Configure research parser if available
+        if RESEARCH_INTEGRATION_AVAILABLE and ContractTermsParser:
+            self.research_parser = ContractTermsParser()
+            logger.debug("Research parser configured for ContractTermsAgent")
+
         logger.debug(
             f"Initialized ContractTermsAgent in {mode.value} mode "
             f"with {len(self.scoring_rubric)} scoring levels"
@@ -458,7 +492,17 @@ class ContractTermsAgent(BaseParameterAgent):
         elif self.mode == AgentMode.RULE_BASED:
             # Estimate from World Bank governance indicators
             if self.data_service is None:
-                logger.warning("No data_service available, falling back to MOCK data")
+                logger.warning("No data_service available, trying research system")
+
+                # Try research integration as fallback
+                if RESEARCH_INTEGRATION_AVAILABLE:
+                    research_data = self._fetch_data_from_research(country, period)
+                    if research_data:
+                        logger.info(f"Using research data for {country}")
+                        return research_data
+
+                # Final fallback to MOCK
+                logger.warning("Research not available, falling back to MOCK data")
                 return self._fetch_data_mock_fallback(country)
             
             try:
@@ -960,8 +1004,11 @@ class ContractTermsAgent(BaseParameterAgent):
         """
         sources = []
         
-        # Check if we used rule-based or mock data
-        if data and data.get('source') == 'rule_based':
+        # Check if we used rule-based, research, or mock data
+        if data and data.get('source') == 'research':
+            sources.append("Research System - Contract Terms Analysis")
+            sources.append("PPA Frameworks and Legal Assessments")
+        elif data and data.get('source') == 'rule_based':
             sources.append("World Bank Development Indicators - Rule-Based Estimation")
             sources.append("Legal framework assessments (Reference)")
         else:
@@ -983,7 +1030,7 @@ class ContractTermsAgent(BaseParameterAgent):
     
     def get_data_sources(self) -> List[str]:
         """Get general data sources for this parameter.
-        
+
         Returns:
             List of typical data sources
         """
@@ -994,6 +1041,27 @@ class ContractTermsAgent(BaseParameterAgent):
             "Project finance transaction data",
             "IFC and development bank reports"
         ]
+
+    def get_research_status(self) -> Dict[str, Any]:
+        """Get research integration status for debugging.
+
+        Returns:
+            Dictionary with research integration status
+        """
+        status = {
+            'enabled': RESEARCH_INTEGRATION_AVAILABLE,
+            'orchestrator_available': False,
+            'parser_configured': False,
+            'parser_class': None
+        }
+
+        if RESEARCH_INTEGRATION_AVAILABLE:
+            status['orchestrator_available'] = hasattr(self, '_research_orchestrator') or hasattr(self, 'research_orchestrator')
+            status['parser_configured'] = hasattr(self, 'research_parser') and self.research_parser is not None
+            if status['parser_configured']:
+                status['parser_class'] = type(self.research_parser).__name__
+
+        return status
 
 
 def analyze_contract_terms(

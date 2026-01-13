@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:10:45.873080",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Resource Availability",
+  "country": "Chile",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/resource_availability/chile/1.0.0/research.json",
+  "file_size": 10316,
+  "checksum": "484dcd643a9410f1ec2a9cb1fc7f4f192c438f7f166d5d1d62535f6bf59529ca"
+}

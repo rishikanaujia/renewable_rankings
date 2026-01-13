@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:00:07.748831",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Country Stability",
+  "country": "United States",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/country_stability/united_states/1.0.0/research.json",
+  "file_size": 8849,
+  "checksum": "756a8ec9e88084cf362e827bcb36f517ef33df324a2091f2623dce82e62c4daa"
+}

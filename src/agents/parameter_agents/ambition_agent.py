@@ -44,19 +44,24 @@ except ImportError:
         def init_memory(self, *args, **kwargs):
             pass
 
-# Import ResearchIntegrationMixin for research system integration
+# Research integration
 try:
-    from .ambition_agent_research_integration import ResearchIntegrationMixin
+    from research_integration.mixins import ResearchIntegrationMixin
+    from research_integration.parsers import AmbitionParser
     RESEARCH_INTEGRATION_AVAILABLE = True
 except ImportError:
-    logger.debug("ResearchIntegrationMixin not available")
     RESEARCH_INTEGRATION_AVAILABLE = False
-    # Create dummy mixin if not available
-    class ResearchIntegrationMixin:
-        pass
+    logger.warning("Research integration not available. Agent will use MOCK data fallback only.")
 
 
-class AmbitionAgent(BaseParameterAgent, MemoryMixin, ResearchIntegrationMixin):
+# Build base classes dynamically based on availability
+_base_classes = [BaseParameterAgent]
+if MEMORY_AVAILABLE:
+    _base_classes.append(MemoryMixin)
+if RESEARCH_INTEGRATION_AVAILABLE:
+    _base_classes.append(ResearchIntegrationMixin)
+
+class AmbitionAgent(*_base_classes):
     """Agent for analyzing government renewable energy ambition."""
     
     # Mock data for Phase 1 testing (will be replaced with real data fetching)
@@ -118,6 +123,11 @@ class AmbitionAgent(BaseParameterAgent, MemoryMixin, ResearchIntegrationMixin):
         if MEMORY_AVAILABLE:
             self.init_memory(memory_manager=memory_manager, auto_record=True)
             logger.debug("Memory capabilities initialized for AmbitionAgent")
+
+        # Configure research parser if available
+        if RESEARCH_INTEGRATION_AVAILABLE and AmbitionParser:
+            self.research_parser = AmbitionParser()
+            logger.debug("Research parser configured for AmbitionAgent")
 
         # Load scoring rubric from config
         self.scoring_rubric = self._load_scoring_rubric()
@@ -347,11 +357,16 @@ class AmbitionAgent(BaseParameterAgent, MemoryMixin, ResearchIntegrationMixin):
             # Fetch rule-based data from data service
             if self.data_service is None:
                 logger.warning("No data_service available, trying research system")
-                # Try research system before falling back to MOCK
-                research_data = self._fetch_data_from_research(country, period) if RESEARCH_INTEGRATION_AVAILABLE else None
-                if research_data:
-                    return research_data
-                logger.warning("No research data available, falling back to MOCK data")
+
+                # Try research integration as fallback
+                if RESEARCH_INTEGRATION_AVAILABLE:
+                    research_data = self._fetch_data_from_research(country, period)
+                    if research_data:
+                        logger.info(f"Using research data for {country}")
+                        return research_data
+
+                # Final fallback to MOCK
+                logger.warning("Research not available, falling back to MOCK data")
                 return self._fetch_data_mock_fallback(country)
             
             try:
@@ -373,11 +388,15 @@ class AmbitionAgent(BaseParameterAgent, MemoryMixin, ResearchIntegrationMixin):
                     logger.warning(
                         f"No rule-based data found for {country}, trying research system"
                     )
-                    # Try research system before falling back to MOCK
-                    research_data = self._fetch_data_from_research(country, period) if RESEARCH_INTEGRATION_AVAILABLE else None
-                    if research_data:
-                        return research_data
-                    logger.warning(f"No research data available, falling back to MOCK data")
+                    # Try research integration as fallback
+                    if RESEARCH_INTEGRATION_AVAILABLE:
+                        research_data = self._fetch_data_from_research(country, period)
+                        if research_data:
+                            logger.info(f"Using research data for {country}")
+                            return research_data
+
+                    # Final fallback to MOCK
+                    logger.warning("Research not available, falling back to MOCK data")
                     return self._fetch_data_mock_fallback(country)
                 
                 # Estimate renewable targets based on GDP growth
@@ -408,11 +427,15 @@ class AmbitionAgent(BaseParameterAgent, MemoryMixin, ResearchIntegrationMixin):
                     f"Error fetching rule-based data for {country}: {e}. "
                     f"Trying research system"
                 )
-                # Try research system before falling back to MOCK
-                research_data = self._fetch_data_from_research(country, period) if RESEARCH_INTEGRATION_AVAILABLE else None
-                if research_data:
-                    return research_data
-                logger.warning(f"No research data available, falling back to MOCK data")
+                # Try research integration as fallback
+                if RESEARCH_INTEGRATION_AVAILABLE:
+                    research_data = self._fetch_data_from_research(country, period)
+                    if research_data:
+                        logger.info(f"Using research data for {country}")
+                        return research_data
+
+                # Final fallback to MOCK
+                logger.warning("Research not available, falling back to MOCK data")
                 return self._fetch_data_mock_fallback(country)
         
         elif self.mode == AgentMode.AI_POWERED:

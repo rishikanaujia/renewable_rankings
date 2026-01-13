@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:19:45.966359",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Expected Return",
+  "country": "Australia",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/expected_return/australia/1.0.0/research.json",
+  "file_size": 10034,
+  "checksum": "ce1443ea0d88f3e54562febc26ad7ec30e143d3c6fa7c6bf44af5fe1d165ac66"
+}

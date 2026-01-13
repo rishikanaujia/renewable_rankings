@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:18:47.398393",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Expected Return",
+  "country": "China",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/expected_return/china/1.0.0/research.json",
+  "file_size": 7797,
+  "checksum": "cabea4320ec02962b4f0c766d83aab8876b972c1320e04850cd51e77e27c193e"
+}

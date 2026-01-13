@@ -46,10 +46,36 @@ from ...models.parameter import ParameterScore
 from ...core.logger import get_logger
 from ...core.exceptions import AgentError
 
+
+# Memory system integration
+try:
+    from memory_system.src.memory.integration.memory_mixin import MemoryMixin
+    MEMORY_AVAILABLE = True
+except ImportError:
+    MEMORY_AVAILABLE = False
+    logger.warning("Memory system not available. Agent will run without memory capabilities.")
+
+# Research integration
+try:
+    from research_integration.mixins import ResearchIntegrationMixin
+    from research_integration.parsers import SystemModifiersParser
+    RESEARCH_INTEGRATION_AVAILABLE = True
+except ImportError:
+    RESEARCH_INTEGRATION_AVAILABLE = False
+    logger.warning("Research integration not available. Agent will use MOCK data fallback only.")
+
 logger = get_logger(__name__)
 
 
-class SystemModifiersAgent(BaseParameterAgent):
+# Build base classes dynamically based on availability
+_base_classes = [BaseParameterAgent]
+if MEMORY_AVAILABLE:
+    _base_classes.append(MemoryMixin)
+if RESEARCH_INTEGRATION_AVAILABLE:
+    _base_classes.append(ResearchIntegrationMixin)
+
+
+class SystemModifiersAgent(*_base_classes):
     """Agent for analyzing systemic adjustment factors."""
     
     # Mock data for Phase 1 testing
@@ -279,6 +305,17 @@ class SystemModifiersAgent(BaseParameterAgent):
                 "Agent will fall back to MOCK data."
             )
         
+        
+        # Initialize memory capabilities if available
+        if MEMORY_AVAILABLE:
+            self.init_memory()
+            logger.debug("Memory capabilities initialized for SystemModifiersAgent")
+
+        # Configure research parser if available
+        if RESEARCH_INTEGRATION_AVAILABLE and SystemModifiersParser:
+            self.research_parser = SystemModifiersParser()
+            logger.debug("Research parser configured for SystemModifiersAgent")
+
         # Load scoring rubric from config
         self.scoring_rubric = self._load_scoring_rubric()
         
@@ -448,7 +485,17 @@ class SystemModifiersAgent(BaseParameterAgent):
         elif self.mode == AgentMode.RULE_BASED:
             # Estimate from World Bank macroeconomic indicators
             if self.data_service is None:
-                logger.warning("No data_service available, falling back to MOCK data")
+                logger.warning("No data_service available, trying research system")
+
+                # Try research integration as fallback
+                if RESEARCH_INTEGRATION_AVAILABLE:
+                    research_data = self._fetch_data_from_research(country, period)
+                    if research_data:
+                        logger.info(f"Using research data for {country}")
+                        return research_data
+
+                # Final fallback to MOCK
+                logger.warning("Research not available, falling back to MOCK data")
                 return self._fetch_data_mock_fallback(country)
             
             try:
@@ -479,8 +526,17 @@ class SystemModifiersAgent(BaseParameterAgent):
                 
                 if inflation is None and interest_rate is None:
                     logger.warning(
-                        f"Insufficient data for {country}, falling back to MOCK data"
+                        f"Insufficient data for {country}, trying research system"
                     )
+                    # Try research integration as fallback
+                    if RESEARCH_INTEGRATION_AVAILABLE:
+                        research_data = self._fetch_data_from_research(country, period)
+                        if research_data:
+                            logger.info(f"Using research data for {country}")
+                            return research_data
+
+                    # Final fallback to MOCK
+                    logger.warning("Research not available, falling back to MOCK data")
                     return self._fetch_data_mock_fallback(country)
                 
                 # Estimate systemic risk score
@@ -530,8 +586,17 @@ class SystemModifiersAgent(BaseParameterAgent):
             except Exception as e:
                 logger.error(
                     f"Error estimating systemic risks for {country}: {e}. "
-                    f"Falling back to MOCK data"
+                    f"Trying research system"
                 )
+                # Try research integration as fallback
+                if RESEARCH_INTEGRATION_AVAILABLE:
+                    research_data = self._fetch_data_from_research(country, period)
+                    if research_data:
+                        logger.info(f"Using research data for {country}")
+                        return research_data
+
+                # Final fallback to MOCK
+                logger.warning("Research not available, falling back to MOCK data")
                 return self._fetch_data_mock_fallback(country)
         
         elif self.mode == AgentMode.AI_POWERED:

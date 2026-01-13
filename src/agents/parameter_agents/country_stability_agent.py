@@ -49,15 +49,17 @@ except ImportError:
     class MemoryMixin:
         pass
 
-# Import research integration mixin
+# Import research integration from new package
 try:
-    from .ambition_agent_research_integration import ResearchIntegrationMixin
+    from research_integration.mixins import ResearchIntegrationMixin
+    from research_integration.parsers import CountryStabilityParser
     RESEARCH_INTEGRATION_AVAILABLE = True
 except ImportError:
-    logger.warning("Research integration not available")
+    logger.warning("Research integration package not available")
     RESEARCH_INTEGRATION_AVAILABLE = False
     class ResearchIntegrationMixin:
         pass
+    CountryStabilityParser = None
 
 logger = get_logger(__name__)
 
@@ -124,6 +126,13 @@ class CountryStabilityAgent(BaseParameterAgent, MemoryMixin, ResearchIntegration
         if MEMORY_AVAILABLE:
             self.init_memory()
             logger.debug("Memory capabilities initialized for CountryStabilityAgent")
+
+        # Configure research parser
+        if RESEARCH_INTEGRATION_AVAILABLE and CountryStabilityParser:
+            self.research_parser = CountryStabilityParser()
+            logger.debug("Research parser configured for CountryStabilityAgent")
+        else:
+            self.research_parser = None
 
         logger.debug(
             f"Initialized CountryStabilityAgent in {mode.value} mode "
@@ -293,54 +302,53 @@ class CountryStabilityAgent(BaseParameterAgent, MemoryMixin, ResearchIntegration
             return data
         
         elif self.mode == AgentMode.RULE_BASED:
-            # Fetch rule-based data from data service
-            if self.data_service is None:
-                logger.warning("No data_service available, falling back to MOCK data")
-                return self._fetch_data_mock_fallback(country)
-            
-            try:
-                # Try to fetch ECR rating from data service
-                # Indicator name: 'ecr' (from our CSV files or future data sources)
-                ecr_rating = self.data_service.get_value(
-                    country=country,
-                    indicator='ecr',
-                    default=None
-                )
-                
-                if ecr_rating is None:
-                    logger.warning(
-                        f"No real ECR data found for {country}, falling back to MOCK data"
+            # Try data service first (highest priority)
+            if self.data_service is not None:
+                try:
+                    # Try to fetch ECR rating from data service
+                    # Indicator name: 'ecr' (from our CSV files or future data sources)
+                    ecr_rating = self.data_service.get_value(
+                        country=country,
+                        indicator='ecr',
+                        default=None
                     )
-                    return self._fetch_data_mock_fallback(country)
-                
-                # Determine risk category based on ECR rating
-                risk_category = self._determine_risk_category(ecr_rating)
-                
-                data = {
-                    'ecr_rating': float(ecr_rating),
-                    'risk_category': risk_category,
-                    'source': 'rule_based',
-                    'period': period
-                }
-                
-                logger.info(
-                    f"Fetched REAL data for {country}: ECR={ecr_rating:.1f}, "
-                    f"Category={risk_category}"
-                )
-                
-                return data
-                
-            except Exception as e:
-                logger.error(
-                    f"Error fetching rule-based data for {country}: {e}. "
-                    f"Falling back to MOCK data"
-                )
-                return self._fetch_data_mock_fallback(country)
-        
-        elif self.mode == AgentMode.RULE_BASED:
-            # TODO Phase 2: Query from database
-            # return self._query_risk_database(country, period)
-            raise NotImplementedError("RULE_BASED mode not yet implemented")
+
+                    if ecr_rating is not None:
+                        # Determine risk category based on ECR rating
+                        risk_category = self._determine_risk_category(ecr_rating)
+
+                        data = {
+                            'ecr_rating': float(ecr_rating),
+                            'risk_category': risk_category,
+                            'source': 'rule_based',
+                            'period': period
+                        }
+
+                        logger.info(
+                            f"Fetched REAL data for {country}: ECR={ecr_rating:.1f}, "
+                            f"Category={risk_category}"
+                        )
+
+                        return data
+
+                except Exception as e:
+                    logger.error(f"Error fetching from data service: {e}")
+            else:
+                logger.warning("No data_service available, trying research system")
+
+            # Fallback to research system (second priority)
+            if RESEARCH_INTEGRATION_AVAILABLE:
+                research_data = self._fetch_data_from_research(country, period)
+                if research_data:
+                    logger.info(f"Using research data for {country}")
+                    return research_data
+
+            # Final fallback to MOCK (lowest priority)
+            logger.warning(
+                f"No real data or research available for {country}, "
+                f"falling back to MOCK data"
+            )
+            return self._fetch_data_mock_fallback(country)
         
         elif self.mode == AgentMode.AI_POWERED:
             # Use AI Extraction System to extract country stability from documents

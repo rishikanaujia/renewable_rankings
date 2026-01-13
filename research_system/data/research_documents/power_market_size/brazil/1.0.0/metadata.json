@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:05:41.168921",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Power Market Size",
+  "country": "Brazil",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/power_market_size/brazil/1.0.0/research.json",
+  "file_size": 10040,
+  "checksum": "afa1daffd31d7206a420d5d26e8d1386b57ed29b6afc93df0d7a95e3d93fa92a"
+}

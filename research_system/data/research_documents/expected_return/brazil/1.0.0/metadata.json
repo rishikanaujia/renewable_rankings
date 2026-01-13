@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-12T23:55:15.983036",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Expected Return",
+  "country": "Brazil",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/expected_return/brazil/1.0.0/research.json",
+  "file_size": 9138,
+  "checksum": "195d66027b3424d0855232f359e6a07f5f627eec4b231508bcd83ed297dfc7ce"
+}

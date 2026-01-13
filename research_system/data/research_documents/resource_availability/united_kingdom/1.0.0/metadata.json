@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:09:41.812029",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Resource Availability",
+  "country": "United Kingdom",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/resource_availability/united_kingdom/1.0.0/research.json",
+  "file_size": 10063,
+  "checksum": "6719b996230f40d500333e5ceca2877fd672d5faa1f78718729bbdc7e865e8cf"
+}

@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-12T23:54:53.381168",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Country Stability",
+  "country": "India",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/country_stability/india/1.0.0/research.json",
+  "file_size": 7455,
+  "checksum": "048f6b04c8b5a9b7f6818b4ad9f4975da30ca757ab3c7c25da320c4e7c226ea1"
+}

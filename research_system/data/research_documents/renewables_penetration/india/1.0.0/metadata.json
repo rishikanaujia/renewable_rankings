@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T11:00:36.519483",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Renewables Penetration",
+  "country": "India",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/renewables_penetration/india/1.0.0/research.json",
+  "file_size": 10066,
+  "checksum": "d276d85b0b5bc5f63f9d880f530bb6ae00a4be68dd6f2d9aaea169d76ac2a56c"
+}

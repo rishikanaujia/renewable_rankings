@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T11:03:58.655909",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Status of Grid",
+  "country": "Chile",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/status_of_grid/chile/1.0.0/research.json",
+  "file_size": 7400,
+  "checksum": "fad338e535cb11f9483422851506e3e62bb71e6a13098730e0ed921c9501c75a"
+}

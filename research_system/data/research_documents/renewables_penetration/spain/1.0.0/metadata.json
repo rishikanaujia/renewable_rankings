@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:17:00.342130",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Renewables Penetration",
+  "country": "Spain",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/renewables_penetration/spain/1.0.0/research.json",
+  "file_size": 5025,
+  "checksum": "d9b260498387dfd852d3ae55118eb8638dda42a1bce6ba889e89596b717f5e5a"
+}

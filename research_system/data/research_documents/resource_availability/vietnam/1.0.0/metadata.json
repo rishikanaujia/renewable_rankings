@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:11:07.574016",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Resource Availability",
+  "country": "Vietnam",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/resource_availability/vietnam/1.0.0/research.json",
+  "file_size": 10141,
+  "checksum": "1214dd272f9ae11cdc8681a4e7aefb8505907cc12a27cf206a95bf28ca51ea35"
+}

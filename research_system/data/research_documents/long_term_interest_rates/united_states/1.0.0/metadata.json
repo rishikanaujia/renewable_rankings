@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:26:26.664674",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Long Term Interest Rates",
+  "country": "United States",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/long_term_interest_rates/united_states/1.0.0/research.json",
+  "file_size": 8251,
+  "checksum": "6d399d4fdc71af4f4844017457b614970fb8875edbc9f0e199208e7a7aa7d6e7"
+}

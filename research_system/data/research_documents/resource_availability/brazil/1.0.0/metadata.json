@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:08:27.875064",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Resource Availability",
+  "country": "Brazil",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/resource_availability/brazil/1.0.0/research.json",
+  "file_size": 9169,
+  "checksum": "a6dbef4d2d6156130ae38bd8018f63f21bffcd28cba5e07611a4e8aa1e391934"
+}

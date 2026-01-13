@@ -32,10 +32,34 @@ from ...models.parameter import ParameterScore
 from ...core.logger import get_logger
 from ...core.exceptions import AgentError
 
+# Memory system integration
+try:
+    from memory_system.src.memory.integration.memory_mixin import MemoryMixin
+    MEMORY_AVAILABLE = True
+except ImportError:
+    MEMORY_AVAILABLE = False
+    logger.warning("Memory system not available. Agent will run without memory capabilities.")
+
+# Research integration
+try:
+    from research_integration.mixins import ResearchIntegrationMixin
+    from research_integration.parsers import LongTermInterestRatesParser
+    RESEARCH_INTEGRATION_AVAILABLE = True
+except ImportError:
+    RESEARCH_INTEGRATION_AVAILABLE = False
+    logger.warning("Research integration not available. Agent will use MOCK data fallback only.")
+
 logger = get_logger(__name__)
 
 
-class LongTermInterestRatesAgent(BaseParameterAgent):
+# Build base classes dynamically based on availability
+_base_classes = [BaseParameterAgent]
+if MEMORY_AVAILABLE:
+    _base_classes.append(MemoryMixin)
+if RESEARCH_INTEGRATION_AVAILABLE:
+    _base_classes.append(ResearchIntegrationMixin)
+
+class LongTermInterestRatesAgent(*_base_classes):
     """Agent for analyzing long-term interest rates and financing costs."""
     
     # Mock data for Phase 1 testing
@@ -200,10 +224,20 @@ class LongTermInterestRatesAgent(BaseParameterAgent):
                 "RULE_BASED mode enabled but no data_service provided. "
                 "Agent will fall back to MOCK data."
             )
-        
+
+        # Initialize memory capabilities if available
+        if MEMORY_AVAILABLE:
+            self.init_memory()
+            logger.debug("Memory capabilities initialized for LongTermInterestRatesAgent")
+
+        # Configure research parser if available
+        if RESEARCH_INTEGRATION_AVAILABLE and LongTermInterestRatesParser:
+            self.research_parser = LongTermInterestRatesParser()
+            logger.debug("Research parser configured for LongTermInterestRatesAgent")
+
         # Load scoring rubric from config
         self.scoring_rubric = self._load_scoring_rubric()
-        
+
         logger.debug(
             f"Initialized LongTermInterestRatesAgent in {mode.value} mode "
             f"with {len(self.scoring_rubric)} scoring levels"
@@ -369,7 +403,17 @@ class LongTermInterestRatesAgent(BaseParameterAgent):
         elif self.mode == AgentMode.RULE_BASED:
             # Use World Bank lending interest rate as proxy
             if self.data_service is None:
-                logger.warning("No data_service available, falling back to MOCK data")
+                logger.warning("No data_service available, trying research system")
+
+                # Try research integration as fallback
+                if RESEARCH_INTEGRATION_AVAILABLE:
+                    research_data = self._fetch_data_from_research(country, period)
+                    if research_data:
+                        logger.info(f"Using research data for {country}")
+                        return research_data
+
+                # Final fallback to MOCK
+                logger.warning("Research not available, falling back to MOCK data")
                 return self._fetch_data_mock_fallback(country)
             
             try:
@@ -396,8 +440,17 @@ class LongTermInterestRatesAgent(BaseParameterAgent):
                 
                 if lending_rate is None:
                     logger.warning(
-                        f"No lending rate data for {country}, falling back to MOCK data"
+                        f"No lending rate data for {country}, trying research system"
                     )
+                    # Try research integration as fallback
+                    if RESEARCH_INTEGRATION_AVAILABLE:
+                        research_data = self._fetch_data_from_research(country, period)
+                        if research_data:
+                            logger.info(f"Using research data for {country}")
+                            return research_data
+
+                    # Final fallback to MOCK
+                    logger.warning("Research not available, falling back to MOCK data")
                     return self._fetch_data_mock_fallback(country)
                 
                 # Use lending rate as proxy for long-term financing cost
@@ -440,8 +493,17 @@ class LongTermInterestRatesAgent(BaseParameterAgent):
             except Exception as e:
                 logger.error(
                     f"Error fetching interest rate for {country}: {e}. "
-                    f"Falling back to MOCK data"
+                    f"Trying research system"
                 )
+                # Try research integration as fallback
+                if RESEARCH_INTEGRATION_AVAILABLE:
+                    research_data = self._fetch_data_from_research(country, period)
+                    if research_data:
+                        logger.info(f"Using research data for {country}")
+                        return research_data
+
+                # Final fallback to MOCK
+                logger.warning("Research not available, falling back to MOCK data")
                 return self._fetch_data_mock_fallback(country)
         
         elif self.mode == AgentMode.AI_POWERED:

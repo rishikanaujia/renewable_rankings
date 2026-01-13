@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:08:50.054093",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Resource Availability",
+  "country": "Germany",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/resource_availability/germany/1.0.0/research.json",
+  "file_size": 9352,
+  "checksum": "0b92cc584099be740be5c7eb617ae297129519b3706ee969746d2619b41390c1"
+}

@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:14:56.282324",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Renewables Penetration",
+  "country": "Brazil",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/renewables_penetration/brazil/1.0.0/research.json",
+  "file_size": 9652,
+  "checksum": "d9d254899a26350481c8703484786b847739b05546ecf095f862ff4d370eabe1"
+}

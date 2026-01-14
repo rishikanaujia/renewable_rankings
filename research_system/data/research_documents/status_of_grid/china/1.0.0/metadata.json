@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:36:12.292195",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Status of Grid",
+  "country": "China",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/status_of_grid/china/1.0.0/research.json",
+  "file_size": 9750,
+  "checksum": "340f2039b142101f360af12622cfedde9f5aff6d8ca34904b3060d35b81edddb"
+}

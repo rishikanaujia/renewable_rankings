@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T10:59:18.675256",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Country Stability",
+  "country": "Vietnam",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/country_stability/vietnam/1.0.0/research.json",
+  "file_size": 10733,
+  "checksum": "231ef12c504fd363ef2d00c7088dce48d5b87de90222d394c99e68bb15dbbc6f"
+}

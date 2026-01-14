@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T11:00:03.748626",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Power Market Size",
+  "country": "Vietnam",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/power_market_size/vietnam/1.0.0/research.json",
+  "file_size": 10760,
+  "checksum": "763117621dc6bd936acd0dda13f5fea54071d9468aa4b705215a610cefff93c9"
+}

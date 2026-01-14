@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:24:26.961761",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Offtaker Status",
+  "country": "Spain",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/offtaker_status/spain/1.0.0/research.json",
+  "file_size": 9878,
+  "checksum": "df221e80a20f8ee166e48700190f5fddaa22357aecb91fef181aa9dcab7847ff"
+}

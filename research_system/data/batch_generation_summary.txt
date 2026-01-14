@@ -1,0 +1,87 @@
+================================================================================
+ BATCH RESEARCH GENERATION SUMMARY
+================================================================================
+
+Generated: 2026-01-13 11:06:20
+Duration: 0:08:20.237199
+
+Configuration:
+  Parameters: 18
+  Countries: 10
+  Total combinations: 180
+
+Results:
+  Successful: 65/180 (36.1%)
+  Failed: 0/180
+  Skipped: 115/180
+
+Cost: $0.00
+Tokens: 0
+
+Successful Documents:
+--------------------------------------------------------------------------------
+Ambition                       | United States        | v1.0.0 | Grade: F | $0.0000
+Ambition                       | United Kingdom       | v1.0.0 | Grade: F | $0.0000
+Ambition                       | Australia            | v1.0.0 | Grade: F | $0.0000
+Ambition                       | Vietnam              | v1.0.0 | Grade: F | $0.0000
+Country Stability              | China                | v1.0.0 | Grade: F | $0.0000
+Country Stability              | United Kingdom       | v1.0.0 | Grade: F | $0.0000
+Country Stability              | Spain                | v1.0.0 | Grade: F | $0.0000
+Country Stability              | Chile                | v1.0.0 | Grade: F | $0.0000
+Country Stability              | Vietnam              | v1.0.0 | Grade: D | $0.0000
+Track Record                   | Spain                | v1.0.0 | Grade: F | $0.0000
+Power Market Size              | Germany              | v1.0.0 | Grade: F | $0.0000
+Power Market Size              | United States        | v1.0.0 | Grade: F | $0.0000
+Power Market Size              | India                | v1.0.0 | Grade: F | $0.0000
+Power Market Size              | Spain                | v1.0.0 | Grade: F | $0.0000
+Power Market Size              | Australia            | v1.0.0 | Grade: F | $0.0000
+Power Market Size              | Vietnam              | v1.0.0 | Grade: C | $0.0000
+Resource Availability          | China                | v1.0.0 | Grade: F | $0.0000
+Resource Availability          | India                | v1.0.0 | Grade: F | $0.0000
+Energy Dependence              | United Kingdom       | v1.0.0 | Grade: B | $0.0000
+Renewables Penetration         | India                | v1.0.0 | Grade: D | $0.0000
+Renewables Penetration         | United Kingdom       | v1.0.0 | Grade: F | $0.0000
+Renewables Penetration         | Australia            | v1.0.0 | Grade: F | $0.0000
+Renewables Penetration         | Vietnam              | v1.0.0 | Grade: D | $0.0000
+Expected Return                | United States        | v1.0.0 | Grade: F | $0.0000
+Expected Return                | United Kingdom       | v1.0.0 | Grade: F | $0.0000
+Expected Return                | Chile                | v1.0.0 | Grade: F | $0.0000
+Revenue Stream Stability       | Germany              | v1.0.0 | Grade: F | $0.0000
+Revenue Stream Stability       | United States        | v1.0.0 | Grade: F | $0.0000
+Revenue Stream Stability       | India                | v1.0.0 | Grade: F | $0.0000
+Revenue Stream Stability       | Spain                | v1.0.0 | Grade: F | $0.0000
+Revenue Stream Stability       | Australia            | v1.0.0 | Grade: D | $0.0000
+Revenue Stream Stability       | Chile                | v1.0.0 | Grade: F | $0.0000
+Offtaker Status                | United Kingdom       | v1.0.0 | Grade: F | $0.0000
+Long Term Interest Rates       | Brazil               | v1.0.0 | Grade: F | $0.0000
+Long Term Interest Rates       | China                | v1.0.0 | Grade: F | $0.0000
+Long Term Interest Rates       | India                | v1.0.0 | Grade: F | $0.0000
+Long Term Interest Rates       | Chile                | v1.0.0 | Grade: F | $0.0000
+Long Term Interest Rates       | Vietnam              | v1.0.0 | Grade: F | $0.0000
+Contract Terms                 | Brazil               | v1.0.0 | Grade: F | $0.0000
+Contract Terms                 | United States        | v1.0.0 | Grade: F | $0.0000
+Contract Terms                 | China                | v1.0.0 | Grade: F | $0.0000
+Contract Terms                 | United Kingdom       | v1.0.0 | Grade: F | $0.0000
+Contract Terms                 | Chile                | v1.0.0 | Grade: F | $0.0000
+Status of Grid                 | India                | v1.0.0 | Grade: F | $0.0000
+Status of Grid                 | Chile                | v1.0.0 | Grade: F | $0.0000
+Ownership Hurdles              | United States        | v1.0.0 | Grade: F | $0.0000
+Ownership Hurdles              | India                | v1.0.0 | Grade: F | $0.0000
+Ownership Hurdles              | United Kingdom       | v1.0.0 | Grade: F | $0.0000
+Ownership Consolidation        | Brazil               | v1.0.0 | Grade: F | $0.0000
+Ownership Consolidation        | Australia            | v1.0.0 | Grade: F | $0.0000
+Competitive Landscape          | Brazil               | v1.0.0 | Grade: F | $0.0000
+Competitive Landscape          | United States        | v1.0.0 | Grade: F | $0.0000
+Competitive Landscape          | United Kingdom       | v1.0.0 | Grade: F | $0.0000
+Competitive Landscape          | Spain                | v1.0.0 | Grade: F | $0.0000
+Competitive Landscape          | Australia            | v1.0.0 | Grade: F | $0.0000
+Competitive Landscape          | Chile                | v1.0.0 | Grade: F | $0.0000
+Competitive Landscape          | Vietnam              | v1.0.0 | Grade: F | $0.0000
+System Modifiers               | Brazil               | v1.0.0 | Grade: C | $0.0000
+System Modifiers               | Germany              | v1.0.0 | Grade: F | $0.0000
+System Modifiers               | United States        | v1.0.0 | Grade: C | $0.0000
+System Modifiers               | China                | v1.0.0 | Grade: F | $0.0000
+System Modifiers               | India                | v1.0.0 | Grade: F | $0.0000
+System Modifiers               | United Kingdom       | v1.0.0 | Grade: F | $0.0000
+System Modifiers               | Australia            | v1.0.0 | Grade: F | $0.0000
+System Modifiers               | Vietnam              | v1.0.0 | Grade: F | $0.0000

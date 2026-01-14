@@ -1,0 +1,33 @@
+{
+  "parameter": "",
+  "country": "",
+  "overview": "",
+  "error": "Failed to parse JSON: Expecting ',' delimiter: line 8 column 3 (char 598)",
+  "raw_content": "{\n  \"parameter\": \"Country Stability\",\n  \"country\": \"Spain\",\n  \"period\": \"Q4 2024\",\n  \"research_date\": \"2024-10-15\",\n  \"overview\": \"Country stability is a crucial parameter for renewable energy investment in Spain as it directly impacts the political and economic risks associated with such investments. A stable country environment provides a conducive atmosphere for long-term investments and ensures the security of assets. As of Q4 2024, Spain has been relatively stable in terms of its regulatory framework and governance, making it an attractive destination for renewable energy projects.\"\n\n  \"current_status\": \"Spain's country stability rating as per Euromoney Country Risk (ECR) stands at 2.5, indicating a stable environment with low risk. The World Bank Governance Indicators also reflect positively on Spain's regulatory quality and rule of law. Recent developments include the government's commitment to increasing renewable energy capacity by 2030, with a target of 74% renewable electric",
+  "_metadata": {
+    "research_date": "2026-01-13T10:59:02.710297",
+    "execution_time_seconds": 6.922951,
+    "parameter": "Country Stability",
+    "country": "Spain",
+    "period": "Q4 2024",
+    "llm_model": "gpt-3.5-turbo",
+    "prompt_length": 4119,
+    "response_length": 4222
+  },
+  "_raw_response": "{\n  \"parameter\": \"Country Stability\",\n  \"country\": \"Spain\",\n  \"period\": \"Q4 2024\",\n  \"research_date\": \"2024-10-15\",\n  \"overview\": \"Country stability is a crucial parameter for renewable energy investment in Spain as it directly impacts the political and economic risks associated with such investments. A stable country environment provides a conducive atmosphere for long-term investments and ensures the security of assets. As of Q4 2024, Spain has been relatively stable in terms of its regulatory framework and governance, making it an attractive destination for renewable energy projects.\"\n\n  \"current_status\": \"Spain's country stability rating as per Euromoney Country Risk (ECR) stands at 2.5, indicating a stable environment with low risk. The World Bank Governance Indicators also reflect positively on Spain's regulatory quality and rule of law. Recent developments include the government's commitment to increasing renewable energy capacity by 2030, with a target of 74% renewable electricity generation. Spain's stability score is above the regional average, showcasing its favorable investment climate.\"\n\n  \"historical_trends\": \"Over the past five years, Spain has made significant progress in improving its country stability rating. Key turning points include the implementation of renewable energy support schemes and the establishment of clear regulatory frameworks. The stability score has steadily improved from 3.8 in 2019 to the current 2.5 in 2024, indicating a positive trend towards a more stable environment for investments.\"\n\n  \"policy_framework\": \"Spain has enacted various laws and regulations to support renewable energy development, including the Renewable Energy Plan 2021-2030, which aims to increase the share of renewables in the energy mix. The government has committed to phasing out coal-fired power plants by 2025 and promoting the use of clean energy sources. Recent policy announcements include incentives for solar and wind energy projects, further enhancing the investment attractiveness of the sector.\"\n\n  \"key_metrics\": [\n    {\"metric\": \"Country Stability Rating\", \"value\": \"2.5\", \"unit\": \"ECR Score\", \"source\": \"Euromoney Country Risk\", \"date\": \"Q4 2024\"},\n    {\"metric\": \"Renewable Electricity Generation Target\", \"value\": \"74%\", \"unit\": \"%\", \"source\": \"Government of Spain\", \"date\": \"2030\"},\n    {\"metric\": \"Coal Phase-out Deadline\", \"value\": \"2025\", \"unit\": \"Year\", \"source\": \"Government of Spain\", \"date\": \"2024\"}\n  ],\n\n  \"challenges\": \"Challenges in Spain's renewable energy sector include grid integration issues, regulatory uncertainties, and the need for further investment in infrastructure. Market constraints such as competition from conventional energy sources and fluctuating energy prices also pose challenges to the sector's growth.\"\n\n  \"opportunities\": \"Spain's renewable energy sector offers opportunities for growth due to the government's supportive policies, increasing demand for clean energy, and access to EU funding for sustainable projects. Market opportunities include the expansion of solar and wind energy capacity, energy storage solutions, and green hydrogen production.\"\n\n  \"future_outlook\": \"Looking ahead, Spain is expected to continue its positive trajectory in renewable energy development, with a focus on meeting its 2030 targets. Policy changes may include further incentives for renewable projects and regulatory reforms to streamline the approval process. Market forecasts predict a steady increase in renewable energy investments, with Spain emerging as a key player in the European clean energy market.\"\n\n  \"sources\": [\n    {\"name\": \"Euromoney Country Risk\", \"url\": \"https://www.euromoney.com/\", \"access_date\": \"2024-10-15\"},\n    {\"name\": \"World Bank Governance Indicators\", \"url\": \"https://info.worldbank.org/governance/wgi/\", \"access_date\": \"2024-10-15\"},\n    {\"name\": \"Government of Spain\", \"url\": \"https://www.lamoncloa.gob.es/Paginas/index.aspx\", \"access_date\": \"2024-10-15\"}\n  ],\n\n  \"confidence\": 0.9,\n  \"completeness_score\": 0.95,\n  \"data_quality_notes\": \"The data presented is based on reputable sources and recent information, providing a comprehensive analysis of Spain's country stability for renewable energy investments.\"\n}",
+  "_validation": {
+    "scores": {
+      "completeness": 0.0,
+      "data_quality": 0.3,
+      "source_quality": 0.3,
+      "overall": 0.18
+    },
+    "issues": [
+      "Missing sections: 7/10",
+      "Insufficient numerical data (< 3 metrics)",
+      "Insufficient sources (< 3)"
+    ],
+    "passed": false,
+    "grade": "F"
+  }
+}

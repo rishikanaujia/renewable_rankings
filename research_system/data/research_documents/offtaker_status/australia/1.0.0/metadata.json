@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:24:47.848451",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Offtaker Status",
+  "country": "Australia",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/offtaker_status/australia/1.0.0/research.json",
+  "file_size": 9147,
+  "checksum": "898fcee64ff5f9e32c45316c53b88d1327f0db7bdb3ae1e79264f2f6289fcaad"
+}

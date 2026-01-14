@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:07:50.722818",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Power Market Size",
+  "country": "Chile",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/power_market_size/chile/1.0.0/research.json",
+  "file_size": 9312,
+  "checksum": "9414d1ca4ee0ffb8287bc0b8b282f4203636f93f6af0d669974898a0492023b3"
+}

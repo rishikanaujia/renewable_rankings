@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:37:32.863584",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Status of Grid",
+  "country": "Australia",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/status_of_grid/australia/1.0.0/research.json",
+  "file_size": 8304,
+  "checksum": "ff5ad481f789b5b45680e0df884ae5388757d7d1a4842105fb480a10e6eba58e"
+}

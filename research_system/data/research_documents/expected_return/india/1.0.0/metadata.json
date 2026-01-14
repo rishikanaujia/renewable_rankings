@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-12T23:55:38.742420",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Expected Return",
+  "country": "India",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/expected_return/india/1.0.0/research.json",
+  "file_size": 8462,
+  "checksum": "e99d6375272927f98650a9a6e8cf8aa931ae67515dfce7dca72e5e798dc7c2e6"
+}

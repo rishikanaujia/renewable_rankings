@@ -1,0 +1,33 @@
+{
+  "parameter": "",
+  "country": "",
+  "overview": "",
+  "error": "Failed to parse JSON: Expecting ',' delimiter: line 8 column 3 (char 738)",
+  "raw_content": "{\n  \"parameter\": \"Revenue Stream Stability\",\n  \"country\": \"India\",\n  \"period\": \"Q4 2024\",\n  \"research_date\": \"2024-12-15\",\n  \"overview\": \"Revenue stream stability in India refers to the predictability and security of project revenues through Power Purchase Agreements (PPAs). Longer contract terms with fixed prices provide greater revenue certainty and reduce merchant exposure risk. This parameter is crucial for renewable energy investment as it directly impacts the financial viability and attractiveness of projects to investors. As of Q4 2024, India's renewable energy sector is experiencing significant growth, with a focus on enhancing revenue stream stability to attract more investment and achieve sustainable energy goals.\"\n\n  \"current_status\": \"In Q4 2024, the revenue stream stability in India's renewable energy sector is improving. The average PPA term for solar projects is around 25 years, providing exceptional stability. Wind projects also have long-term PPAs ranging from 20 to 25",
+  "_metadata": {
+    "research_date": "2026-01-13T11:01:49.220288",
+    "execution_time_seconds": 5.905161,
+    "parameter": "Revenue Stream Stability",
+    "country": "India",
+    "period": "Q4 2024",
+    "llm_model": "gpt-3.5-turbo",
+    "prompt_length": 4313,
+    "response_length": 4539
+  },
+  "_raw_response": "{\n  \"parameter\": \"Revenue Stream Stability\",\n  \"country\": \"India\",\n  \"period\": \"Q4 2024\",\n  \"research_date\": \"2024-12-15\",\n  \"overview\": \"Revenue stream stability in India refers to the predictability and security of project revenues through Power Purchase Agreements (PPAs). Longer contract terms with fixed prices provide greater revenue certainty and reduce merchant exposure risk. This parameter is crucial for renewable energy investment as it directly impacts the financial viability and attractiveness of projects to investors. As of Q4 2024, India's renewable energy sector is experiencing significant growth, with a focus on enhancing revenue stream stability to attract more investment and achieve sustainable energy goals.\"\n\n  \"current_status\": \"In Q4 2024, the revenue stream stability in India's renewable energy sector is improving. The average PPA term for solar projects is around 25 years, providing exceptional stability. Wind projects also have long-term PPAs ranging from 20 to 25 years, ensuring outstanding revenue security. Recent developments include the introduction of hybrid renewable energy projects that combine solar and wind to optimize revenue streams. India's revenue stream stability surpasses regional averages, with most projects having PPAs covering the full project life.\"\n\n  \"historical_trends\": \"Over the past 3-5 years, India has made significant progress in enhancing revenue stream stability for renewable energy projects. Key turning points include the implementation of competitive bidding processes for PPAs, which have led to lower tariffs and longer contract durations. The growth rate of PPA terms has been steady, with an average increase of 1-2 years every year. This trend indicates a positive trajectory towards greater revenue security and investor confidence in the sector.\"\n\n  \"policy_framework\": \"India's renewable energy policy framework includes the National Solar Mission and National Wind Mission, which aim to achieve 175 GW of renewable energy capacity by 2022, with a further target of 450 GW by 2030. The government has committed to promoting long-term PPAs to ensure revenue stability for investors. Recent policy announcements include incentives for storage integration in renewable projects to enhance revenue streams. The institutional framework includes the Ministry of New and Renewable Energy (MNRE) overseeing policy implementation and regulation in the sector.\"\n\n  \"key_metrics\": [\n    {\"metric\": \"Average PPA term for solar projects\", \"value\": \"25 years\", \"unit\": \"years\", \"source\": \"MNRE Database\", \"date\": \"2024\"},\n    {\"metric\": \"Average PPA term for wind projects\", \"value\": \"20-25 years\", \"unit\": \"years\", \"source\": \"MNRE Database\", \"date\": \"2024\"}\n  ],\n\n  \"challenges\": \"Challenges to revenue stream stability in India's renewable energy sector include regulatory uncertainties, grid integration issues, and land acquisition challenges. Market constraints such as fluctuating tariffs and off-taker credit risks also pose obstacles to revenue predictability. Infrastructure limitations in transmission and distribution networks can impact the reliability of revenue streams for renewable projects.\"\n\n  \"opportunities\": \"Opportunities for enhancing revenue stream stability in India include the development of energy storage solutions to mitigate intermittency risks and optimize revenue generation. Market opportunities exist in the growing demand for clean energy and the increasing focus on sustainability by corporations and consumers. Supportive policies that incentivize long-term PPAs and provide regulatory clarity can further drive revenue stability in the sector.\"\n\n  \"future_outlook\": \"Looking ahead, India's renewable energy sector is poised for continued growth in revenue stream stability. Projections for the next 2-5 years indicate an increase in the average PPA term for solar and wind projects, with a focus on ultra-long term contracts exceeding 25 years. Expected policy changes include further incentives for storage integration and grid modernization to enhance revenue predictability. Market forecasts suggest a rise in renewable energy investments driven by improved revenue stream stability, offering attractive opportunities for investors.\"\n\n  \"sources\": [\n    {\"name\": \"MNRE Database\", \"url\": \"www.mnre.gov.in\", \"access_date\": \"2024-12-15\"}\n  ],\n\n  \"confidence\": 0.9,\n  \"completeness_score\": 0.95,\n  \"data_quality_notes\": \"The data presented is based on official sources and recent reports, ensuring high accuracy and reliability.\"\n}",
+  "_validation": {
+    "scores": {
+      "completeness": 0.0,
+      "data_quality": 0.3,
+      "source_quality": 0.3,
+      "overall": 0.18
+    },
+    "issues": [
+      "Missing sections: 7/10",
+      "Insufficient numerical data (< 3 metrics)",
+      "Insufficient sources (< 3)"
+    ],
+    "passed": false,
+    "grade": "F"
+  }
+}

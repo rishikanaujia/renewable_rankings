@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T11:01:00.066419",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Renewables Penetration",
+  "country": "Vietnam",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/renewables_penetration/vietnam/1.0.0/research.json",
+  "file_size": 8560,
+  "checksum": "472f7b35a9901a36942e37cf36eca988cf683de9c20fe2eda6bae95342fe789a"
+}

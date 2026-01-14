@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:20:17.847716",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Expected Return",
+  "country": "Vietnam",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/expected_return/vietnam/1.0.0/research.json",
+  "file_size": 8260,
+  "checksum": "ec62d41fbb8d4213c295f66f6fe8ae3a9a7fd44c098bd2e85460a8fb5b963a04"
+}

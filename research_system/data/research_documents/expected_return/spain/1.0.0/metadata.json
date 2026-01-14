@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:19:20.471040",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Expected Return",
+  "country": "Spain",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/expected_return/spain/1.0.0/research.json",
+  "file_size": 8708,
+  "checksum": "cf4328f1d9730458e916234e86deda072dc0edb1337c03eb067af9ece5ac6e05"
+}

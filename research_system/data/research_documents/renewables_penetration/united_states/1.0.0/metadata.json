@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:15:43.178974",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Renewables Penetration",
+  "country": "United States",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/renewables_penetration/united_states/1.0.0/research.json",
+  "file_size": 10661,
+  "checksum": "8f42f5fc4a0a1579deebd7a3027ac4e2537471c6ded3d55b48fbbc1c098ed733"
+}

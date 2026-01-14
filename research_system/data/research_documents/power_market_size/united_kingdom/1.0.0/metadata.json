@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:06:51.825244",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Power Market Size",
+  "country": "United Kingdom",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/power_market_size/united_kingdom/1.0.0/research.json",
+  "file_size": 10591,
+  "checksum": "05b70149d396dde2f95f243bc39efcf3da4fe98d018f67fab355765859a1e399"
+}

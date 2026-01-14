@@ -1,0 +1,33 @@
+{
+  "parameter": "",
+  "country": "",
+  "overview": "",
+  "error": "Failed to parse JSON: Expecting ',' delimiter: line 8 column 3 (char 609)",
+  "raw_content": "{\n  \"parameter\": \"Ownership Hurdles\",\n  \"country\": \"India\",\n  \"period\": \"Q4 2024\",\n  \"research_date\": \"2024-12-15\",\n  \"overview\": \"Ownership hurdles in India refer to the regulatory and practical barriers that limit foreign ownership and market participation in the renewable energy sector. These hurdles are crucial as they directly impact the level of international investment and competition in the country's renewable energy market. As of Q4 2024, understanding the ownership hurdles in India is essential for investors looking to enter or expand their presence in the Indian renewable energy market.\"\n\n  \"current_status\": \"Currently, India imposes significant restrictions on foreign ownership in the renewable energy sector. Foreign ownership is limited to 25-40% in most cases, with complex approval processes and regulatory barriers hindering greater international investment. The OECD FDI Regulatory Restrictiveness Index ranks India relatively high in terms of barriers to foreign ownership",
+  "_metadata": {
+    "research_date": "2026-01-13T11:04:10.225242",
+    "execution_time_seconds": 5.526625,
+    "parameter": "Ownership Hurdles",
+    "country": "India",
+    "period": "Q4 2024",
+    "llm_model": "gpt-3.5-turbo",
+    "prompt_length": 4499,
+    "response_length": 4535
+  },
+  "_raw_response": "{\n  \"parameter\": \"Ownership Hurdles\",\n  \"country\": \"India\",\n  \"period\": \"Q4 2024\",\n  \"research_date\": \"2024-12-15\",\n  \"overview\": \"Ownership hurdles in India refer to the regulatory and practical barriers that limit foreign ownership and market participation in the renewable energy sector. These hurdles are crucial as they directly impact the level of international investment and competition in the country's renewable energy market. As of Q4 2024, understanding the ownership hurdles in India is essential for investors looking to enter or expand their presence in the Indian renewable energy market.\"\n\n  \"current_status\": \"Currently, India imposes significant restrictions on foreign ownership in the renewable energy sector. Foreign ownership is limited to 25-40% in most cases, with complex approval processes and regulatory barriers hindering greater international investment. The OECD FDI Regulatory Restrictiveness Index ranks India relatively high in terms of barriers to foreign ownership compared to other countries. Recent developments have seen some easing of restrictions in certain sub-sectors, but overall, India still presents high barriers to foreign ownership in the renewable energy market.\"\n\n  \"historical_trends\": \"Over the past few years, India has gradually increased foreign ownership limits in the renewable energy sector, aiming to attract more international investment. Key turning points include policy changes that allowed higher levels of foreign ownership in specific sub-sectors. Growth rates in foreign investment have been positive but constrained by regulatory hurdles. The trend has been towards a gradual opening up of the market, but significant barriers still exist as of Q4 2024.\"\n\n  \"policy_framework\": \"India's policy framework includes various laws, regulations, and policies that govern foreign ownership in the renewable energy sector. The government has set ambitious targets for renewable energy capacity addition, with a goal of reaching 450 GW by 2030. The institutional framework includes the Ministry of New and Renewable Energy (MNRE) and various state agencies that oversee renewable energy development. Recent policy announcements have focused on streamlining approval processes and attracting more foreign investment.\"\n\n  \"key_metrics\": [\n    {\"metric\": \"Foreign ownership limit\", \"value\": \"25-40%\", \"unit\": \"%\", \"source\": \"OECD FDI Regulatory Restrictiveness Index\", \"date\": \"2024\"},\n    {\"metric\": \"Renewable energy capacity target\", \"value\": \"450 GW by 2030\", \"unit\": \"GW\", \"source\": \"MNRE\", \"date\": \"2024\"}\n  ],\n\n  \"challenges\": \"The main obstacles and challenges in India's renewable energy sector include complex approval processes, regulatory uncertainties, and market constraints. Infrastructure limitations, especially in remote areas, pose challenges for project development. Additionally, changing policy landscapes and political uncertainties can impact foreign investors' confidence in the market.\"\n\n  \"opportunities\": \"Despite the challenges, India's renewable energy sector presents significant opportunities for growth. The market is vast, with increasing demand for clean energy solutions. Supportive policies, such as incentives for renewable energy projects and tax benefits for investors, create a favorable investment environment. The government's commitment to achieving renewable energy targets also signals long-term growth potential in the sector.\"\n\n  \"future_outlook\": \"Looking ahead, India's renewable energy sector is expected to continue attracting foreign investment, albeit with some regulatory hurdles. Policy changes aimed at further easing ownership restrictions and streamlining approval processes are likely in the next few years. Market forecasts suggest continued growth in renewable energy capacity, with opportunities for both domestic and foreign investors. The future outlook for the sector remains positive, with the potential for increased international participation.\"\n\n  \"sources\": [\n    {\"name\": \"OECD FDI Regulatory Restrictiveness Index\", \"url\": \"https://www.oecd.org/investment/fdiindex.htm\", \"access_date\": \"2024-12-15\"},\n    {\"name\": \"Ministry of New and Renewable Energy (MNRE)\", \"url\": \"https://mnre.gov.in/\", \"access_date\": \"2024-12-15\"}\n  ],\n\n  \"confidence\": 0.9,\n  \"completeness_score\": 0.95,\n  \"data_quality_notes\": \"The data presented is based on reputable sources and recent information from Q4 2024. The analysis is comprehensive and covers various aspects of ownership hurdles in India's renewable energy sector.\"\n}",
+  "_validation": {
+    "scores": {
+      "completeness": 0.0,
+      "data_quality": 0.3,
+      "source_quality": 0.3,
+      "overall": 0.18
+    },
+    "issues": [
+      "Missing sections: 7/10",
+      "Insufficient numerical data (< 3 metrics)",
+      "Insufficient sources (< 3)"
+    ],
+    "passed": false,
+    "grade": "F"
+  }
+}

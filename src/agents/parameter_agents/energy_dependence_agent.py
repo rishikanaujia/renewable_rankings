@@ -1,0 +1,897 @@
+"""Energy Dependence Agent - Analyzes energy import dependency.
+
+This agent evaluates energy security by measuring the percentage of primary energy
+that must be imported. Lower import dependency indicates greater energy independence
+and more favorable conditions for domestic renewable energy development.
+
+Import Dependency Scale:
+- < 10%: Energy independent (net exporter or minimal imports)
+- 10-20%: Very low dependence
+- 20-30%: Low dependence
+- 30-40%: Moderate-low dependence
+- 40-50%: Moderate dependence
+- 50-60%: Moderate-high dependence
+- 60-70%: High dependence
+- 70-80%: Very high dependence
+- 80-90%: Extreme dependence
+- ≥ 90%: Nearly total dependence (energy security risk)
+
+Scoring Rubric (LOADED FROM CONFIG):
+Lower imports = Better energy security = Higher score (INVERSE relationship)
+
+MODES:
+- MOCK: Uses hardcoded test data (for testing)
+- RULE_BASED: Estimates import dependency from World Bank data (production)
+"""
+from typing import Dict, Any, List, Optional
+from datetime import datetime
+
+from ..base_agent import BaseParameterAgent, AgentMode
+from ...models.parameter import ParameterScore
+from ...core.logger import get_logger
+from ...core.exceptions import AgentError
+
+# Memory system integration
+try:
+    from memory_system.src.memory.integration.memory_mixin import MemoryMixin
+    MEMORY_AVAILABLE = True
+except ImportError:
+    MEMORY_AVAILABLE = False
+    logger.warning("Memory system not available. Agent will run without memory capabilities.")
+
+# Research integration
+try:
+    from research_integration.mixins import ResearchIntegrationMixin
+    from research_integration.parsers import EnergyDependenceParser
+    RESEARCH_INTEGRATION_AVAILABLE = True
+except ImportError:
+    RESEARCH_INTEGRATION_AVAILABLE = False
+    logger.warning("Research integration not available. Agent will use MOCK data fallback only.")
+
+logger = get_logger(__name__)
+
+
+# Build base classes dynamically based on availability
+_base_classes = [BaseParameterAgent]
+if MEMORY_AVAILABLE:
+    _base_classes.append(MemoryMixin)
+if RESEARCH_INTEGRATION_AVAILABLE:
+    _base_classes.append(ResearchIntegrationMixin)
+
+class EnergyDependenceAgent(*_base_classes):
+    """Agent for analyzing energy import dependency and energy security."""
+    
+    # Mock data for Phase 1 testing
+    # Import dependency % = (Energy imports / Total primary energy consumption) × 100
+    # Data sourced from IEA World Energy Balances 2023
+    MOCK_DATA = {
+        "Brazil": {
+            "import_pct": 8.5,  # Net energy exporter (oil, biofuels)
+            "production_mtoe": 305,
+            "consumption_mtoe": 333,
+            "status": "Near energy independent"
+        },
+        "Germany": {
+            "import_pct": 63.5,  # High dependence on gas/oil imports
+            "production_mtoe": 112,
+            "consumption_mtoe": 307,
+            "status": "High import dependence"
+        },
+        "USA": {
+            "import_pct": 3.2,  # Energy independent since 2019 (shale revolution)
+            "production_mtoe": 2425,
+            "consumption_mtoe": 2501,
+            "status": "Energy independent"
+        },
+        "China": {
+            "import_pct": 22.5,  # Low-moderate dependence (domestic coal, growing imports)
+            "production_mtoe": 2785,
+            "consumption_mtoe": 3596,
+            "status": "Low import dependence"
+        },
+        "India": {
+            "import_pct": 38.2,  # Moderate-low dependence (domestic coal, oil imports)
+            "production_mtoe": 651,
+            "consumption_mtoe": 1053,
+            "status": "Moderate-low dependence"
+        },
+        "UK": {
+            "import_pct": 36.8,  # Moderate-low (North Sea declining)
+            "production_mtoe": 101,
+            "consumption_mtoe": 160,
+            "status": "Moderate-low dependence"
+        },
+        "Spain": {
+            "import_pct": 72.5,  # Very high dependence (limited domestic resources)
+            "production_mtoe": 32,
+            "consumption_mtoe": 116,
+            "status": "Very high dependence"
+        },
+        "Australia": {
+            "import_pct": -145.0,  # Huge net exporter (coal, LNG)
+            "production_mtoe": 347,
+            "consumption_mtoe": 142,
+            "status": "Major energy exporter"
+        },
+        "Chile": {
+            "import_pct": 68.5,  # High dependence (limited domestic fossil fuels)
+            "production_mtoe": 11,
+            "consumption_mtoe": 35,
+            "status": "High import dependence"
+        },
+        "Vietnam": {
+            "import_pct": 15.5,  # Very low dependence (domestic coal, growing imports)
+            "production_mtoe": 72,
+            "consumption_mtoe": 85,
+            "status": "Very low dependence"
+        },
+        "South Africa": {
+            "import_pct": -32.0,  # Net exporter (coal)
+            "production_mtoe": 168,
+            "consumption_mtoe": 127,
+            "status": "Energy exporter"
+        },
+        "Nigeria": {
+            "import_pct": -85.0,  # Major oil/gas exporter
+            "production_mtoe": 246,
+            "consumption_mtoe": 133,
+            "status": "Major energy exporter"
+        },
+        "Argentina": {
+            "import_pct": 12.5,  # Very low dependence (shale oil/gas, Vaca Muerta)
+            "production_mtoe": 79,
+            "consumption_mtoe": 90,
+            "status": "Very low dependence"
+        },
+        "Mexico": {
+            "import_pct": 25.8,  # Low dependence (oil production declining)
+            "production_mtoe": 134,
+            "consumption_mtoe": 181,
+            "status": "Low dependence"
+        },
+        "Indonesia": {
+            "import_pct": 18.5,  # Very low dependence (coal, becoming net importer)
+            "production_mtoe": 456,
+            "consumption_mtoe": 560,
+            "status": "Very low dependence"
+        },
+    }
+    
+    def __init__(
+        self, 
+        mode: AgentMode = AgentMode.MOCK, 
+        config: Dict[str, Any] = None,
+        data_service = None  # DataService instance for RULE_BASED mode
+    ):
+        """Initialize Energy Dependence Agent.
+        
+        Args:
+            mode: Agent operation mode (MOCK or RULE_BASED)
+            config: Configuration dictionary
+            data_service: DataService instance (required for RULE_BASED mode)
+        """
+        super().__init__(
+            parameter_name="Energy Dependence",
+            mode=mode,
+            config=config
+        )
+        
+        # Store data service for RULE_BASED mode
+        self.data_service = data_service
+        
+        # Validate data service if in RULE_BASED mode
+        if self.mode == AgentMode.RULE_BASED and self.data_service is None:
+            logger.warning(
+                "RULE_BASED mode enabled but no data_service provided. "
+                "Agent will fall back to MOCK data."
+            )
+
+        # Initialize memory capabilities if available
+        if MEMORY_AVAILABLE:
+            self.init_memory()
+            logger.debug("Memory capabilities initialized for EnergyDependenceAgent")
+
+        # Configure research parser if available
+        if RESEARCH_INTEGRATION_AVAILABLE and EnergyDependenceParser:
+            self.research_parser = EnergyDependenceParser()
+            logger.debug("Research parser configured for EnergyDependenceAgent")
+
+        # Load scoring rubric from config (NO HARDCODING!)
+        self.scoring_rubric = self._load_scoring_rubric()
+
+        logger.debug(
+            f"Initialized EnergyDependenceAgent in {mode.value} mode "
+            f"with {len(self.scoring_rubric)} scoring levels"
+        )
+    
+    def _load_scoring_rubric(self) -> List[Dict[str, Any]]:
+        """Load scoring rubric from configuration.
+        
+        Returns:
+            List of scoring levels with import % thresholds
+        """
+        try:
+            from ...core.config_loader import config_loader
+            params_config = config_loader.get_parameters()
+            
+            # Get rubric for energy_dependence parameter
+            dependence_config = params_config['parameters'].get('energy_dependence', {})
+            scoring = dependence_config.get('scoring', [])
+            
+            if scoring:
+                logger.info("Loaded scoring rubric from config/parameters.yaml")
+                # Convert config format to internal format
+                rubric = []
+                for item in scoring:
+                    rubric.append({
+                        "score": item['value'],
+                        "min_import_pct": item.get('min_import_pct', 0.0),
+                        "max_import_pct": item.get('max_import_pct', 100.0),
+                        "range": item['range'],
+                        "description": item['description']
+                    })
+                
+                logger.debug(f"Converted {len(rubric)} rubric levels from config")
+                return rubric
+            else:
+                logger.warning("No scoring rubric in config, using fallback")
+                return self._get_fallback_rubric()
+                
+        except Exception as e:
+            logger.warning(f"Could not load rubric from config: {e}. Using fallback.")
+            return self._get_fallback_rubric()
+    
+    def _get_fallback_rubric(self) -> List[Dict[str, Any]]:
+        """Fallback scoring rubric if config is not available.
+        
+        This ensures agent works even without full config.
+        
+        Returns:
+            Default scoring rubric
+        """
+        return [
+            {"score": 10, "min_import_pct": 0.0, "max_import_pct": 10.0, "range": "< 10%", "description": "Energy independent (net exporter or minimal imports)"},
+            {"score": 9, "min_import_pct": 10.0, "max_import_pct": 20.0, "range": "10-20%", "description": "Very low dependence"},
+            {"score": 8, "min_import_pct": 20.0, "max_import_pct": 30.0, "range": "20-30%", "description": "Low dependence"},
+            {"score": 7, "min_import_pct": 30.0, "max_import_pct": 40.0, "range": "30-40%", "description": "Moderate-low dependence"},
+            {"score": 6, "min_import_pct": 40.0, "max_import_pct": 50.0, "range": "40-50%", "description": "Moderate dependence"},
+            {"score": 5, "min_import_pct": 50.0, "max_import_pct": 60.0, "range": "50-60%", "description": "Moderate-high dependence"},
+            {"score": 4, "min_import_pct": 60.0, "max_import_pct": 70.0, "range": "60-70%", "description": "High dependence"},
+            {"score": 3, "min_import_pct": 70.0, "max_import_pct": 80.0, "range": "70-80%", "description": "Very high dependence"},
+            {"score": 2, "min_import_pct": 80.0, "max_import_pct": 90.0, "range": "80-90%", "description": "Extreme dependence"},
+            {"score": 1, "min_import_pct": 90.0, "max_import_pct": 100.0, "range": "≥ 90%", "description": "Nearly total dependence (energy security risk)"}
+        ]
+    
+    def analyze(
+        self,
+        country: str,
+        period: str,
+        **kwargs
+    ) -> ParameterScore:
+        """Analyze energy import dependency for a country.
+        
+        Args:
+            country: Country name
+            period: Time period (e.g., "Q3 2024")
+            **kwargs: Additional context
+            
+        Returns:
+            ParameterScore with score, justification, confidence
+        """
+        try:
+            logger.info(f"Analyzing Energy Dependence for {country} ({period}) in {self.mode.value} mode")
+            
+            # Step 1: Fetch data
+            data = self._fetch_data(country, period, **kwargs)
+            
+            # Step 2: Calculate score
+            score = self._calculate_score(data, country, period)
+            
+            # Step 3: Validate score
+            score = self._validate_score(score)
+            
+            # Step 4: Generate justification
+            justification = self._generate_justification(data, score, country, period)
+            
+            # Step 5: Estimate confidence
+            # AI-powered data uses AI's own confidence assessment
+            if data.get('source') == 'ai_powered':
+                data_quality = "high"
+                ai_confidence = data.get('ai_confidence', 0.8)
+                confidence = ai_confidence  # Use AI's confidence directly
+            elif self.mode == AgentMode.RULE_BASED and data.get('source') == 'rule_based':
+                data_quality = "medium"  # Estimation based, not direct measurement
+                confidence = 0.75  # Moderate-high confidence for estimated data
+            else:
+                data_quality = "medium"
+                confidence = 0.7  # Lower confidence for mock data
+
+            confidence = self._estimate_confidence(data, data_quality)
+            
+            # Step 6: Identify data sources
+            data_sources = self._get_data_sources(country, data)
+            
+            # Create result
+            result = ParameterScore(
+                parameter_name=self.parameter_name,
+                score=score,
+                justification=justification,
+                data_sources=data_sources,
+                confidence=confidence,
+                timestamp=datetime.now()
+            )
+            
+            logger.info(
+                f"Energy Dependence analysis complete for {country}: "
+                f"Score={score:.1f}, Import%={data.get('import_pct', 0):.1f}, "
+                f"Confidence={confidence:.2f}, Mode={self.mode.value}"
+            )
+            
+            return result
+            
+        except Exception as e:
+            logger.error(f"Energy Dependence analysis failed for {country}: {str(e)}", exc_info=True)
+            raise AgentError(f"Energy Dependence analysis failed: {str(e)}")
+    
+    def _fetch_data(
+        self,
+        country: str,
+        period: str,
+        **kwargs
+    ) -> Dict[str, Any]:
+        """Fetch energy import dependency data.
+        
+        In MOCK mode: Returns mock import % data
+        In RULE_BASED mode: Estimates import dependency from World Bank data
+        In AI_POWERED mode: Would use LLM to extract from IEA reports (not yet implemented)
+        
+        Args:
+            country: Country name
+            period: Time period
+            
+        Returns:
+            Dictionary with import dependency data
+        """
+        if self.mode == AgentMode.MOCK:
+            # Return mock data
+            data = self.MOCK_DATA.get(country, None)
+            if not data:
+                logger.warning(f"No mock data for {country}, using default moderate dependence")
+                data = {
+                    "import_pct": 45.0,
+                    "production_mtoe": 100,
+                    "consumption_mtoe": 182,
+                    "status": "Moderate dependence"
+                }
+            
+            # Add source indicator
+            data['source'] = 'mock'
+            
+            logger.debug(f"Fetched mock data for {country}: {data.get('import_pct')}% import dependency")
+            return data
+        
+        elif self.mode == AgentMode.RULE_BASED:
+            # Estimate import dependency from World Bank data
+            if self.data_service is None:
+                logger.warning("No data_service available, trying research system")
+
+                # Try research integration as fallback
+                if RESEARCH_INTEGRATION_AVAILABLE:
+                    research_data = self._fetch_data_from_research(country, period)
+                    if research_data:
+                        logger.info(f"Using research data for {country}")
+                        return research_data
+
+                # Final fallback to MOCK
+                logger.warning("Research not available, falling back to MOCK data")
+                return self._fetch_data_mock_fallback(country)
+            
+            try:
+                # Fetch energy use per capita
+                energy_use_per_capita = self.data_service.get_value(
+                    country=country,
+                    indicator='energy_use',  # kg of oil equivalent per capita
+                    default=None
+                )
+                
+                # Fetch GDP per capita
+                gdp_per_capita = self.data_service.get_value(
+                    country=country,
+                    indicator='gdp_per_capita',
+                    default=None
+                )
+                
+                # Fetch population for total calculations
+                population = self.data_service.get_value(
+                    country=country,
+                    indicator='population',
+                    default=None
+                )
+                
+                if energy_use_per_capita is None or gdp_per_capita is None:
+                    logger.warning(
+                        f"Insufficient data for {country}, trying research system"
+                    )
+                    # Try research integration as fallback
+                    if RESEARCH_INTEGRATION_AVAILABLE:
+                        research_data = self._fetch_data_from_research(country, period)
+                        if research_data:
+                            logger.info(f"Using research data for {country}")
+                            return research_data
+
+                    # Final fallback to MOCK
+                    logger.warning("Research not available, falling back to MOCK data")
+                    return self._fetch_data_mock_fallback(country)
+                
+                # Estimate import dependency using economic indicators
+                # This is a simplified model based on observed patterns:
+                # - High GDP per capita + high energy use = likely energy independent (developed with resources)
+                # - High GDP per capita + low energy use = likely efficient (low dependency)
+                # - Low GDP per capita + high energy use = likely import dependent
+                import_pct = self._estimate_import_dependency(
+                    country, 
+                    energy_use_per_capita, 
+                    gdp_per_capita,
+                    population
+                )
+                
+                # Calculate approximate production and consumption
+                # Total energy use (Mtoe) = energy_use_per_capita (kg/capita) * population / 1000 / 1000
+                if population:
+                    consumption_mtoe = (energy_use_per_capita * population) / 1_000_000
+                    production_mtoe = consumption_mtoe * (1 - import_pct / 100)
+                else:
+                    consumption_mtoe = 100
+                    production_mtoe = 100 * (1 - import_pct / 100)
+                
+                # Determine status
+                status = self._determine_dependency_status(import_pct)
+                
+                data = {
+                    'import_pct': import_pct,
+                    'production_mtoe': production_mtoe,
+                    'consumption_mtoe': consumption_mtoe,
+                    'status': status,
+                    'source': 'rule_based',
+                    'period': period,
+                    'estimation_method': 'GDP and energy use based'
+                }
+                
+                logger.info(
+                    f"Estimated RULE_BASED data for {country}: {import_pct:.1f}% import dependency "
+                    f"(energy use={energy_use_per_capita:.0f} kg/capita, GDP={gdp_per_capita:.0f})"
+                )
+                
+                return data
+                
+            except Exception as e:
+                logger.error(
+                    f"Error estimating import dependency for {country}: {e}. "
+                    f"Trying research system"
+                )
+                # Try research integration as fallback
+                if RESEARCH_INTEGRATION_AVAILABLE:
+                    research_data = self._fetch_data_from_research(country, period)
+                    if research_data:
+                        logger.info(f"Using research data for {country}")
+                        return research_data
+
+                # Final fallback to MOCK
+                logger.warning("Research not available, falling back to MOCK data")
+                return self._fetch_data_mock_fallback(country)
+        
+        elif self.mode == AgentMode.AI_POWERED:
+            # Extract energy dependence using AI extraction system
+            try:
+                from ai_extraction_system import AIExtractionAdapter
+
+                # Initialize AI extraction adapter
+                adapter = AIExtractionAdapter(
+                    llm_config=self.config.get('llm_config') if self.config else None,
+                    cache_config=self.config.get('cache_config') if self.config else None
+                )
+
+                # Extract energy dependence using AI
+                extraction_result = adapter.extract_parameter(
+                    parameter_name='energy_dependence',
+                    country=country,
+                    period=period,
+                    documents=kwargs.get('documents'),
+                    document_urls=kwargs.get('document_urls')
+                )
+
+                logger.info(f"Using AI_POWERED mode for {country}")
+
+                if extraction_result and extraction_result.get('value') is not None:
+                    # AI returns import dependency percentage (0-100)
+                    import_pct = float(extraction_result['value'])
+
+                    # Get metadata from extraction
+                    metadata = extraction_result.get('metadata', {})
+
+                    # Determine status from import percentage
+                    status = self._determine_dependency_status(import_pct)
+
+                    # Build data dictionary
+                    data = {
+                        'import_pct': import_pct,
+                        'status': status,
+                        'production_mtoe': metadata.get('production_mtoe', 0),
+                        'consumption_mtoe': metadata.get('consumption_mtoe', 0),
+                        'source': 'ai_powered',
+                        'ai_confidence': extraction_result.get('confidence', 0.8),
+                        'ai_justification': extraction_result.get('justification', ''),
+                        'fossil_fuel_share': metadata.get('fossil_fuel_share'),
+                        'primary_import_sources': metadata.get('primary_import_sources'),
+                        'energy_security_risk': metadata.get('energy_security_risk'),
+                        'period': period
+                    }
+
+                    logger.info(
+                        f"AI extraction successful for {country}: "
+                        f"{import_pct:.1f}% import dependency, "
+                        f"confidence={data['ai_confidence']:.2f}"
+                    )
+
+                    return data
+                else:
+                    logger.warning(f"AI extraction returned no value for {country}, falling back to MOCK")
+                    return self._fetch_data_mock_fallback(country)
+
+            except Exception as e:
+                logger.error(
+                    f"Error using AI extraction for {country}: {e}. "
+                    f"Falling back to MOCK data"
+                )
+                return self._fetch_data_mock_fallback(country)
+        
+        else:
+            raise AgentError(f"Unknown agent mode: {self.mode}")
+    
+    def _fetch_data_mock_fallback(self, country: str) -> Dict[str, Any]:
+        """Fallback to mock data when rule-based data is unavailable.
+        
+        Args:
+            country: Country name
+            
+        Returns:
+            Mock data dictionary
+        """
+        data = self.MOCK_DATA.get(country, {
+            "import_pct": 45.0,
+            "production_mtoe": 100,
+            "consumption_mtoe": 182,
+            "status": "Moderate dependence"
+        })
+        data['source'] = 'mock_fallback'
+        
+        logger.debug(f"Using mock fallback data for {country}")
+        return data
+    
+    def _estimate_import_dependency(
+        self,
+        country: str,
+        energy_use_per_capita: float,
+        gdp_per_capita: float,
+        population: Optional[float] = None
+    ) -> float:
+        """Estimate import dependency from economic indicators.
+        
+        This is a simplified estimation model. In production, use actual IEA data.
+        
+        Model logic:
+        - High GDP/capita suggests developed economy
+        - Energy intensity = energy_use / gdp_per_capita
+        - High energy intensity + high GDP = likely resource-rich (USA, Australia)
+        - Low energy intensity + high GDP = likely efficient (Germany, Japan)
+        - Developing countries generally more import dependent
+        
+        Args:
+            country: Country name
+            energy_use_per_capita: Energy use in kg oil equivalent per capita
+            gdp_per_capita: GDP per capita in USD
+            population: Total population (optional, for context)
+            
+        Returns:
+            Estimated import dependency percentage
+        """
+        # Get base estimate from mock data if available
+        base_data = self.MOCK_DATA.get(country)
+        if base_data:
+            base_import_pct = base_data.get('import_pct', 40.0)
+        else:
+            base_import_pct = 40.0  # Default moderate dependency
+        
+        # Calculate energy intensity (energy per dollar of GDP)
+        # Normalize: energy_use is in kg/capita, gdp is in $/capita
+        if gdp_per_capita > 0:
+            energy_intensity = energy_use_per_capita / (gdp_per_capita / 1000)
+        else:
+            return base_import_pct
+        
+        # Adjustment based on energy intensity
+        # High intensity countries with high GDP are often energy producers
+        # Low intensity countries with high GDP are often importers
+        if gdp_per_capita > 40000:  # Developed economy
+            if energy_intensity > 150:  # High energy use relative to GDP
+                # Likely resource-rich developed country (USA, Canada, Australia)
+                adjustment = -0.7  # Reduce dependency
+            else:
+                # Efficient developed country (Germany, Japan, S.Korea)
+                adjustment = 0.2  # Slight increase in dependency
+        elif gdp_per_capita > 15000:  # Upper-middle income
+            if energy_intensity > 200:
+                # Energy-intensive developing (China, Russia)
+                adjustment = -0.3
+            else:
+                adjustment = 0.1
+        else:  # Developing economy
+            adjustment = 0.3  # Generally more dependent
+        
+        # Apply adjustment
+        estimated_import_pct = base_import_pct * (1 + adjustment)
+        
+        # Cap between -150% (major exporter) and 95% (near total dependence)
+        estimated_import_pct = max(-150, min(95, estimated_import_pct))
+        
+        logger.debug(
+            f"Import dependency estimation for {country}: "
+            f"base={base_import_pct:.1f}%, intensity={energy_intensity:.1f}, "
+            f"adjustment={adjustment:.2f}, final={estimated_import_pct:.1f}%"
+        )
+        
+        return estimated_import_pct
+    
+    def _determine_dependency_status(self, import_pct: float) -> str:
+        """Determine dependency status description from import percentage.
+        
+        Args:
+            import_pct: Import dependency percentage
+            
+        Returns:
+            Status description string
+        """
+        if import_pct < 0:
+            if import_pct < -100:
+                return "Major energy exporter"
+            elif import_pct < -20:
+                return "Energy exporter"
+            else:
+                return "Net energy exporter"
+        elif import_pct < 10:
+            return "Energy independent"
+        elif import_pct < 20:
+            return "Very low dependence"
+        elif import_pct < 30:
+            return "Low dependence"
+        elif import_pct < 40:
+            return "Moderate-low dependence"
+        elif import_pct < 50:
+            return "Moderate dependence"
+        elif import_pct < 60:
+            return "Moderate-high dependence"
+        elif import_pct < 70:
+            return "High import dependence"
+        elif import_pct < 80:
+            return "Very high dependence"
+        elif import_pct < 90:
+            return "Extreme dependence"
+        else:
+            return "Nearly total dependence"
+    
+    def _calculate_score(
+        self,
+        data: Dict[str, Any],
+        country: str,
+        period: str
+    ) -> float:
+        """Calculate energy dependence score based on import %.
+        
+        INVERSE: Lower import % = better energy security = higher score
+        
+        Special handling for net exporters (negative import %):
+        - Negative % treated as 0% (maximum score)
+        
+        Args:
+            data: Import dependency data with import_pct
+            country: Country name
+            period: Time period
+            
+        Returns:
+            Score between 1-10
+        """
+        import_pct = data.get("import_pct", 0)
+        
+        # Handle net exporters (negative import %)
+        if import_pct < 0:
+            logger.debug(f"{country} is net energy exporter ({import_pct:.1f}%), assigning max score")
+            return 10.0
+        
+        logger.debug(f"Calculating score for {country}: {import_pct:.1f}% import dependency")
+        
+        # Find matching rubric level
+        for level in self.scoring_rubric:
+            min_pct = level.get("min_import_pct", 0.0)
+            max_pct = level.get("max_import_pct", 100.0)
+            
+            if min_pct <= import_pct < max_pct:
+                score = level["score"]
+                logger.debug(
+                    f"Score {score} assigned: "
+                    f"{import_pct:.1f}% falls in range {min_pct:.0f}-{max_pct:.0f}%"
+                )
+                return float(score)
+        
+        # Fallback (shouldn't reach here with proper rubric)
+        logger.warning(f"No rubric match for {import_pct:.1f}%, defaulting to score 5")
+        return 5.0
+    
+    def _generate_justification(
+        self,
+        data: Dict[str, Any],
+        score: float,
+        country: str,
+        period: str
+    ) -> str:
+        """Generate justification for the energy dependence score.
+        
+        Args:
+            data: Import dependency data
+            score: Calculated score
+            country: Country name
+            period: Time period
+            
+        Returns:
+            Human-readable justification string
+        """
+        import_pct = data.get("import_pct", 0)
+        production = data.get("production_mtoe", 0)
+        consumption = data.get("consumption_mtoe", 0)
+        status = data.get("status", "moderate dependence")
+        source = data.get("source", "unknown")
+        
+        # Find description from rubric
+        description = "moderate energy dependence"
+        for level in self.scoring_rubric:
+            if level["score"] == int(score):
+                description = level["description"].lower()
+                break
+        
+        # Build justification based on source and dependency level
+        if source == 'ai_powered':
+            # Use AI-generated justification directly
+            ai_justification = data.get('ai_justification', '')
+            if ai_justification:
+                return ai_justification
+            # Fallback if AI didn't provide justification
+            else:
+                return (
+                    f"AI-extracted import dependency of {import_pct:.1f}% indicates {description}. "
+                    f"Renewable energy development can improve energy security and reduce import reliance."
+                )
+        elif source == 'rule_based':
+            method = data.get('estimation_method', 'economic indicators')
+            if import_pct < 0:
+                # Net exporter
+                export_pct = abs(import_pct)
+                justification = (
+                    f"Based on {method}: Net energy exporter with production exceeding "
+                    f"consumption by approximately {export_pct:.1f}%. "
+                    f"{status.capitalize()} provides strong foundation for renewable energy investment "
+                    f"and excellent energy security."
+                )
+            elif import_pct < 10:
+                # Energy independent
+                justification = (
+                    f"Based on {method}: Import dependency of {import_pct:.1f}% indicates {description}. "
+                    f"Strong domestic energy base provides favorable conditions for renewable development."
+                )
+            else:
+                # Import dependent
+                justification = (
+                    f"Based on {method}: Import dependency of {import_pct:.1f}% indicates {description}. "
+                    f"Renewable energy development can improve energy security and reduce import reliance."
+                )
+        else:
+            # Mock data - use detailed production/consumption numbers
+            if import_pct < 0:
+                # Net exporter
+                export_pct = abs(import_pct)
+                justification = (
+                    f"Net energy exporter with production of {production:.0f} Mtoe exceeding "
+                    f"consumption of {consumption:.0f} Mtoe by {export_pct:.1f}%. "
+                    f"{status} provides strong foundation for renewable energy investment "
+                    f"and excellent energy security."
+                )
+            elif import_pct < 10:
+                # Energy independent
+                justification = (
+                    f"Import dependency of {import_pct:.1f}% indicates {description}. "
+                    f"Domestic production of {production:.0f} Mtoe meets {100-import_pct:.1f}% "
+                    f"of {consumption:.0f} Mtoe consumption, providing strong energy security "
+                    f"and favorable conditions for renewable development."
+                )
+            else:
+                # Import dependent
+                justification = (
+                    f"Import dependency of {import_pct:.1f}% indicates {description}. "
+                    f"Domestic production of {production:.0f} Mtoe covers {100-import_pct:.1f}% "
+                    f"of {consumption:.0f} Mtoe consumption. Renewable energy development can "
+                    f"improve energy security and reduce import reliance."
+                )
+        
+        return justification
+    
+    def _get_data_sources(self, country: str, data: Dict[str, Any] = None) -> List[str]:
+        """Get data sources used for this analysis.
+
+        Args:
+            country: Country name
+            data: Data dictionary with source info
+
+        Returns:
+            List of data source identifiers
+        """
+        sources = []
+
+        # Check source type
+        if data and data.get('source') == 'ai_powered':
+            sources.append("AI-Powered Extraction from Energy Reports")
+            sources.append("IEA World Energy Balances")
+            sources.append("BP Statistical Review of World Energy")
+        elif data and data.get('source') == 'rule_based':
+            sources.append("World Bank Energy Indicators - Rule-Based Estimation")
+            sources.append("IEA World Energy Balances 2023 (Reference)")
+        else:
+            sources.append("IEA World Energy Balances 2023 - Mock Data")
+
+        if data and data.get('source') != 'ai_powered':
+            sources.append("BP Statistical Review of World Energy 2023")
+
+        sources.append(f"{country} National Energy Statistics")
+
+        return sources
+    
+    def _get_scoring_rubric(self) -> List[Dict[str, Any]]:
+        """Get scoring rubric for Energy Dependence parameter.
+        
+        Returns:
+            Complete scoring rubric
+        """
+        return self.scoring_rubric
+    
+    def get_data_sources(self) -> List[str]:
+        """Get general data sources for this parameter.
+        
+        Returns:
+            List of typical data sources
+        """
+        return [
+            "IEA World Energy Balances",
+            "BP Statistical Review of World Energy",
+            "National energy statistics agencies",
+            "Energy Information Administration (EIA)",
+            "Eurostat Energy Statistics"
+        ]
+
+
+# Convenience function for direct usage
+def analyze_energy_dependence(
+    country: str,
+    period: str = "Q3 2024",
+    mode: AgentMode = AgentMode.MOCK,
+    data_service = None
+) -> ParameterScore:
+    """Convenience function to analyze energy dependence.
+    
+    Args:
+        country: Country name
+        period: Time period
+        mode: Agent mode (MOCK or RULE_BASED)
+        data_service: DataService instance (required for RULE_BASED mode)
+        
+    Returns:
+        ParameterScore
+    """
+    agent = EnergyDependenceAgent(mode=mode, data_service=data_service)
+    return agent.analyze(country, period)

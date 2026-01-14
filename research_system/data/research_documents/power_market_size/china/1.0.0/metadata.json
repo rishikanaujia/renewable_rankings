@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:06:22.026607",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Power Market Size",
+  "country": "China",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/power_market_size/china/1.0.0/research.json",
+  "file_size": 8902,
+  "checksum": "c38c35bd3e93c54203b21f035aeddedab088a168621dfa42ab11e293cc44065f"
+}

@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:16:07.452582",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Renewables Penetration",
+  "country": "China",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/renewables_penetration/china/1.0.0/research.json",
+  "file_size": 9686,
+  "checksum": "5e224dd69cee25d1bbf7bdf461494c390bcb6ff9eb5917b958a0aea658c94f28"
+}

@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:15:19.022362",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Renewables Penetration",
+  "country": "Germany",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/renewables_penetration/germany/1.0.0/research.json",
+  "file_size": 9204,
+  "checksum": "a901d7827d90958411a115929737300a8f05468068615091aad824650a9a46a2"
+}

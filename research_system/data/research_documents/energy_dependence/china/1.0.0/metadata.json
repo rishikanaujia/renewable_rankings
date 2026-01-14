@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:12:34.056755",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Energy Dependence",
+  "country": "China",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/energy_dependence/china/1.0.0/research.json",
+  "file_size": 9250,
+  "checksum": "96bd5178824ce1124074ece247c92302fe9bd2b04bafe45d63af6bd2625ff4a0"
+}

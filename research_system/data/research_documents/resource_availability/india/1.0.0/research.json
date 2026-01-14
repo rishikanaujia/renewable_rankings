@@ -1,0 +1,33 @@
+{
+  "parameter": "",
+  "country": "",
+  "overview": "",
+  "error": "Failed to parse JSON: Expecting ',' delimiter: line 8 column 3 (char 626)",
+  "raw_content": "{\n  \"parameter\": \"Resource Availability\",\n  \"country\": \"India\",\n  \"period\": \"Q4 2024\",\n  \"research_date\": \"2024-11-15\",\n  \"overview\": \"Resource availability in India, particularly in terms of solar and wind energy, plays a crucial role in determining the country's renewable energy potential. India is blessed with abundant solar irradiation and favorable wind conditions, making it a prime location for renewable energy investments. The quality and quantity of these resources are essential for the successful deployment of solar and wind energy projects, which are key components of India's renewable energy transition.\"\n\n  \"current_status\": \"As of Q4 2024, India continues to have excellent resource availability for solar and wind energy. The solar irradiation levels in most parts of the country range from 5.0 to 6.5 kWh/m\u00b2/day, with some regions experiencing even higher levels. Wind speeds vary across the country, with coastal areas and certain regions in the north experiencing wind speeds ",
+  "_metadata": {
+    "research_date": "2026-01-13T11:00:20.725932",
+    "execution_time_seconds": 8.550708,
+    "parameter": "Resource Availability",
+    "country": "India",
+    "period": "Q4 2024",
+    "llm_model": "gpt-3.5-turbo",
+    "prompt_length": 4111,
+    "response_length": 4714
+  },
+  "_raw_response": "{\n  \"parameter\": \"Resource Availability\",\n  \"country\": \"India\",\n  \"period\": \"Q4 2024\",\n  \"research_date\": \"2024-11-15\",\n  \"overview\": \"Resource availability in India, particularly in terms of solar and wind energy, plays a crucial role in determining the country's renewable energy potential. India is blessed with abundant solar irradiation and favorable wind conditions, making it a prime location for renewable energy investments. The quality and quantity of these resources are essential for the successful deployment of solar and wind energy projects, which are key components of India's renewable energy transition.\"\n\n  \"current_status\": \"As of Q4 2024, India continues to have excellent resource availability for solar and wind energy. The solar irradiation levels in most parts of the country range from 5.0 to 6.5 kWh/m\u00b2/day, with some regions experiencing even higher levels. Wind speeds vary across the country, with coastal areas and certain regions in the north experiencing wind speeds of 5.5 to 7.5 m/s. These resource levels are significantly above the global average, indicating India's strong potential for renewable energy development.\"\n\n  \"historical_trends\": \"Over the past few years, India has seen a significant increase in solar and wind energy capacity, driven by favorable resource availability and supportive government policies. Solar irradiation levels have remained consistently high, while wind speeds have shown a slight increase in certain regions. The government's focus on renewable energy has led to a steady growth in installed capacity, with solar and wind energy contributing significantly to the country's energy mix.\"\n\n  \"policy_framework\": \"India has set ambitious renewable energy targets, aiming to achieve 175 GW of renewable energy capacity by 2022 and 450 GW by 2030. The government has implemented various policies and incentives to promote renewable energy development, including the National Solar Mission and the Wind Energy Mission. Recent policy announcements have focused on increasing investment in renewable energy projects and improving grid infrastructure to support the integration of renewable energy sources.\"\n\n  \"key_metrics\": [\n    {\"metric\": \"Solar Irradiation\", \"value\": \"5.5 kWh/m\u00b2/day\", \"unit\": \"kWh/m\u00b2/day\", \"source\": \"Global Solar Atlas (World Bank)\", \"date\": \"2024\"},\n    {\"metric\": \"Wind Speed\", \"value\": \"6.0 m/s\", \"unit\": \"m/s\", \"source\": \"Global Wind Atlas (DTU)\", \"date\": \"2024\"}\n  ],\n\n  \"challenges\": \"Despite the abundant resource availability, India faces challenges in grid integration, land acquisition, and policy implementation. The variability of renewable energy sources poses challenges for grid stability, requiring investments in grid infrastructure and energy storage. Land acquisition for large-scale projects can be a lengthy and complex process, leading to delays in project development. Policy implementation at the state level can also vary, creating uncertainty for investors.\"\n\n  \"opportunities\": \"India's resource availability presents significant opportunities for renewable energy growth, attracting both domestic and international investors. The government's focus on clean energy transition and the increasing demand for electricity provide a conducive environment for renewable energy investments. Market opportunities exist in solar rooftop installations, utility-scale solar and wind projects, and hybrid renewable energy systems. Supportive policies and incentives further enhance the attractiveness of the renewable energy sector.\"\n\n  \"future_outlook\": \"Looking ahead, India's renewable energy sector is poised for continued growth, driven by favorable resource availability and government support. The country is expected to surpass its renewable energy targets and emerge as a global leader in clean energy. Investments in grid infrastructure, energy storage, and technology innovation will be crucial for maximizing the potential of India's renewable energy resources. The future outlook for renewable energy in India remains optimistic, with significant opportunities for investors and stakeholders.\"\n\n  \"sources\": [\n    {\"name\": \"Global Solar Atlas (World Bank)\", \"url\": \"https://globalsolaratlas.info/\", \"access_date\": \"2024-11-15\"},\n    {\"name\": \"Global Wind Atlas (DTU)\", \"url\": \"https://globalwindatlas.info/\", \"access_date\": \"2024-11-15\"},\n    {\"name\": \"NREL Renewable Energy Data\", \"url\": \"https://www.nrel.gov/data/\", \"access_date\": \"2024-11-15\"}\n  ],\n\n  \"confidence\": 0.9,\n  \"completeness_score\": 0.95,\n  \"data_quality_notes\": \"The data used in this research is sourced from reputable sources and reflects the current state of resource availability for renewable energy in India as of Q4 2024.\"\n}",
+  "_validation": {
+    "scores": {
+      "completeness": 0.0,
+      "data_quality": 0.3,
+      "source_quality": 0.3,
+      "overall": 0.18
+    },
+    "issues": [
+      "Missing sections: 7/10",
+      "Insufficient numerical data (< 3 metrics)",
+      "Insufficient sources (< 3)"
+    ],
+    "passed": false,
+    "grade": "F"
+  }
+}

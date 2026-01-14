@@ -1,0 +1,1106 @@
+# Parameter Definitions for Global Renewable Market Rankings
+# Each parameter has scoring rubrics 1-10
+
+# Metadata
+total_parameters: 21
+subcategories: 6
+levels: 3
+
+
+parameters:
+  # LEVEL I: REGULATION
+  ambition:
+    name: "Ambition"
+    subcategory: "regulation"
+    level: 1
+    description: "Government renewable energy targets for solar PV + onshore wind + offshore wind in GW by 2030"
+    scoring:
+      - value: 1
+        min_gw: 0
+        max_gw: 3
+        range: "< 3 GW"
+        description: "Minimal renewable targets"
+      - value: 2
+        min_gw: 3
+        max_gw: 5
+        range: "3 – 4.99 GW"
+        description: "Very low targets"
+      - value: 3
+        min_gw: 5
+        max_gw: 10
+        range: "5 – 9.99 GW"
+        description: "Low targets"
+      - value: 4
+        min_gw: 10
+        max_gw: 15
+        range: "10 – 14.99 GW"
+        description: "Below moderate targets"
+      - value: 5
+        min_gw: 15
+        max_gw: 20
+        range: "15 – 19.99 GW"
+        description: "Moderate targets"
+      - value: 6
+        min_gw: 20
+        max_gw: 25
+        range: "20 – 24.99 GW"
+        description: "Above moderate targets"
+      - value: 7
+        min_gw: 25
+        max_gw: 30
+        range: "25 – 29.99 GW"
+        description: "High targets"
+      - value: 8
+        min_gw: 30
+        max_gw: 35
+        range: "30 – 34.99 GW"
+        description: "Very high targets"
+      - value: 9
+        min_gw: 35
+        max_gw: 40
+        range: "35 – 39.99 GW"
+        description: "Extremely high targets"
+      - value: 10
+        min_gw: 40
+        max_gw: 10000
+        range: "> 40 GW"
+        description: "World-class targets"
+    data_sources:
+      - "Government NDCs"
+      - "Ministry of Energy publications"
+      - "IRENA country profiles"
+
+  country_stability:
+    name: "Country Stability"
+    subcategory: "regulation"
+    level: 1
+    description: "Political and economic risk assessment based on Euromoney Country Risk (ECR) rating. Lower ECR = higher stability = higher score."
+    scoring:
+      - value: 10
+        min_ecr: 0.0
+        max_ecr: 1.0
+        range: "< 1.0"
+        description: "Extremely stable (minimal risk)"
+      - value: 9
+        min_ecr: 1.0
+        max_ecr: 2.0
+        range: "1.0 – 1.99"
+        description: "Very stable (very low risk)"
+      - value: 8
+        min_ecr: 2.0
+        max_ecr: 3.0
+        range: "2.0 – 2.99"
+        description: "Stable (low risk)"
+      - value: 7
+        min_ecr: 3.0
+        max_ecr: 4.0
+        range: "3.0 – 3.99"
+        description: "Moderately stable (moderate risk)"
+      - value: 6
+        min_ecr: 4.0
+        max_ecr: 5.0
+        range: "4.0 – 4.99"
+        description: "Fair stability (elevated risk)"
+      - value: 5
+        min_ecr: 5.0
+        max_ecr: 6.0
+        range: "5.0 – 5.99"
+        description: "Moderate instability (significant risk)"
+      - value: 4
+        min_ecr: 6.0
+        max_ecr: 7.0
+        range: "6.0 – 6.99"
+        description: "Unstable (high risk)"
+      - value: 3
+        min_ecr: 7.0
+        max_ecr: 8.0
+        range: "7.0 – 7.99"
+        description: "Very unstable (very high risk)"
+      - value: 2
+        min_ecr: 8.0
+        max_ecr: 9.0
+        range: "8.0 – 8.99"
+        description: "Extremely unstable (severe risk)"
+      - value: 1
+        min_ecr: 9.0
+        max_ecr: 100.0
+        range: "≥ 9.0"
+        description: "Failed/fragile state (extreme risk)"
+    data_sources:
+      - "Euromoney Country Risk (ECR)"
+      - "World Bank Governance Indicators"
+      - "Political Risk Services (PRS) Group"
+
+  track_record:
+    name: "Track Record"
+    subcategory: "regulation"
+    level: 1
+    description: "Historical renewable energy deployment track record measured by cumulative installed capacity. Higher installed capacity demonstrates proven market execution and reduced regulatory risk."
+    scoring:
+      - value: 1
+        min_capacity_mw: 0
+        max_capacity_mw: 100
+        range: "< 100 MW"
+        description: "Minimal track record (nascent market)"
+      - value: 2
+        min_capacity_mw: 100
+        max_capacity_mw: 500
+        range: "100 – 499 MW"
+        description: "Very limited track record"
+      - value: 3
+        min_capacity_mw: 500
+        max_capacity_mw: 1000
+        range: "500 – 999 MW"
+        description: "Limited track record (early stage)"
+      - value: 4
+        min_capacity_mw: 1000
+        max_capacity_mw: 2500
+        range: "1 – 2.4 GW"
+        description: "Below moderate track record"
+      - value: 5
+        min_capacity_mw: 2500
+        max_capacity_mw: 5000
+        range: "2.5 – 4.9 GW"
+        description: "Moderate track record (emerging market)"
+      - value: 6
+        min_capacity_mw: 5000
+        max_capacity_mw: 10000
+        range: "5 – 9.9 GW"
+        description: "Above moderate track record"
+      - value: 7
+        min_capacity_mw: 10000
+        max_capacity_mw: 25000
+        range: "10 – 24.9 GW"
+        description: "Good track record (established market)"
+      - value: 8
+        min_capacity_mw: 25000
+        max_capacity_mw: 50000
+        range: "25 – 49.9 GW"
+        description: "Very good track record"
+      - value: 9
+        min_capacity_mw: 50000
+        max_capacity_mw: 100000
+        range: "50 – 99.9 GW"
+        description: "Excellent track record (major market)"
+      - value: 10
+        min_capacity_mw: 100000
+        max_capacity_mw: 10000000
+        range: "≥ 100 GW"
+        description: "Outstanding track record (world leader)"
+    data_sources:
+      - "IRENA Renewable Energy Statistics"
+      - "IEA Renewables Market Report"
+      - "National renewable energy agencies"
+      - "Industry databases (BNEF, Wood Mackenzie)"
+
+  power_market_size:
+    name: "Power Market Size"
+    subcategory: "market_size_fundamentals"
+    level: 2
+    description: "Total electricity consumption in TWh per year. Larger markets offer greater absolute opportunity for renewable energy deployment."
+    scoring:
+      - value: 1
+        min_twh: 0
+        max_twh: 50
+        range: "< 50 TWh"
+        description: "Very small market (limited opportunity)"
+      - value: 2
+        min_twh: 50
+        max_twh: 100
+        range: "50 – 99 TWh"
+        description: "Small market"
+      - value: 3
+        min_twh: 100
+        max_twh: 200
+        range: "100 – 199 TWh"
+        description: "Below moderate market"
+      - value: 4
+        min_twh: 200
+        max_twh: 300
+        range: "200 – 299 TWh"
+        description: "Moderate market"
+      - value: 5
+        min_twh: 300
+        max_twh: 500
+        range: "300 – 499 TWh"
+        description: "Above moderate market"
+      - value: 6
+        min_twh: 500
+        max_twh: 750
+        range: "500 – 749 TWh"
+        description: "Large market"
+      - value: 7
+        min_twh: 750
+        max_twh: 1000
+        range: "750 – 999 TWh"
+        description: "Very large market"
+      - value: 8
+        min_twh: 1000
+        max_twh: 2000
+        range: "1000 – 1999 TWh"
+        description: "Major market"
+      - value: 9
+        min_twh: 2000
+        max_twh: 4000
+        range: "2000 – 3999 TWh"
+        description: "Huge market"
+      - value: 10
+        min_twh: 4000
+        max_twh: 100000
+        range: "≥ 4000 TWh"
+        description: "Massive market (world-leading)"
+    data_sources:
+      - "IEA World Energy Statistics"
+      - "BP Statistical Review of World Energy"
+      - "National energy statistics agencies"
+
+  resource_availability:
+    name: "Resource Availability"
+    subcategory: "market_size_fundamentals"
+    level: 2
+    description: "Quality and abundance of solar and wind renewable energy resources. Combines solar irradiation (kWh/m²/day) and wind speed (m/s) to assess natural resource endowment."
+    scoring:
+      - value: 1
+        min_combined: 0.0
+        max_combined: 2.0
+        range: "< 2.0"
+        description: "Very poor resources (both solar and wind weak)"
+      - value: 2
+        min_combined: 2.0
+        max_combined: 3.0
+        range: "2.0 – 2.99"
+        description: "Poor resources"
+      - value: 3
+        min_combined: 3.0
+        max_combined: 4.0
+        range: "3.0 – 3.99"
+        description: "Below average resources"
+      - value: 4
+        min_combined: 4.0
+        max_combined: 5.0
+        range: "4.0 – 4.99"
+        description: "Moderate resources"
+      - value: 5
+        min_combined: 5.0
+        max_combined: 6.0
+        range: "5.0 – 5.99"
+        description: "Average resources"
+      - value: 6
+        min_combined: 6.0
+        max_combined: 7.0
+        range: "6.0 – 6.99"
+        description: "Good resources"
+      - value: 7
+        min_combined: 7.0
+        max_combined: 8.0
+        range: "7.0 – 7.99"
+        description: "Very good resources"
+      - value: 8
+        min_combined: 8.0
+        max_combined: 9.0
+        range: "8.0 – 8.99"
+        description: "Excellent resources"
+      - value: 9
+        min_combined: 9.0
+        max_combined: 10.0
+        range: "9.0 – 9.99"
+        description: "Outstanding resources"
+      - value: 10
+        min_combined: 10.0
+        max_combined: 100.0
+        range: "≥ 10.0"
+        description: "World-class resources (exceptional solar and wind)"
+    calculation:
+      method: "weighted_average"
+      solar_weight: 0.5
+      wind_weight: 0.5
+      solar_normalization: 6.5  # Normalize solar kWh/m²/day to 0-10 scale (max expected ~6.5)
+      wind_normalization: 9.0   # Normalize wind m/s to 0-10 scale (max expected ~9.0)
+    data_sources:
+      - "Global Solar Atlas (World Bank)"
+      - "Global Wind Atlas (DTU)"
+      - "NREL Renewable Energy Data"
+
+  energy_dependence:
+    name: "Energy Dependence"
+    subcategory: "market_size_fundamentals"
+    level: 2
+    description: "Degree of reliance on energy imports. Lower import dependency indicates greater energy security and more favorable conditions for domestic renewable energy development."
+    scoring:
+      - value: 10
+        min_import_pct: 0.0
+        max_import_pct: 10.0
+        range: "< 10%"
+        description: "Energy independent (net exporter or minimal imports)"
+      - value: 9
+        min_import_pct: 10.0
+        max_import_pct: 20.0
+        range: "10% – 19%"
+        description: "Very low dependence"
+      - value: 8
+        min_import_pct: 20.0
+        max_import_pct: 30.0
+        range: "20% – 29%"
+        description: "Low dependence"
+      - value: 7
+        min_import_pct: 30.0
+        max_import_pct: 40.0
+        range: "30% – 39%"
+        description: "Moderate-low dependence"
+      - value: 6
+        min_import_pct: 40.0
+        max_import_pct: 50.0
+        range: "40% – 49%"
+        description: "Moderate dependence"
+      - value: 5
+        min_import_pct: 50.0
+        max_import_pct: 60.0
+        range: "50% – 59%"
+        description: "Moderate-high dependence"
+      - value: 4
+        min_import_pct: 60.0
+        max_import_pct: 70.0
+        range: "60% – 69%"
+        description: "High dependence"
+      - value: 3
+        min_import_pct: 70.0
+        max_import_pct: 80.0
+        range: "70% – 79%"
+        description: "Very high dependence"
+      - value: 2
+        min_import_pct: 80.0
+        max_import_pct: 90.0
+        range: "80% – 89%"
+        description: "Extreme dependence"
+      - value: 1
+        min_import_pct: 90.0
+        max_import_pct: 100.0
+        range: "≥ 90%"
+        description: "Nearly total dependence (energy security risk)"
+    data_sources:
+      - "IEA World Energy Balances"
+      - "BP Statistical Review of World Energy"
+      - "National energy statistics"
+
+  renewables_penetration:
+    name: "Renewables Penetration"
+    subcategory: "market_size_fundamentals"
+    level: 2
+    description: "Current share of renewables in electricity generation. Higher penetration indicates market maturity, proven track record, and favorable conditions for further renewable development."
+    scoring:
+      - value: 1
+        min_renewables_pct: 0.0
+        max_renewables_pct: 5.0
+        range: "< 5%"
+        description: "Minimal renewables (coal/gas/nuclear dominated)"
+      - value: 2
+        min_renewables_pct: 5.0
+        max_renewables_pct: 10.0
+        range: "5% – 9%"
+        description: "Very low renewables penetration"
+      - value: 3
+        min_renewables_pct: 10.0
+        max_renewables_pct: 15.0
+        range: "10% – 14%"
+        description: "Low renewables penetration"
+      - value: 4
+        min_renewables_pct: 15.0
+        max_renewables_pct: 20.0
+        range: "15% – 19%"
+        description: "Below moderate penetration"
+      - value: 5
+        min_renewables_pct: 20.0
+        max_renewables_pct: 30.0
+        range: "20% – 29%"
+        description: "Moderate renewables penetration"
+      - value: 6
+        min_renewables_pct: 30.0
+        max_renewables_pct: 40.0
+        range: "30% – 39%"
+        description: "Above moderate penetration"
+      - value: 7
+        min_renewables_pct: 40.0
+        max_renewables_pct: 50.0
+        range: "40% – 49%"
+        description: "High renewables penetration"
+      - value: 8
+        min_renewables_pct: 50.0
+        max_renewables_pct: 60.0
+        range: "50% – 59%"
+        description: "Very high renewables penetration"
+      - value: 9
+        min_renewables_pct: 60.0
+        max_renewables_pct: 75.0
+        range: "60% – 74%"
+        description: "Outstanding renewables penetration"
+      - value: 10
+        min_renewables_pct: 75.0
+        max_renewables_pct: 100.0
+        range: "≥ 75%"
+        description: "World-leading renewables penetration (renewable-dominated grid)"
+    data_sources:
+      - "IEA Electricity Information"
+      - "IRENA Renewable Energy Statistics"
+      - "Ember Climate - Global Electricity Review"
+      - "National grid operators"
+
+  expected_return:
+    name: "Expected Return"
+    subcategory: "profitability"
+    level: 2
+    description: "Projected Internal Rate of Return (IRR) for renewable energy projects. Higher IRR indicates better profitability and more attractive investment opportunity."
+    scoring:
+      - value: 1
+        min_irr_pct: 0.0
+        max_irr_pct: 2.0
+        range: "< 2%"
+        description: "Very poor returns (below risk-free rate)"
+      - value: 2
+        min_irr_pct: 2.0
+        max_irr_pct: 4.0
+        range: "2% – 3%"
+        description: "Poor returns (marginal profitability)"
+      - value: 3
+        min_irr_pct: 4.0
+        max_irr_pct: 6.0
+        range: "4% – 5%"
+        description: "Below acceptable returns"
+      - value: 4
+        min_irr_pct: 6.0
+        max_irr_pct: 8.0
+        range: "6% – 7%"
+        description: "Minimally acceptable returns"
+      - value: 5
+        min_irr_pct: 8.0
+        max_irr_pct: 10.0
+        range: "8% – 9%"
+        description: "Moderate returns (acceptable for low-risk)"
+      - value: 6
+        min_irr_pct: 10.0
+        max_irr_pct: 12.0
+        range: "10% – 11%"
+        description: "Good returns (above hurdle rate)"
+      - value: 7
+        min_irr_pct: 12.0
+        max_irr_pct: 14.0
+        range: "12% – 13%"
+        description: "Very good returns"
+      - value: 8
+        min_irr_pct: 14.0
+        max_irr_pct: 16.0
+        range: "14% – 15%"
+        description: "Excellent returns"
+      - value: 9
+        min_irr_pct: 16.0
+        max_irr_pct: 20.0
+        range: "16% – 19%"
+        description: "Outstanding returns"
+      - value: 10
+        min_irr_pct: 20.0
+        max_irr_pct: 100.0
+        range: "≥ 20%"
+        description: "Exceptional returns (highly attractive)"
+    data_sources:
+      - "IRENA Renewable Power Generation Costs"
+      - "Bloomberg New Energy Finance (BNEF)"
+      - "Lazard Levelized Cost of Energy (LCOE)"
+      - "Project financial models"
+      - "Developer IRR benchmarks"
+
+  revenue_stream_stability:
+    name: "Revenue Stream Stability"
+    subcategory: "profitability"
+    level: 2
+    description: "Predictability and security of project revenues through PPA contracts. Longer contract terms with fixed prices provide greater revenue certainty and reduce merchant exposure risk."
+    scoring:
+      - value: 1
+        min_term_years: 0
+        max_term_years: 3
+        range: "< 3 years"
+        description: "Minimal revenue security (merchant or very short-term)"
+      - value: 2
+        min_term_years: 3
+        max_term_years: 5
+        range: "3 – 4 years"
+        description: "Very low stability (short-term contracts)"
+      - value: 3
+        min_term_years: 5
+        max_term_years: 7
+        range: "5 – 6 years"
+        description: "Low stability (below typical debt tenor)"
+      - value: 4
+        min_term_years: 7
+        max_term_years: 10
+        range: "7 – 9 years"
+        description: "Below moderate stability"
+      - value: 5
+        min_term_years: 10
+        max_term_years: 12
+        range: "10 – 11 years"
+        description: "Moderate stability (covers partial debt)"
+      - value: 6
+        min_term_years: 12
+        max_term_years: 15
+        range: "12 – 14 years"
+        description: "Above moderate stability"
+      - value: 7
+        min_term_years: 15
+        max_term_years: 18
+        range: "15 – 17 years"
+        description: "Good stability (covers typical debt tenor)"
+      - value: 8
+        min_term_years: 18
+        max_term_years: 20
+        range: "18 – 19 years"
+        description: "Very good stability"
+      - value: 9
+        min_term_years: 20
+        max_term_years: 25
+        range: "20 – 24 years"
+        description: "Outstanding stability (full project life)"
+      - value: 10
+        min_term_years: 25
+        max_term_years: 100
+        range: "≥ 25 years"
+        description: "Exceptional stability (ultra-long term contracts)"
+    data_sources:
+      - "PPA databases and registries"
+      - "Project finance documentation"
+      - "Market PPA term benchmarks"
+      - "Offtaker contract databases"
+
+  offtaker_status:
+    name: "Offtaker Status"
+    subcategory: "profitability"
+    level: 2
+    description: "Credit quality and reliability of the PPA offtaker. Higher creditworthiness reduces payment default risk and improves project bankability."
+    scoring:
+      - value: 1
+        category: "distressed"
+        range: "D/CCC rating"
+        description: "Distressed offtaker (high default risk)"
+      - value: 2
+        category: "very_weak"
+        range: "CCC+/B- rating"
+        description: "Very weak credit (substantial credit risk)"
+      - value: 3
+        category: "weak"
+        range: "B/B+ rating"
+        description: "Weak credit (significant risk)"
+      - value: 4
+        category: "below_moderate"
+        range: "BB- rating"
+        description: "Below investment grade (speculative)"
+      - value: 5
+        category: "moderate"
+        range: "BB/BB+ rating"
+        description: "Moderate credit (below investment grade)"
+      - value: 6
+        category: "adequate"
+        range: "BBB- rating"
+        description: "Adequate credit (lower investment grade)"
+      - value: 7
+        category: "good"
+        range: "BBB/BBB+ rating"
+        description: "Good credit (solid investment grade)"
+      - value: 8
+        category: "very_good"
+        range: "A-/A rating"
+        description: "Very good credit (strong capacity)"
+      - value: 9
+        category: "excellent"
+        range: "A+/AA rating"
+        description: "Excellent credit (very strong capacity)"
+      - value: 10
+        category: "superior"
+        range: "AA+/AAA rating"
+        description: "Superior credit (sovereign/AAA utilities)"
+    data_sources:
+      - "S&P Global Ratings"
+      - "Moody's Ratings"
+      - "Fitch Ratings"
+      - "Offtaker financial statements"
+      - "Sovereign credit ratings"
+
+  long_term_interest_rates:
+    name: "Long Term Interest Rates"
+    subcategory: "profitability"
+    level: 2
+    description: "Long-term government bond yields indicating cost of capital and financing conditions. Lower interest rates reduce debt service costs and improve project economics."
+    scoring:
+      - value: 1
+        min_rate_pct: 15.0
+        max_rate_pct: 100.0
+        range: "≥ 15%"
+        description: "Very high rates (prohibitive financing costs)"
+      - value: 2
+        min_rate_pct: 12.0
+        max_rate_pct: 15.0
+        range: "12% – 14%"
+        description: "High rates (expensive financing)"
+      - value: 3
+        min_rate_pct: 10.0
+        max_rate_pct: 12.0
+        range: "10% – 11%"
+        description: "Elevated rates (challenging economics)"
+      - value: 4
+        min_rate_pct: 8.0
+        max_rate_pct: 10.0
+        range: "8% – 9%"
+        description: "Above moderate rates"
+      - value: 5
+        min_rate_pct: 6.0
+        max_rate_pct: 8.0
+        range: "6% – 7%"
+        description: "Moderate rates (average financing costs)"
+      - value: 6
+        min_rate_pct: 5.0
+        max_rate_pct: 6.0
+        range: "5% – 5.9%"
+        description: "Below moderate rates"
+      - value: 7
+        min_rate_pct: 4.0
+        max_rate_pct: 5.0
+        range: "4% – 4.9%"
+        description: "Low rates (favorable financing)"
+      - value: 8
+        min_rate_pct: 3.0
+        max_rate_pct: 4.0
+        range: "3% – 3.9%"
+        description: "Very low rates (attractive financing)"
+      - value: 9
+        min_rate_pct: 2.0
+        max_rate_pct: 3.0
+        range: "2% – 2.9%"
+        description: "Exceptionally low rates"
+      - value: 10
+        min_rate_pct: 0.0
+        max_rate_pct: 2.0
+        range: "< 2%"
+        description: "Ultra-low rates (optimal financing environment)"
+    data_sources:
+      - "Central bank policy rates"
+      - "Government 10-year bond yields"
+      - "Bloomberg terminal data"
+      - "Trading Economics"
+      - "OECD interest rate statistics"
+  
+  support_scheme:
+    name: "Support Scheme"
+    subcategory: "regulation"
+    level: 1
+    description: "Evaluation of current support mechanisms available and their efficacy"
+    scoring:
+      - value: 1
+        description: "No Support: No financial or regulatory support exists for renewable energy"
+      - value: 2
+        description: "Emerging but Ineffective: No formal support, limited routes emerging organically"
+      - value: 3
+        description: "Forces Into Disadvantage: Support exists but creates unhealthy competition"
+      - value: 4
+        description: "Boom-Bust Support: Irregular and unstable, creating boom-bust cycles"
+      - value: 5
+        description: "Under Threat: Mechanisms exist but face cancellation risk"
+      - value: 6
+        description: "Federal-State Misalignment: Support present but policies conflict"
+      - value: 7
+        description: "Solid but Uncertain: Well-established but nearing expiration"
+      - value: 8
+        description: "Broad but Uneven: Multiple routes available but effectiveness varies"
+      - value: 9
+        description: "Strong but Not Scalable: Clear and stable but not scalable enough"
+      - value: 10
+        description: "Highly Mature: Long-term calendars, strong certainty, consistent investment"
+    data_sources:
+      - "Auction calendars"
+      - "FiT schedules"
+      - "Policy documents"
+
+
+  contract_terms:
+    name: "Contract Terms"
+    subcategory: "regulation"
+    level: 1
+    description: "Bankability, risk allocation, and PPA robustness. Evaluates standardization, enforceability, and investor-friendliness of renewable energy contracts."
+    scoring:
+      - value: 1
+        range: "Non-bankable"
+        description: "Highly unfavorable terms, unenforceable contracts, severe investor risk"
+      - value: 2
+        range: "Very poor"
+        description: "Major risk allocation issues, weak legal framework, difficult to finance"
+      - value: 3
+        range: "Poor"
+        description: "Significant concerns about enforceability and risk allocation"
+      - value: 4
+        range: "Below adequate"
+        description: "Below-market terms, notable legal uncertainties"
+      - value: 5
+        range: "Adequate"
+        description: "Basic contract framework exists but with material weaknesses"
+      - value: 6
+        range: "Above adequate"
+        description: "Reasonable terms with some improvement needed"
+      - value: 7
+        range: "Good"
+        description: "Solid contract framework with minor gaps"
+      - value: 8
+        range: "Very good"
+        description: "Strong standardization, favorable risk allocation, highly bankable"
+      - value: 9
+        range: "Excellent"
+        description: "Internationally-competitive terms, proven track record"
+      - value: 10
+        range: "Best-in-class"
+        description: "World-class contract framework, optimal risk allocation, maximum bankability"
+    data_sources:
+      - "Sample PPAs and contracts"
+      - "Legal framework assessments"
+      - "International lender due diligence"
+      - "Project finance transaction data"
+
+
+  status_of_grid:
+    name: "Status of Grid"
+    subcategory: "accommodation"
+    level: 1
+    description: "Grid infrastructure quality, transmission capacity, and reliability for renewable energy integration. Higher grid quality enables greater renewable deployment and reduces curtailment risk."
+    scoring:
+      - value: 1
+        min_score: 0.0
+        max_score: 1.0
+        range: "0 – 0.9"
+        description: "Critical grid deficiencies (frequent outages, severe congestion)"
+      - value: 2
+        min_score: 1.0
+        max_score: 2.0
+        range: "1.0 – 1.9"
+        description: "Major grid challenges (poor reliability, limited capacity)"
+      - value: 3
+        min_score: 2.0
+        max_score: 3.0
+        range: "2.0 – 2.9"
+        description: "Significant grid constraints (regular congestion, aging infrastructure)"
+      - value: 4
+        min_score: 3.0
+        max_score: 4.0
+        range: "3.0 – 3.9"
+        description: "Below adequate grid (moderate reliability issues)"
+      - value: 5
+        min_score: 4.0
+        max_score: 5.0
+        range: "4.0 – 4.9"
+        description: "Adequate grid (basic functionality, some constraints)"
+      - value: 6
+        min_score: 5.0
+        max_score: 6.0
+        range: "5.0 – 5.9"
+        description: "Above adequate grid (reliable with minor constraints)"
+      - value: 7
+        min_score: 6.0
+        max_score: 7.0
+        range: "6.0 – 6.9"
+        description: "Good grid (strong reliability, manageable constraints)"
+      - value: 8
+        min_score: 7.0
+        max_score: 8.0
+        range: "7.0 – 7.9"
+        description: "Very good grid (high reliability, modern infrastructure)"
+      - value: 9
+        min_score: 8.0
+        max_score: 9.0
+        range: "8.0 – 8.9"
+        description: "Excellent grid (very high reliability, advanced infrastructure)"
+      - value: 10
+        min_score: 9.0
+        max_score: 10.1
+        range: "9.0 – 10.0"
+        description: "Outstanding grid (world-class reliability, cutting-edge infrastructure)"
+    data_sources:
+      - "World Bank Enterprise Surveys"
+      - "IEA Electricity Security reports"
+      - "National grid operator data"
+      - "SAIDI/SAIFI reliability metrics"
+      - "Transmission capacity reports"
+
+  ownership_hurdles:
+    name: "Ownership Hurdles"
+    subcategory: "accommodation"
+    level: 1
+    description: "Regulatory and practical barriers to foreign ownership and market participation. Lower barriers enable greater international investment and competition."
+    scoring:
+      - value: 1
+        range: "Severe restrictions"
+        description: "Prohibitive barriers (foreign ownership banned or <10% allowed)"
+      - value: 2
+        range: "Very high barriers"
+        description: "Major restrictions (10-25% foreign ownership, complex approvals)"
+      - value: 3
+        range: "High barriers"
+        description: "Significant restrictions (25-40% foreign ownership)"
+      - value: 4
+        range: "Above moderate barriers"
+        description: "Notable restrictions (40-50% foreign ownership)"
+      - value: 5
+        range: "Moderate barriers"
+        description: "Some restrictions (50-65% foreign ownership)"
+      - value: 6
+        range: "Below moderate barriers"
+        description: "Limited restrictions (65-75% foreign ownership)"
+      - value: 7
+        range: "Low barriers"
+        description: "Minor restrictions (75-85% foreign ownership)"
+      - value: 8
+        range: "Very low barriers"
+        description: "Minimal restrictions (85-95% foreign ownership)"
+      - value: 9
+        range: "Minimal barriers"
+        description: "Nearly unrestricted (95-99% foreign ownership)"
+      - value: 10
+        range: "No barriers"
+        description: "Full market access (100% foreign ownership allowed)"
+    data_sources:
+      - "OECD FDI Regulatory Restrictiveness Index"
+      - "World Bank Doing Business reports"
+      - "National energy laws and regulations"
+      - "Investment treaties and bilateral agreements"
+
+
+  ownership_consolidation:
+    name: "Ownership Consolidation"
+    subcategory: "competition_ease"
+    level: 2
+    description: "Market concentration and consolidation among renewable energy asset owners. Lower consolidation indicates more competitive markets with diverse ownership."
+    scoring:
+      - value: 1
+        range: "Extreme monopoly"
+        description: "Single dominant owner controls >80% of market"
+      - value: 2
+        range: "Very high consolidation"
+        description: "Top 3 owners control 70-80% of market"
+      - value: 3
+        range: "High consolidation"
+        description: "Top 3 owners control 60-70% of market"
+      - value: 4
+        range: "Above moderate consolidation"
+        description: "Top 3 owners control 50-60% of market"
+      - value: 5
+        range: "Moderate consolidation"
+        description: "Top 3 owners control 40-50% of market"
+      - value: 6
+        range: "Below moderate consolidation"
+        description: "Top 3 owners control 30-40% of market"
+      - value: 7
+        range: "Low consolidation"
+        description: "Top 3 owners control 20-30% of market"
+      - value: 8
+        range: "Very low consolidation"
+        description: "Top 3 owners control 15-20% of market"
+      - value: 9
+        range: "Minimal consolidation"
+        description: "Top 3 owners control 10-15% of market"
+      - value: 10
+        range: "Highly fragmented"
+        description: "Top 3 owners control <10% of market (highly competitive)"
+    data_sources:
+      - "Renewable energy asset ownership databases"
+      - "Market concentration analysis"
+      - "Industry reports and company filings"
+      - "National energy statistics"
+
+  competitive_landscape:
+    name: "Competitive Landscape"
+    subcategory: "competition_ease"
+    level: 2
+    description: "Ease of market entry and competitive dynamics. Evaluates barriers to entry, market openness, and competitive intensity in renewable energy markets."
+    scoring:
+      - value: 1
+        range: "Extreme barriers"
+        description: "Market effectively closed, no new entry, monopolistic control"
+      - value: 2
+        range: "Very high barriers"
+        description: "Severe restrictions on entry, limited competition possible"
+      - value: 3
+        range: "High barriers"
+        description: "Significant entry barriers, difficult for new players"
+      - value: 4
+        range: "Above moderate barriers"
+        description: "Notable barriers but entry possible with resources"
+      - value: 5
+        range: "Moderate barriers"
+        description: "Balanced entry requirements, moderate competition"
+      - value: 6
+        range: "Below moderate barriers"
+        description: "Relatively open market with some entry requirements"
+      - value: 7
+        range: "Low barriers"
+        description: "Open market, easy entry for qualified players"
+      - value: 8
+        range: "Very low barriers"
+        description: "Minimal restrictions, highly competitive market"
+      - value: 9
+        range: "Minimal barriers"
+        description: "Nearly open market with streamlined processes"
+      - value: 10
+        range: "No barriers"
+        description: "Completely open market, maximum competition and ease of entry"
+    data_sources:
+      - "Market entry analysis and regulatory frameworks"
+      - "Competitive intensity assessments"
+      - "Licensing and permitting requirements"
+      - "Industry entry and exit data"
+
+
+  # LEVEL III: SYSTEM MODIFIERS
+  system_modifiers:
+    name: "System Modifiers"
+    subcategory: "system_modifiers"
+    level: 3
+    description: "Composite adjustment factors including currency risk, geopolitical factors, and market anomalies. Acts as final calibration layer for overall rankings."
+    scoring:
+      - value: 1
+        range: "Severe negative factors"
+        description: "Multiple severe risks compound to make market essentially uninvestable"
+      - value: 2
+        range: "Very high negative impact"
+        description: "Major currency instability, severe geopolitical risks, or critical market failures"
+      - value: 3
+        range: "High negative impact"
+        description: "Significant currency risk, high geopolitical uncertainty, or major market issues"
+      - value: 4
+        range: "Above moderate negative impact"
+        description: "Notable currency volatility, elevated geopolitical concerns"
+      - value: 5
+        range: "Moderate factors"
+        description: "Balanced risk profile, manageable currency and geopolitical environment"
+      - value: 6
+        range: "Below moderate positive impact"
+        description: "Relatively stable currency, improving geopolitical environment"
+      - value: 7
+        range: "Low risk environment"
+        description: "Good currency stability, favorable geopolitical climate"
+      - value: 8
+        range: "Very low risk"
+        description: "Strong currency stability, very favorable conditions"
+      - value: 9
+        range: "Minimal risk"
+        description: "Excellent currency and geopolitical environment"
+      - value: 10
+        range: "Optimal conditions"
+        description: "Best-in-class stability across all system modifiers"
+    data_sources:
+      - "Currency volatility and exchange rate data"
+      - "Geopolitical risk indices"
+      - "Market anomaly detection"
+      - "IMF and World Bank macroeconomic indicators"
+
+
+# ANALYSIS CONFIGURATION
+analysis:
+  # Subcategory weights for aggregation (used by Agent #19)
+  subcategory_weights:
+    regulation: 0.20  # 20% - Critical for policy and regulatory risk
+    market_size_fundamentals: 0.20  # 20% - Scale and market opportunity
+    profitability: 0.25  # 25% - Returns are primary investment driver
+    accommodation: 0.15  # 15% - Operational feasibility and access
+    competition_ease: 0.10  # 10% - Market entry and competitive dynamics
+    system_modifiers: 0.10  # 10% - Risk adjustment factors
+    # Total: 100%
+  
+  # Country-level analysis thresholds (used by Agent #19)
+  strength_threshold: 7.5  # Scores >= 7.5 are considered strengths
+  weakness_threshold: 5.5  # Scores < 5.5 are considered weaknesses
+  
+  # Score interpretation labels (used by Agent #19)
+  score_interpretation:
+    - range: [9.0, 10.0]
+      label: "Exceptional"
+      description: "Best-in-class investment destination"
+    - range: [8.0, 9.0]
+      label: "Excellent"
+      description: "Highly attractive market with strong fundamentals"
+    - range: [7.0, 8.0]
+      label: "Very Good"
+      description: "Attractive market with good investment conditions"
+    - range: [6.0, 7.0]
+      label: "Good"
+      description: "Solid market with manageable risks"
+    - range: [5.0, 6.0]
+      label: "Moderate"
+      description: "Moderate attractiveness with notable challenges"
+    - range: [4.0, 5.0]
+      label: "Below Average"
+      description: "Challenging market requiring careful consideration"
+    - range: [3.0, 4.0]
+      label: "Poor"
+      description: "Significant barriers to investment"
+    - range: [2.0, 3.0]
+      label: "Very Poor"
+      description: "Major risks and obstacles"
+    - range: [0.0, 2.0]
+      label: "Extremely Poor"
+      description: "Market not viable for investment"
+  
+  # Comparative analysis settings (used by Agent #20)
+  comparative_analysis:
+    min_countries: 2  # Minimum countries required for comparison
+    max_countries: 100  # Maximum countries in single comparison
+    recommended_countries: 10  # Recommended number for best insights
+    
+    # Performance gap thresholds for subcategory analysis
+    gap_thresholds:
+      highly_competitive: 1.0  # Gap < 1.0 points = highly competitive
+      moderately_competitive: 2.0  # Gap 1-2 points = moderately competitive
+      uncompetitive: 2.0  # Gap > 2.0 points = uncompetitive
+    
+    # Ranking display preferences
+    display:
+      show_scores: true  # Show numerical scores in rankings
+      show_strengths_weaknesses: true  # Show strength/weakness counts
+      show_subcategory_details: true  # Show subcategory breakdowns
+      decimal_places: 2  # Decimal places for score display
+    
+    # Summary generation settings
+    summary:
+      include_top_performers: 3  # Number of top performers to highlight
+      include_bottom_performers: 1  # Number of bottom performers to mention
+      highlight_competitive_subcategories: 2  # Most competitive to mention
+      highlight_gap_subcategories: 2  # Largest gaps to mention
+  
+  # ================================================================================
+  # AGENT #21: GLOBAL RANKINGS CONFIGURATION
+  # ================================================================================
+  # Configuration for the Global Rankings Agent - the final synthesis agent
+  # that produces complete global rankings with tier assignments
+  # ================================================================================
+  
+  global_rankings:
+    # Minimum countries required for global rankings
+    min_countries_for_ranking: 5  # Need meaningful sample size
+    
+    # Performance tier thresholds (0-10 scale)
+    tier_thresholds:
+      tier_a_min: 8.0  # A-tier: 8.0+ (Excellent investment climate)
+      tier_b_min: 6.5  # B-tier: 6.5-7.99 (Strong investment climate)
+      tier_c_min: 5.0  # C-tier: 5.0-6.49 (Moderate investment climate)
+      # D-tier: < 5.0 (Challenging investment climate)
+    
+    # Ranking display preferences
+    ranking_display:
+      countries_per_tier: 10  # Show top 10 countries per tier in summaries
+      show_tier_statistics: true  # Include tier-level statistics
+      include_tier_transitions: true  # Track countries moving between tiers
+      show_score_distribution: true  # Show score distribution by tier
+    
+    # Summary generation settings
+    summary:
+      highlight_top_performers: 5  # Number of top countries to highlight
+      highlight_bottom_performers: 3  # Number of bottom countries to mention
+      mention_tier_movers: true  # Mention countries that changed tiers
+      include_regional_insights: false  # Regional analysis (future feature)
+    
+    # Analysis preferences
+    analysis:
+      enable_historical_comparison: false  # Compare with previous periods (future)
+      enable_peer_benchmarking: false  # Benchmark against peer groups (future)
+      enable_trend_analysis: false  # Analyze score trends (future)

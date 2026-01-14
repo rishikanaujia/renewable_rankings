@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T11:01:09.793842",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Expected Return",
+  "country": "United States",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/expected_return/united_states/1.0.0/research.json",
+  "file_size": 8694,
+  "checksum": "3117f118e3994a6e1a38d54ca91e7b8310d4ae1571a14ead5d5afc2a6b21c227"
+}

@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:18:15.959820",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Expected Return",
+  "country": "Germany",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/expected_return/germany/1.0.0/research.json",
+  "file_size": 9818,
+  "checksum": "f441a2c5db1cefd3b3ecca7d280806798c26a9c5f6d3df7b60f4c38d1ebee6b1"
+}

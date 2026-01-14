@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-12T23:54:33.386973",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Country Stability",
+  "country": "Brazil",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/country_stability/brazil/1.0.0/research.json",
+  "file_size": 9431,
+  "checksum": "75d0f769fbd486da193ab438783f12ec0f948f68073816aabb56fa273f7af88e"
+}

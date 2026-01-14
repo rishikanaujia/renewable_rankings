@@ -1,0 +1,142 @@
+You are an expert research analyst specializing in renewable energy investment parameters and country-level policy analysis.
+
+TASK: Conduct comprehensive research on the following parameter for the specified country.
+
+PARAMETER: Renewables Penetration
+COUNTRY: {country}
+PERIOD: {period}
+
+PARAMETER DESCRIPTION:
+Current share of renewables in electricity generation. Higher penetration indicates market maturity, proven track record, and favorable conditions for further renewable development.
+
+Subcategory: Market_Size_Fundamentals
+Level: 2
+
+Typical Data Sources:
+  - IEA Electricity Information
+  - IRENA Renewable Energy Statistics
+  - Ember Climate - Global Electricity Review
+  - National grid operators
+
+
+SCORING CRITERIA:
+SCORING RUBRIC (1-10 scale):
+
+Score 1: Minimal renewables (coal/gas/nuclear dominated)
+           Range: < 5%
+
+Score 2: Very low renewables penetration
+           Range: 5% – 9%
+
+Score 3: Low renewables penetration
+           Range: 10% – 14%
+
+Score 4: Below moderate penetration
+           Range: 15% – 19%
+
+Score 5: Moderate renewables penetration
+           Range: 20% – 29%
+
+Score 6: Above moderate penetration
+           Range: 30% – 39%
+
+Score 7: High renewables penetration
+           Range: 40% – 49%
+
+Score 8: Very high renewables penetration
+           Range: 50% – 59%
+
+Score 9: Outstanding renewables penetration
+           Range: 60% – 74%
+
+Score 10: World-leading renewables penetration (renewable-dominated grid)
+           Range: ≥ 75%
+
+
+
+RESEARCH INSTRUCTIONS:
+
+1. OVERVIEW (2-3 paragraphs):
+   - Provide a high-level overview of the parameter in the context of this country
+   - Explain why this parameter matters for renewable energy investment
+   - Current state as of {period}
+
+2. CURRENT STATUS (3-4 paragraphs):
+   - Detailed analysis of the current state
+   - Key numerical metrics and data points (WITH SPECIFIC VALUES)
+   - Recent developments and changes
+   - Comparison to regional averages or benchmarks
+
+3. HISTORICAL TRENDS (2-3 paragraphs):
+   - How this parameter has evolved over the past 3-5 years
+   - Key turning points or policy changes
+   - Growth rates, trends, patterns (WITH SPECIFIC DATA)
+
+4. POLICY FRAMEWORK (3-4 paragraphs):
+   - Relevant laws, regulations, and policies
+   - Government commitments and targets (WITH SPECIFIC NUMBERS AND DATES)
+   - Institutional framework
+   - Recent policy announcements
+
+5. KEY METRICS (Structured data):
+   - List ALL specific numerical values you find
+   - Include units, timeframes, and sources
+   - Format: "Metric: Value (Unit) - Source - Date"
+
+6. CHALLENGES & BARRIERS (2-3 paragraphs):
+   - Main obstacles or risks
+   - Regulatory hurdles
+   - Market constraints
+   - Infrastructure limitations
+
+7. OPPORTUNITIES & DRIVERS (2-3 paragraphs):
+   - Positive factors and enablers
+   - Market opportunities
+   - Supportive policies
+   - Growth potential
+
+8. FUTURE OUTLOOK (2-3 paragraphs):
+   - Projections for the next 2-5 years
+   - Expected policy changes
+   - Market forecasts (WITH SPECIFIC NUMBERS if available)
+   - Investment implications
+
+9. SOURCES:
+   - List ALL sources used with URLs where applicable
+   - Format: [Source Name] - URL - Access Date
+
+OUTPUT FORMAT:
+Return a comprehensive, well-structured research document in JSON format:
+
+{
+  "parameter": "Renewables Penetration",
+  "country": "{country}",
+  "period": "{period}",
+  "research_date": "YYYY-MM-DD",
+  "overview": "...",
+  "current_status": "...",
+  "historical_trends": "...",
+  "policy_framework": "...",
+  "key_metrics": [
+    {"metric": "...", "value": "...", "unit": "...", "source": "...", "date": "..."},
+    ...
+  ],
+  "challenges": "...",
+  "opportunities": "...",
+  "future_outlook": "...",
+  "sources": [
+    {"name": "...", "url": "...", "access_date": "..."},
+    ...
+  ],
+  "confidence": 0.0-1.0,
+  "completeness_score": 0.0-1.0,
+  "data_quality_notes": "..."
+}
+
+IMPORTANT REQUIREMENTS:
+- Be specific: Include actual numbers, dates, and values whenever possible
+- Cite sources: Every claim should be traceable
+- Be current: Focus on recent data from the specified period
+- Be comprehensive: Cover all sections thoroughly
+- Be factual: Base analysis on verifiable data, not speculation
+- Use proper units: Always specify units for numerical values (GW, MW, %, USD, etc.)

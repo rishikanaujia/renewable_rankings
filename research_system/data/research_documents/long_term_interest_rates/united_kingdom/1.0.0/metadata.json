@@ -1,0 +1,12 @@
+{
+  "version": "1.0.0",
+  "created_at": "2026-01-13T00:26:51.356975",
+  "change_type": "major",
+  "change_description": "Research for Q4 2024",
+  "parameter": "Long Term Interest Rates",
+  "country": "United Kingdom",
+  "period": "Q4 2024",
+  "file_path": "research_system/data/research_documents/long_term_interest_rates/united_kingdom/1.0.0/research.json",
+  "file_size": 9406,
+  "checksum": "a78aaa258234a059e70dd73e51352a42fde4d4ee736292e458c2f4fbecf75754"
+}

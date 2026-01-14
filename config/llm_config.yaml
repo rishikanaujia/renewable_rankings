@@ -1,0 +1,47 @@
+# LLM Configuration for AI-Powered Extraction
+# Used by AIExtractionAdapter when agents run in AI_POWERED mode
+
+llm:
+  # Provider: 'anthropic', 'openai', or 'azure_openai'
+  provider: openai
+
+  # Model configuration
+  model_name: gpt-4-turbo-preview  # Valid OpenAI model names: gpt-4-turbo-preview, gpt-4, gpt-3.5-turbo
+  temperature: 0.1  # Low temperature for deterministic extraction
+  max_tokens: 4000
+
+  # Retry configuration
+  max_retries: 3
+  retry_delay: 1.0  # seconds
+
+  # Fallback model (cheaper/faster if primary fails)
+  fallback_model: claude-3-haiku-20240307
+
+  # Rate limiting
+  max_requests_per_minute: 60
+  max_tokens_per_minute: 90000
+
+  # API credentials (will be loaded from environment variables)
+  # ANTHROPIC_API_KEY - from .env
+  # OPENAI_API_KEY - from .env
+  # AZURE_OPENAI_API_KEY - from .env
+
+# Cache configuration
+cache:
+  enabled: true
+  cache_dir: ./ai_extraction_system/cache/extraction_results
+  ttl: 86400  # 24 hours in seconds
+
+# Document processing
+document_processor:
+  chunk_size: 4000
+  chunk_overlap: 200
+  extract_tables: true
+  max_document_size: 100000  # characters
+
+# Extraction prompts
+prompts:
+  system_role: "You are an expert data analyst specializing in renewable energy policy and targets. Extract precise numerical data from policy documents."
+  temperature_override:
+    numerical_extraction: 0.0  # Very deterministic for numbers
+    text_extraction: 0.1
